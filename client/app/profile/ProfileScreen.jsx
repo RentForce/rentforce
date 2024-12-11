@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
-const ProfileScreen = ({navigation}) => {
+const ProfileScreen = ({navigation, userId, route}) => {
+  const [userData, setUserData] = useState({
+    firstName: 'Nicolas',
+    lastName: 'Adams',
+    email: 'nicolasadams@gmail.com',
+  });
 
+  useEffect(() => {
+    if (route.params?.updatedUser) {
+      setUserData(route.params.updatedUser);
+    }
+  }, [route.params?.updatedUser]);
 
   return (
     <View style={styles.container}>
@@ -17,13 +27,13 @@ const ProfileScreen = ({navigation}) => {
             <Ionicons name="pencil" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
-        <Text style={styles.profileName}  >Nicolas Adams</Text>
-        <Text style={styles.profileEmail}>nicolasadams@gmail.com</Text>
+        <Text style={styles.profileName} onPress={() => navigation.navigate('ShowProfile')}>{`${userData.firstName} ${userData.lastName}`}</Text>    
+            <Text style={styles.profileEmail}>{userData.email}</Text>
       </View>
 
       <View style={styles.accountSettings}>
         {[
-         { label: 'Personal information', icon: 'person' },
+         { label: 'Personal information', icon: 'person', navigateTo: 'Screen2' },
          { label: 'Payments and payouts', icon: 'card' },
          { label: 'Notifications', icon: 'notifications' },
          { label: 'Privacy and sharing', icon: 'lock-closed' },
@@ -32,9 +42,11 @@ const ProfileScreen = ({navigation}) => {
         ].map((item, index) => (
           <TouchableOpacity key={index} style={styles.settingItem}>
             <View style={styles.settingContent}  >
-              <Ionicons name={item.icon} size={20} color="#333" />
-              <Text style={styles.settingText} onPress={() => navigation.navigate('Screen2')} >{item.label}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#333" />
+              <Ionicons name={item.icon} size={20} color="#333"  />
+              <Text style={styles.settingText} >{item.label}</Text>
+              {item.label === 'Personal information' && (
+                <Ionicons name="chevron-forward" size={20} color="#333" onPress={() => navigation.navigate("Screen2", { userId: userId })} />
+              )}
             </View>
           </TouchableOpacity>
         ))}
