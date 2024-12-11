@@ -31,7 +31,7 @@ model User {
 model Post {
   id          Int       @id @default(autoincrement())
   title       String?   
-  images      Json?     
+  images      Image[]  
   description String?   
   location    String?   
   price       Decimal?  
@@ -140,6 +140,15 @@ model Map {
   longitude  Decimal?  
   postId     Int       @unique  // Add @unique attribute here
   post       Post      @relation(fields: [postId], references: [id])
+
+  @@unique([id])
+}
+
+model Image {
+  id     Int    @id @default(autoincrement())
+  url    String
+  postId Int
+  post   Post   @relation(fields: [postId], references: [id])
 
   @@unique([id])
 }
