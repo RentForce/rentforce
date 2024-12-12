@@ -10,6 +10,7 @@ CREATE TABLE `User` (
     `type` ENUM('host', 'guest') NULL,
     `address` VARCHAR(191) NULL,
 
+    UNIQUE INDEX `User_email_key`(`email`),
     UNIQUE INDEX `User_id_key`(`id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -24,6 +25,10 @@ CREATE TABLE `Post` (
     `category` ENUM('house', 'apartment', 'villa', 'hotel', 'historical', 'lake', 'beachfront', 'countryside', 'castles', 'experiences', 'camping', 'desert', 'luxe', 'islands') NULL,
     `rating` INTEGER NULL,
     `userId` INTEGER NOT NULL,
+    `cancellationPolicy` VARCHAR(191) NULL,
+    `roomConfiguration` VARCHAR(191) NULL,
+    `houseRules` VARCHAR(191) NULL,
+    `safetyProperty` VARCHAR(191) NULL,
 
     UNIQUE INDEX `Post_id_key`(`id`),
     PRIMARY KEY (`id`)

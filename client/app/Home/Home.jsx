@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  TextInput,
 } from "react-native";
 import {
   Ionicons,
@@ -52,29 +53,62 @@ const categoryIcons = {
   islands: (props) => <Fontisto name="island" {...props} />,
 };
 
-const Home = () => {
+const Home = ({ navigation }) => {
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    fetchPostsByCategory(selectedCategory);
-  }, [selectedCategory]);
+    if (isSearching) {
+      const delayDebounceFn = setTimeout(() => {
+        fetchPostsByCategory(selectedCategory);
+      }, 300);
+      return () => clearTimeout(delayDebounceFn);
+    } else {
+      fetchPostsByCategory(selectedCategory);
+    }
+  }, [selectedCategory, searchQuery]);
 
   const fetchPostsByCategory = async (category) => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `http://192.168.104.2:3000/posts/${category}`
-      );
-      console.log(response.data, "s");
+      const baseUrl = "http://192.168.195.93:3000";
+      const endpoint = searchQuery
+        ? `${baseUrl}/posts/all`
+        : `${baseUrl}/posts/${category}`;
 
+      console.log("Fetching from:", endpoint);
+
+      const response = await axios.get(endpoint, {
+        params: {
+          search: searchQuery,
+        },
+      });
+
+      console.log("Response data:", response.data);
       setPosts(response.data);
     } catch (error) {
-      console.error("Failed to fetch posts:", error);
-      console.log(error, "error");
+      console.error(
+        "Failed to fetch posts:",
+        error.response?.data || error.message
+      );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearch = (text) => {
+    setSearchQuery(text);
+    setIsSearching(true);
+  };
+
+  const handleCategoryPress = (category) => {
+    setSelectedCategory(category);
+    if (searchQuery) {
+      setSearchQuery("");
+      setIsSearching(false);
     }
   };
 
@@ -89,9 +123,18 @@ const Home = () => {
 
     return posts.map((post) => (
       <View key={post.id} style={styles.postContainer}>
-        <TouchableOpacity onPress={() => navigation.navigate("HomeDetails")}>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("HomeDetails", {
+              post: post,
+            })
+          }
+        >
           {post.images && post.images.length > 0 ? (
-            <Image source={{ uri: post.images[0].url }} style={styles.postImage} />
+            <Image
+              source={{ uri: post.images[0].url }}
+              style={styles.postImage}
+            />
           ) : (
             <Text>No Image Available</Text>
           )}
@@ -119,16 +162,28 @@ const Home = () => {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} style={styles.icon} />
-          <View style={styles.inputContainer}>
-            <Text style={styles.placeholderText}>Where to?</Text>
-            <Text style={styles.subText}>Anywhere · Any week · Add guests</Text>
+        <TouchableOpacity style={styles.searchBarContainer}>
+          <View style={styles.searchBar}>
+            <View style={styles.searchIconContainer}>
+              <Ionicons name="search" size={18} color="#222222" />
+            </View>
+            <View style={styles.searchInputContainer}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Where to?"
+                placeholderTextColor="#222222"
+                value={searchQuery}
+                onChangeText={handleSearch}
+              />
+              <Text style={styles.searchSubtext}>
+                Anywhere • Any week • Add guests
+              </Text>
+            </View>
+            <View style={styles.filterIconContainer}>
+              <Ionicons name="options-outline" size={18} color="#222222" />
+            </View>
           </View>
-          <TouchableOpacity>
-            <Ionicons name="options-outline" size={20} style={styles.icon} />
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
         <View>
           <ScrollView
             horizontal
@@ -138,32 +193,32 @@ const Home = () => {
             {categories.map((category) => (
               <View key={category} style={styles.tabContainer}>
                 <TouchableOpacity
-                  onPress={() => setSelectedCategory(category)}
+                  onPress={() => handleCategoryPress(category)}
                   style={[
                     styles.tab,
-                    selectedCategory === category && styles.activeTab,
+                    selectedCategory === category &&
+                      !searchQuery &&
+                      styles.activeTab,
                   ]}
                 >
-                  <Ionicons
-                    name={
-                      typeof categoryIcons[category] === "function"
-                        ? null
-                        : categoryIcons[category]
-                    }
-                    size={24}
-                    style={[
-                      styles.tabIcon,
-                      selectedCategory === category && styles.activeTabText,
-                    ]}
-                  />
-                  {typeof categoryIcons[category] === "function" &&
+                  {typeof categoryIcons[category] === "function" ? (
                     categoryIcons[category]({
                       size: 24,
                       style: [
                         styles.tabIcon,
-                        selectedCategory === category && styles.activeTabText,
+                        selectedCategory === category && styles.activeTabIcon,
                       ],
-                    })}
+                    })
+                  ) : (
+                    <Ionicons
+                      name={categoryIcons[category]}
+                      size={24}
+                      style={[
+                        styles.tabIcon,
+                        selectedCategory === category && styles.activeTabIcon,
+                      ]}
+                    />
+                  )}
                   <Text
                     style={[
                       styles.tabText,
@@ -173,7 +228,7 @@ const Home = () => {
                     {category}
                   </Text>
                 </TouchableOpacity>
-                {selectedCategory === category && (
+                {selectedCategory === category && !searchQuery && (
                   <View style={styles.scrollBar} />
                 )}
               </View>
@@ -199,18 +254,54 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  searchBarContainer: {
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    marginTop: 12,
+    marginBottom: 15,
+  },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 25,
-    padding: 10,
-    marginBottom: 20,
+    backgroundColor: "#F7F7F7",
+    borderWidth: 1,
+    borderColor: "#DDDDDD",
+    borderRadius: 40,
+    padding: 12,
+    marginHorizontal: 4,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 2,
+  },
+  searchIconContainer: {
+    marginRight: 12,
+    marginLeft: 4,
+  },
+  searchInputContainer: {
+    flex: 1,
+  },
+  searchInput: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#222222",
+    padding: 0,
+    margin: 0,
+  },
+  searchSubtext: {
+    fontSize: 12,
+    color: "#717171",
+    marginTop: 2,
+  },
+  filterIconContainer: {
+    marginLeft: 12,
+    padding: 8,
+    borderLeftWidth: 1,
+    borderLeftColor: "#DDDDDD",
   },
   icon: {
     marginHorizontal: 10,
@@ -227,32 +318,35 @@ const styles = StyleSheet.create({
   },
   categoryTabs: {
     flexDirection: "row",
-    marginBottom: 10,
+    marginTop: 8,
+  },
+  tabContainer: {
+    alignItems: "center",
+    marginRight: 24,
   },
   tab: {
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 4,
   },
   tabIcon: {
-    marginBottom: 2,
-    color: "#374957",
-    fontSize: 24,
+    color: "#717171",
+    marginBottom: 8,
+    opacity: 0.7,
   },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#000",
-    marginBottom: -2,
+  activeTabIcon: {
+    color: "#000000",
+    opacity: 1,
   },
   tabText: {
     fontSize: 12,
-    color: "#F1EFEF",
-    fontWeight: "600",
-    textAlign: "center",
+    color: "#717171",
+    textTransform: "capitalize",
+    fontWeight: "500",
   },
   activeTabText: {
-    color: "#374957",
+    color: "#000000",
+    fontWeight: "600",
   },
   contentContainer: {
     flex: 1,
@@ -266,17 +360,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  tabContainer: {
-    alignItems: "center",
-  },
   scrollBar: {
-    height: 0.1,
-    backgroundColor: "#000",
+    height: 2,
+    backgroundColor: "#000000",
     width: "100%",
-    marginTop: 2,
-  },
-  activeTabIcon: {
-    color: "#0A0A0A",
+    marginTop: 8,
+    borderRadius: 1,
   },
   navbar: {
     position: "absolute",
