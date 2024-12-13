@@ -1,11 +1,40 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
-const prisma = new PrismaClient();
 
-const JWT_SECRET = "ascefbth,plnihcdxuwy";
+// Use environment variables from expo-constants instead of dotenv
+const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key";
 
+const prisma = new PrismaClient({
+    // Remove log configuration as it might not be compatible with Expo
+});
+
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    console.log('Received Authorization Header:', authHeader);
+    console.log('Extracted Token:', token);
+
+    if (token == null) {
+        return res.status(401).json({ 
+            message: 'No token provided', 
+            details: 'Authorization header is missing or incorrectly formatted' 
+        });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            console.error('Token Verification Error:', err);
+            return res.status(403).json({ 
+                message: 'Invalid or expired token', 
+                error: err.message 
+            });
+        }
+        req.user = user; // Attach the user to the request object
+        next();
+    });
+};
 
 const validatePassword = (password) => {
     const errors = [];
@@ -24,7 +53,6 @@ const validatePassword = (password) => {
 };
 
 const signup = async (req, res) => {
-    
     try {
         const { firstName, lastName, email, image, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -61,7 +89,6 @@ const signup = async (req, res) => {
             console.log('User created:', user);
             res.send(user);
         } 
-        
     } catch (error) {
         console.log(error);
         res.status(500).send(error);
@@ -87,10 +114,17 @@ const login = async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email },
+            { 
+                id: user.id, 
+                firstName: user.firstName, 
+                lastName: user.lastName, 
+                email: user.email 
+            },
             JWT_SECRET,
             { expiresIn: '1h' }
         );
+
+        console.log('Generated Token:', token);
 
         return res.status(200).json({
             message: 'Login successful',
@@ -99,7 +133,8 @@ const login = async (req, res) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 email: user.email,
-                type: user.type
+                type: user.type, 
+                image: user.image
             },
             token
         });
@@ -110,4 +145,141 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { signup, login };
+const getUserData = async (req, res) => {
+    console.log('Received request for userId:', req.params.userId);
+    
+    const { userId } = req.params; 
+    try {
+        if (!userId || isNaN(Number(userId))) {
+            console.log('Invalid user ID received');
+            return res.status(400).json({ message: 'Invalid user ID' });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: Number(userId) },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phoneNumber: true,
+                address: true,
+                image: true,
+                bio: true
+            }
+        });
+
+        if (!user) {
+            console.log(`User with ID ${userId} not found`);
+            return res.status(404).json({ message: 'User not found' });
+        }
+        console.log(user);
+        res.json(user);
+    } catch (error) {
+        console.error('Detailed User Retrieval Error:', error);
+        res.status(500).json({ 
+            message: 'Error retrieving user data', 
+            error: error.message || 'Unknown error',
+            details: error
+        });
+    }
+};
+
+const updateUserData = async (req, res) => {
+    const { userId } = req.params; 
+    const { firstName, lastName, email, image, phoneNumber, address, bio } = req.body; 
+
+    try {
+        console.log('Update request received for userId:', userId, 'with data:', req.body);
+
+        if (!userId || isNaN(Number(userId))) {
+            return res.status(400).json({ message: 'Invalid user ID' });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: Number(userId) },
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const updateData = {
+            ...(firstName && { firstName }),
+            ...(lastName && { lastName }),
+            ...(email && { email }),
+            ...(phoneNumber !== null && { phoneNumber: Number(phoneNumber) }),
+            ...(address && { address }),
+            ...(image && { image }),
+            ...(bio && { bio }),
+        };
+
+        const updatedUser = await prisma.user.update({
+            where: { id: Number(userId) },
+            data: updateData,
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phoneNumber: true,
+                address: true,
+                image: true,
+                bio: true,
+            }
+        });
+
+        res.json(updatedUser);
+    } catch (error) {
+        console.error('Detailed User Update Error:', error);
+        res.status(500).json({ 
+            message: 'Error updating user data', 
+            error: error.message || 'Unknown error',
+            details: error.code ? { code: error.code } : {}
+        });
+    }
+};
+
+const createPost = async (req, res) => {
+    const { title, images, description, location, price, category } = req.body;
+
+    try {
+        if (!title || !description || !price || !category) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        const post = await prisma.post.create({
+            data: {
+                title,
+                images: images ? (typeof images === 'string' ? JSON.parse(images) : images) : [], 
+                description,
+                location: location || '',
+                price: parseFloat(price),
+                category,
+                userId: req.user.id
+            }
+        });
+
+        res.status(201).json(post);
+    } catch (error) {
+        console.error('Error creating post:', error);
+        res.status(500).json({ 
+            message: 'Error creating post', 
+            error: error.message 
+        });
+    }
+};
+
+module.exports = {
+    getUserData,
+    updateUserData,
+    createPost,
+    authenticateToken, 
+    prisma,
+    signup,
+    login
+};
