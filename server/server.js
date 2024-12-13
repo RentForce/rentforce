@@ -1,4 +1,4 @@
-require('dotenv').config(); // Load environment variables
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const userRoutes = require("./routes/user");
@@ -11,7 +11,14 @@ const prisma = new PrismaClient();
 
 // Enhanced CORS configuration
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:19006'], // Add your frontend URLs
+    origin: [
+        'http://localhost:19000', 
+        'http://localhost:19001', 
+        'http://localhost:19002', 
+        'exp://192.168.11.118:19000',  // Expo specific
+        'exp://192.168.11.118:19001',
+        'exp://192.168.11.118:19002'
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -21,13 +28,17 @@ app.use(express.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 5000;
 
+// Mount user routes
+app.use("/user", userRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('Something broke!');
+    console.error('Unhandled Error:', err);
+    res.status(500).json({
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'production' ? {} : err.message
+    });
 });
-
-app.use("/api/users", userRoutes);
 
 const server = app.listen(PORT, async () => {
     console.log(`Listening on port ${PORT}`);
