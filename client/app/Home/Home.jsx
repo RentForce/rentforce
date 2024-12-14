@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Image,
   TextInput,
+  Modal,
+  FlatList,
 } from "react-native";
 import {
   Ionicons,
@@ -59,6 +61,18 @@ const Home = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [price, setPrice] = useState("");
+  const [location, setLocation] = useState("");
+  const [title, setTitle] = useState("");
+
+  const searchInputRef = useRef(null);
+
+  const focusSearchInput = () => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  };
 
   useEffect(() => {
     if (isSearching) {
@@ -74,7 +88,7 @@ const Home = ({ navigation }) => {
   const fetchPostsByCategory = async (category) => {
     setLoading(true);
     try {
-      const baseUrl = "http://192.168.195.93:3000";
+      const baseUrl = "http://192.168.179.93:3000";
       const endpoint = searchQuery
         ? `${baseUrl}/posts/all`
         : `${baseUrl}/posts/${category}`;
@@ -112,6 +126,18 @@ const Home = ({ navigation }) => {
     }
   };
 
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category);
+    setModalVisible(false);
+    // Optionally, trigger a search or fetch posts based on the selected category
+  };
+
+  const handleFilterSubmit = () => {
+    // Here you would typically make an API call to fetch filtered posts
+    console.log("Filters applied:", { selectedCategory, price, location, title });
+    setModalVisible(false);
+  };
+
   const renderContent = () => {
     if (loading) {
       return <ActivityIndicator size="large" color="#0000ff" />;
@@ -120,6 +146,7 @@ const Home = ({ navigation }) => {
     if (posts.length === 0) {
       return <Text>No posts available for this category.</Text>;
     }
+    console.log(posts[0].images[0].url, "salem");
 
     return posts.map((post) => (
       <View key={post.id} style={styles.postContainer}>
@@ -130,14 +157,17 @@ const Home = ({ navigation }) => {
             })
           }
         >
-          {post.images && post.images.length > 0 ? (
+          <View>
             <Image
-              source={{ uri: post.images[0].url }}
+              source={{
+                uri: post.images[0]
+                  ? post.images[0].url
+                  : "https://cdn.vectorstock.com/i/500p/29/08/avatar-10-vector-37332908.jpg",
+              }}
               style={styles.postImage}
             />
-          ) : (
-            <Text>No Image Available</Text>
-          )}
+            <View style={styles.imageOverlay} />
+          </View>
           <Ionicons
             name="heart-outline"
             size={24}
@@ -146,13 +176,19 @@ const Home = ({ navigation }) => {
           />
         </TouchableOpacity>
         <View style={styles.postDetails}>
-          <Text style={styles.title}>{post.title}</Text>
-
-          <Text style={styles.postLocation}>{post.location}</Text>
-          <Text style={styles.postDistance}>{post.description}</Text>
-          <Text style={styles.postDate}>{post.date}</Text>
-          <Text style={styles.postRating}>
-            ⭐ {post.rating} ({post.reviews})
+          <View style={styles.postHeader}>
+            <Text style={styles.postLocation}>{post.location}</Text>
+            <View style={styles.ratingContainer}>
+              <Ionicons name="star" size={14} color="#000" />
+              <Text style={styles.rating}>{post.rating}</Text>
+            </View>
+          </View>
+          <Text style={styles.title} numberOfLines={1}>
+            {post.title}
+          </Text>
+          <Text style={styles.price}>
+            <Text style={styles.priceValue}>${post.price}</Text>
+            <Text style={styles.priceText}> night</Text>
           </Text>
         </View>
       </View>
@@ -161,29 +197,84 @@ const Home = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <TouchableOpacity style={styles.searchBarContainer}>
-          <View style={styles.searchBar}>
-            <View style={styles.searchIconContainer}>
-              <Ionicons name="search" size={18} color="#222222" />
-            </View>
-            <View style={styles.searchInputContainer}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Where to?"
-                placeholderTextColor="#222222"
-                value={searchQuery}
-                onChangeText={handleSearch}
-              />
-              <Text style={styles.searchSubtext}>
-                Anywhere • Any week • Add guests
-              </Text>
-            </View>
-            <View style={styles.filterIconContainer}>
-              <Ionicons name="options-outline" size={18} color="#222222" />
-            </View>
+      <TouchableOpacity
+        onPress={focusSearchInput}
+        style={styles.searchBarContainer}
+      >
+        <View style={styles.searchBar}>
+          <View style={styles.searchIconContainer}>
+            <Ionicons name="search" size={18} color="#222222" />
           </View>
-        </TouchableOpacity>
+          <View style={styles.searchInputContainer}>
+            <TextInput
+              ref={searchInputRef}
+              style={styles.searchInput}
+              placeholder="Where to?"
+              placeholderTextColor="#222222"
+              value={searchQuery}
+              onChangeText={handleSearch}
+            />
+            <Text style={styles.searchSubtext}>
+              Anywhere • Any week • Add guests
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.filterIconContainer}>
+            <Ionicons name="options-outline" size={18} color="#222222" />
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+
+      <Modal visible={modalVisible} animationType="slide">
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>Advanced Filters</Text>
+
+          <Text style={styles.filterLabel}>Category</Text>
+          <FlatList
+            data={categories}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => handleCategorySelect(item)} style={styles.categoryItem}>
+                <Text style={styles.categoryText}>{item}</Text>
+              </TouchableOpacity>
+            )}
+          />
+
+          <Text style={styles.filterLabel}>Price</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Max Price"
+            value={price}
+            onChangeText={setPrice}
+            keyboardType="numeric"
+          />
+
+          <Text style={styles.filterLabel}>Location</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Location"
+            value={location}
+            onChangeText={setLocation}
+          />
+
+          <Text style={styles.filterLabel}>Title</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Post Title"
+            value={title}
+            onChangeText={setTitle}
+          />
+
+          <TouchableOpacity onPress={handleFilterSubmit} style={styles.submitButton}>
+            <Text style={styles.submitButtonText}>Apply Filters</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      <ScrollView style={styles.scrollView}>
         <View>
           <ScrollView
             horizontal
@@ -319,20 +410,25 @@ const styles = StyleSheet.create({
   categoryTabs: {
     flexDirection: "row",
     marginTop: 8,
+    paddingLeft: 4,
   },
   tabContainer: {
     alignItems: "center",
-    marginRight: 24,
+    marginRight: 32,
+    opacity: 0.9,
   },
   tab: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 4,
+    paddingVertical: 8,
+    minWidth: 64,
   },
   tabIcon: {
     color: "#717171",
     marginBottom: 8,
     opacity: 0.7,
+    height: 24,
+    width: 24,
   },
   activeTabIcon: {
     color: "#000000",
@@ -342,7 +438,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#717171",
     textTransform: "capitalize",
-    fontWeight: "500",
+    fontWeight: "400",
+    textAlign: "center",
+    marginTop: 4,
   },
   activeTabText: {
     color: "#000000",
@@ -374,7 +472,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
   postContainer: {
-    marginBottom: 20,
+    marginBottom: 24,
     backgroundColor: "#fff",
     borderRadius: 15,
     shadowColor: "#000",
@@ -386,42 +484,158 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: "100%",
-    height: 200,
+    height: 340,
+    resizeMode: "cover",
+    backgroundColor: "#f0f0f0",
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.02)",
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
   },
   postDetails: {
-    padding: 10,
+    padding: 16,
+    backgroundColor: "#fff",
   },
-  postTitle: {
-    fontWeight: "bold",
-    fontSize: 18,
-    marginBottom: 5,
+  postHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
   },
   postLocation: {
-    fontSize: 16,
-    color: "#374957",
-    fontWeight: "bold",
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#222222",
+    flex: 1,
   },
-  postDistance: {
-    fontSize: 14,
-    color: "#888",
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  postDate: {
+  rating: {
     fontSize: 14,
-    color: "#888",
+    fontWeight: "500",
+    color: "#222222",
+    marginLeft: 4,
   },
-  postRating: {
+  title: {
     fontSize: 14,
-    color: "#374957",
-    marginTop: 5,
-    alignSelf: "flex-end",
+    color: "#717171",
+    marginBottom: 8,
+  },
+  price: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+  priceValue: {
+    fontWeight: "600",
+    color: "#222222",
+  },
+  priceText: {
+    color: "#222222",
   },
   favoriteIcon: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: 16,
+    right: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    padding: 8,
+    borderRadius: 50,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
     zIndex: 1,
+  },
+  noImageContainer: {
+    width: "100%",
+    height: 280,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+  },
+  noImageText: {
+    color: "#717171",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  activeTab: {
+    transform: [{ scale: 1.05 }],
+  },
+  imageGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    padding: 8,
+  },
+  largeImage: {
+    width: "100%",
+    height: 380,
+  },
+  mediumImage: {
+    width: "48%",
+    height: 280,
+  },
+  smallImage: {
+    width: "48%",
+    height: 240,
+  },
+  modalContainer: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  categoryItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+  categoryText: {
+    fontSize: 18,
+  },
+  closeButton: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: "#007BFF",
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  filterLabel: {
+    fontSize: 18,
+    marginVertical: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 15,
+  },
+  submitButton: {
+    backgroundColor: "#007BFF",
+    padding: 15,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
 

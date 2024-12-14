@@ -9,6 +9,10 @@ import {
   TouchableOpacity,
   Modal,
   Dimensions,
+  Animated,
+  PanResponder,
+  TouchableWithoutFeedback,
+  TextInput,
 } from "react-native";
 import axios from "axios";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -25,11 +29,19 @@ const HomeDetails = ({ route }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
+  const imageSizes = [
+    { width: "100%", height: 180 }, // Full width
+    { width: "48%", height: 130 }, // Half width
+    { width: "48%", height: 150 }, // Half width
+    { width: "98%", height: 140 }, // Half width, taller
+    { width: "48%", height: 200 }, // Half width, taller
+  ];
+
   useEffect(() => {
     const fetchImages = async () => {
       try {
         const response = await axios.get(
-          `http://192.168.195.93:3000/posts/images/${post.id}` // Replace X with your IP
+          `http://192.168.179.93:3000/posts/images/${post.id}` // Replace X with your IP
         );
         setImages(response.data);
         setLoading(false);
@@ -49,38 +61,99 @@ const HomeDetails = ({ route }) => {
   };
 
   // Image Modal Component
-  const ImageModal = () => (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={modalVisible}
-      onRequestClose={() => setModalVisible(false)}
-    >
-      <View style={styles.modalContainer}>
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={() => setModalVisible(false)}
-        >
-          <Icon name="close" size={30} color="#fff" />
-        </TouchableOpacity>
+  const ImageModal = () => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const scrollX = new Animated.Value(0);
 
-        {selectedImage && (
-          <ImageZoom
-            cropWidth={SCREEN_WIDTH}
-            cropHeight={SCREEN_HEIGHT}
-            imageWidth={SCREEN_WIDTH}
-            imageHeight={SCREEN_HEIGHT}
+    const handleScroll = Animated.event(
+      [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+      {
+        useNativeDriver: false,
+        listener: (event) => {
+          const slideSize = SCREEN_WIDTH;
+          const index = Math.round(
+            event.nativeEvent.contentOffset.x / slideSize
+          );
+          setCurrentIndex(index);
+        },
+      }
+    );
+
+    return (
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setModalVisible(false)}
           >
-            <Image
-              source={{ uri: selectedImage.url }}
-              style={styles.fullImage}
-              resizeMode="contain"
-            />
-          </ImageZoom>
-        )}
-      </View>
-    </Modal>
-  );
+            <Icon name="close" size={30} color="#fff" />
+          </TouchableOpacity>
+
+          <Animated.ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            decelerationRate="fast"
+            bounces={false}
+            style={styles.fullWidthScrollView}
+            contentOffset={{ x: currentIndex * SCREEN_WIDTH, y: 0 }}
+          >
+            {images.map((image, index) => (
+              <View key={index} style={styles.fullWidthSlideContainer}>
+                {image && image.url ? (
+                  <ImageZoom
+                    cropWidth={SCREEN_WIDTH}
+                    cropHeight={SCREEN_HEIGHT}
+                    imageWidth={SCREEN_WIDTH}
+                    imageHeight={SCREEN_HEIGHT * 0.8}
+                    panToMove={true}
+                    pinchToZoom={true}
+                    enableSwipeDown={true}
+                    swipeDownThreshold={50}
+                    minScale={1}
+                    maxScale={4}
+                    useNativeDriver={true}
+                  >
+                    <TouchableWithoutFeedback onPress={() => {}}>
+                      <Image
+                        source={{ uri: image.url }}
+                        style={styles.fullWidthImage}
+                        resizeMode="contain"
+                      />
+                    </TouchableWithoutFeedback>
+                  </ImageZoom>
+                ) : (
+                  <Text style={styles.errorText}>Data not found</Text>
+                )}
+              </View>
+            ))}
+          </Animated.ScrollView>
+
+          <View style={styles.counterContainer}>
+            <Text style={styles.counterText}>
+              {currentIndex + 1} / {images.length}
+            </Text>
+          </View>
+
+          <View style={styles.pagination}>
+            {images.map((_, i) => (
+              <View
+                key={i}
+                style={[styles.dot, currentIndex === i && styles.activeDot]}
+              />
+            ))}
+          </View>
+        </View>
+      </Modal>
+    );
+  };
 
   if (loading) {
     return (
@@ -99,40 +172,65 @@ const HomeDetails = ({ route }) => {
   }
 
   return (
-    <View style={styles.wrapper}>
-      <ScrollView style={styles.container}>
-        <View style={styles.imageGrid}>
+    <View style={styles.pageContainer}>
+      <ScrollView style={styles.wrapper}>
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          style={styles.imageScrollContainer}
+        >
           {images.map((image, index) => (
             <TouchableOpacity
               key={index}
+              style={styles.imageSlide}
               onPress={() => handleImagePress(image)}
-              style={styles.imageContainer}
             >
-              <Image source={{ uri: image.url }} style={styles.image} />
+              {image && image.url ? (
+                <Image
+                  source={{ uri: image.url }}
+                  style={styles.image}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={styles.errorText}>Data not found</Text>
+              )}
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
         <View style={styles.iconRow}>
-          <TouchableOpacity style={styles.iconContainer}>
-            <Icon name="visibility" size={24} color="#000" />
+          <View style={styles.iconWrapper}>
+            <TouchableOpacity style={styles.iconContainer}>
+              <Icon name="visibility" size={24} color="#000" />
+            </TouchableOpacity>
             <Text style={styles.iconText}>View</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconContainer}>
-            <Icon name="pets" size={24} color="#000" />
+          </View>
+          <View style={styles.iconWrapper}>
+            <TouchableOpacity style={styles.iconContainer}>
+              <Icon name="pets" size={24} color="#000" />
+            </TouchableOpacity>
             <Text style={styles.iconText}>Pets Allowed</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconContainer}>
-            <Icon name="wifi" size={24} color="#000" />
+          </View>
+          <View style={styles.iconWrapper}>
+            <TouchableOpacity style={styles.iconContainer}>
+              <Icon name="wifi" size={24} color="#000" />
+            </TouchableOpacity>
             <Text style={styles.iconText}>Free Wifi</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconContainer}>
-            <Icon name="beach-access" size={24} color="#000" />
+          </View>
+          <View style={styles.iconWrapper}>
+            <TouchableOpacity style={styles.iconContainer}>
+              <Icon name="beach-access" size={24} color="#000" />
+            </TouchableOpacity>
             <Text style={styles.iconText}>Beach</Text>
-          </TouchableOpacity>
+          </View>
         </View>
-        <Text style={styles.title}>{post.title}</Text>
-        <Text style={styles.description}>{post.description}</Text>
-        <Text style={styles.price}>Price: ${post.price}</Text>
+        <View style={styles.detailsContainer}>
+          <Text style={styles.title}>{post.title}</Text>
+          <Text style={styles.description}>{post.description}</Text>
+          <Text style={styles.price}>
+            Price: <Text style={styles.priceValue}>${post.price}</Text>
+          </Text>
+        </View>
         <View style={styles.detailsContainer}>
           <View style={styles.detailRow}>
             <View style={styles.checkInOut}>
@@ -150,9 +248,6 @@ const HomeDetails = ({ route }) => {
           </View>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Cancellation Policy</Text>
-            {/* <Text style={styles.detailText}>
-              Free Cancellation until 1 day before arrival
-            </Text> */}
             <Text style={styles.detailText}>{post.cancellationPolicy}</Text>
           </View>
           <View style={styles.section}>
@@ -162,9 +257,6 @@ const HomeDetails = ({ route }) => {
                 <Icon name="hotel" size={24} color="#000" />
                 <Text style={styles.roomText}>One Bedroom</Text>
               </View>
-              {/* <Text style={styles.bedDetails}>
-                1 Double bed{"\n"}1 Single Bed
-              </Text> */}
               <Text style={styles.bedDetails}>{post.roomConfiguration}</Text>
             </View>
           </View>
@@ -187,12 +279,10 @@ const HomeDetails = ({ route }) => {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>House rules</Text>
-
             <Text style={styles.detailText}>{post.houseRules}</Text>
             <Text style={styles.detailText}>Check-in: 6:00 PM - 11:00 PM</Text>
             <Text style={styles.detailText}>Checkout before 9:00 AM</Text>
             <Text style={styles.detailText}>2 guests maximum</Text>
-
             <TouchableOpacity>
               <Text style={styles.showMoreText}>Show more</Text>
             </TouchableOpacity>
@@ -200,14 +290,6 @@ const HomeDetails = ({ route }) => {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Safety & property</Text>
-            {/* <Text style={styles.detailText}>No carbon monoxide alarm</Text>
-            <Text style={styles.detailText}>
-              Security camera/recording device
-            </Text>
-            <Text style={styles.detailText}>Smoke alarm</Text>
-            <TouchableOpacity>
-              <Text style={styles.showMoreText}>Show more</Text>
-            </TouchableOpacity> */}
             <Text style={styles.detailText}>{post.safetyProperty}</Text>
           </View>
 
@@ -245,12 +327,12 @@ const HomeDetails = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
+  pageContainer: {
+    flex: 1,
+    backgroundColor: "#F1EFEF",
+  },
   wrapper: {
     flex: 1,
-  },
-  container: {
-    padding: 16,
-    backgroundColor: "#F1EFEF",
   },
   navbar: {
     position: "absolute",
@@ -265,9 +347,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    padding: 8,
   },
   imageContainer: {
-    width: "48%",
     marginBottom: 8,
     borderRadius: 12,
     overflow: "hidden",
@@ -281,19 +363,41 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   image: {
-    width: "100%",
-    height: 120,
+    width: SCREEN_WIDTH,
+    height: 300,
+    resizeMode: "cover",
     borderRadius: 12,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    backgroundColor: "rgba(0, 0, 0, 0.95)",
+  },
+  slideContainer: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
     justifyContent: "center",
     alignItems: "center",
   },
   fullImage: {
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT * 0.8,
+  },
+  pagination: {
+    flexDirection: "row",
+    position: "absolute",
+    bottom: 10,
+    alignSelf: "center",
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#fff",
+    marginHorizontal: 4,
+    opacity: 0.3,
+  },
+  activeDot: {
+    opacity: 1,
   },
   closeButton: {
     position: "absolute",
@@ -304,27 +408,51 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     borderRadius: 20,
   },
+  counterContainer: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    padding: 5,
+    borderRadius: 10,
+    zIndex: 1,
+  },
+  counterText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   iconRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginVertical: 16,
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 10,
     backgroundColor: "#e0e0e0",
-    borderRadius: 20,
-    padding: 10,
+    borderRadius: 50,
+    padding: 40,
+    width: "100%",
+    height: 100,
   },
   iconContainer: {
     alignItems: "center",
-    padding: 10,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 50,
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    borderRadius: 30,
+    width: 50,
+    height: 50,
+    marginBottom: 4,
   },
   iconText: {
-    marginTop: 4,
     fontSize: 12,
+    color: "#333",
+    textAlign: "center",
   },
   title: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "bold",
+    color: "#333",
+    marginBottom: 8,
+    textAlign: "left",
   },
   detailsContainer: {
     padding: 16,
@@ -446,6 +574,55 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 16,
     textAlign: "center",
+  },
+  iconWrapper: {
+    alignItems: "center",
+  },
+  imageScrollContainer: {
+    marginBottom: 16,
+  },
+  imageSlide: {
+    width: SCREEN_WIDTH,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  largeImage: {
+    width: SCREEN_WIDTH,
+    height: 300,
+  },
+  fullWidthScrollView: {
+    width: SCREEN_WIDTH,
+  },
+  fullWidthSlideContainer: {
+    width: SCREEN_WIDTH,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fullWidthImage: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT * 0.8,
+  },
+  spacedSlideContainer: {
+    width: SCREEN_WIDTH - 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 10,
+  },
+  description: {
+    fontSize: 16,
+    color: "#555",
+    marginBottom: 12,
+    textAlign: "left",
+  },
+  price: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#2C3E50",
+    marginTop: 4,
+  },
+  priceValue: {
+    fontWeight: "bold",
+    color: "#2C3E50",
   },
 });
 

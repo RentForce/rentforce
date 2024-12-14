@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 const getPostsByCategory = async (req, res) => {
   const { category } = req.params;
-  const { search } = req.query;
+  const { search, price, location, title } = req.query;
 
   try {
     console.log("Category:", category);
@@ -11,14 +11,17 @@ const getPostsByCategory = async (req, res) => {
 
     const posts = await prisma.post.findMany({
       where: {
-        ...(category !== "all" && !search ? { category: category } : {}),
+        ...(category !== "all" && { category: category }),
         ...(search && {
           OR: [
             { title: { contains: search } },
             { location: { contains: search } },
             { description: { contains: search } },
-          ]
+          ],
         }),
+        ...(price && { price: { lte: parseFloat(price) } }),
+        ...(location && { location: { contains: location } }),
+        ...(title && { title: { contains: title } }),
       },
       include: {
         images: true,
@@ -26,13 +29,13 @@ const getPostsByCategory = async (req, res) => {
     });
 
     console.log("Found posts:", posts.length);
-    
+
     res.json(posts);
   } catch (error) {
     console.error("Server error:", error);
-    res.status(500).json({ 
-      message: "Error fetching posts", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error fetching posts",
+      error: error.message,
     });
   }
 };
