@@ -1,9 +1,13 @@
-const { signup, login } = require("../controller/user");
-const express = require("express");
+const express = require('express');
+const { getUserData, updateUserData, signup, login, createPost, authenticateToken} = require('../controller/user');
 
-const userroute = express.Router();
+const router = express.Router();
 
-userroute.post("/signup", signup);
-userroute.post("/login", login);
+router.get('/:userId', getUserData);
+router.put('/:userId', updateUserData);
+router.post("/signup", signup)
+router.post("/login", login)
 
-module.exports = userroute;
+router.post('/posts', authenticateToken, createPost);
+
+module.exports = router;

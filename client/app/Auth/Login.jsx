@@ -1,27 +1,48 @@
 import React, { useState } from "react";
 import { Image, StyleSheet, View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import axios from "axios"; // Import axios for making HTTP requests
+import axios from "axios";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const Login = () => {
-  const [email, setEmail] = useState(""); // State for username
-  const [password, setPassword] = useState(""); // State for password
+
+
+const Login = ({ navigation }) => {
+  const [email, setEmail] = useState(""); 
+  const [password, setPassword] = useState(""); 
   const [passwordVisible, setPasswordVisible] = useState(false);
 
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://192.168.104.13:5000/user/login", {
+      const response = await axios.post("http://192.168.11.149:5000/user/login", {
         email,
         password,
       });
-      // Handle successful login
-      Alert.alert("Login Successful welcome");
+      const { token, user } = response.data;
+      if (token) {
+            // Securely store the token
+            await AsyncStorage.setItem('userToken', token);
+            
+            // Optional: Store user info if needed
+            await AsyncStorage.setItem('userData', JSON.stringify(user));
+
+            console.log('Token successfully stored:', user);
+            navigation.navigate("Screen1", { updatedUser: user})}
+
+            return { success: true, user };
+
+        
+   
+     
     } catch (error) {
-      // Handle login error
-      Alert.alert("Login Failed", "Please check your credentials and try again.");
-    }
+      console.error('Login Error:', error.response ? error.response.data : error);
+      return { 
+          success: false, 
+          message: error.response?.data?.message || 'Login failed' 
+      };
+      }
   };
+
 
   return (
     <View style={styles.signin}>
@@ -40,7 +61,7 @@ const Login = () => {
             placeholder="Email"
             style={styles.input}
             value={email}
-            onChangeText={setEmail} // Update username state
+            onChangeText={setEmail} 
           />
         </View>
         <Text style={styles.inputLabel}>Password</Text>
@@ -51,7 +72,7 @@ const Login = () => {
             secureTextEntry={!passwordVisible}
             style={styles.input}
             value={password}
-            onChangeText={setPassword} // Update password state
+            onChangeText={setPassword} 
           />
           <FontAwesome
             name={passwordVisible ? "eye-slash" : "eye"}
@@ -62,7 +83,7 @@ const Login = () => {
         </View>
         <Text style={styles.forgotPassword}>Forgot Password?</Text>
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <TouchableOpacity style={styles.button} onPress={()=> {handleLogin() }}>
           <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
         <View style={styles.socialLoginContainer}>

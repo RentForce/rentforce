@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import { FontAwesome } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function SignUpScreen() {
+export default function SignUpScreen({navigation}) {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -40,7 +40,7 @@ export default function SignUpScreen() {
     };
 
     try {
-      const response = await fetch('http://192.168.104.13:5000/user/signup', {
+      const response = await fetch('http://192.168.11.149:5000/user/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -51,7 +51,9 @@ export default function SignUpScreen() {
       const data = await response.json();
 
       if (response.ok) {
-        Alert.alert('Success', 'Account created successfully');
+        Alert.alert('Success', 'Account created successfully', [
+          { text: 'OK', onPress: () => navigation.navigate('Login') }
+        ]);
       } else {
         Alert.alert('Error', data.message || 'Something went wrong');
       }
