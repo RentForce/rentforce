@@ -41,8 +41,12 @@ const categories = [
 const categoryIcons = {
   house: "home-outline",
   apartment: "business-outline",
-  villa: "home-sharp",
-  hotel: "bed-outline",
+  villa: (props) => (
+    <MaterialIcons name="villa" size={24} color="black" {...props} />
+  ),
+  hotel: (props) => (
+    <FontAwesome5 name="hotel" size={24} color="black" {...props} />
+  ),
   historical: "time-outline",
   lake: "water-outline",
   beachfront: (props) => <FontAwesome5 name="umbrella-beach" {...props} />,
@@ -67,6 +71,7 @@ const Home = ({ navigation }) => {
   const [title, setTitle] = useState("");
 
   const searchInputRef = useRef(null);
+  const scrollViewRef = useRef(null);
 
   const focusSearchInput = () => {
     if (searchInputRef.current) {
@@ -88,7 +93,7 @@ const Home = ({ navigation }) => {
   const fetchPostsByCategory = async (category) => {
     setLoading(true);
     try {
-      const baseUrl = "http://192.168.179.93:3000";
+      const baseUrl = "http://192.168.126.93:3000";
       const endpoint = searchQuery
         ? `${baseUrl}/posts/all`
         : `${baseUrl}/posts/${category}`;
@@ -134,8 +139,26 @@ const Home = ({ navigation }) => {
 
   const handleFilterSubmit = () => {
     // Here you would typically make an API call to fetch filtered posts
-    console.log("Filters applied:", { selectedCategory, price, location, title });
+    console.log("Filters applied:", {
+      selectedCategory,
+      price,
+      location,
+      title,
+    });
     setModalVisible(false);
+  };
+
+  const handleScroll = (event) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const tabWidth = 100; // Adjust this value based on your tab width
+    const index = Math.round(contentOffsetX / tabWidth);
+    const newCategory = categories[index];
+
+    if (newCategory !== selectedCategory) {
+      setSelectedCategory(newCategory);
+      // Optionally, you can trigger a fetch for posts here
+      fetchPostsByCategory(newCategory);
+    }
   };
 
   const renderContent = () => {
@@ -179,7 +202,7 @@ const Home = ({ navigation }) => {
           <View style={styles.postHeader}>
             <Text style={styles.postLocation}>{post.location}</Text>
             <View style={styles.ratingContainer}>
-              <Ionicons name="star" size={14} color="#000" />
+              <Ionicons name="star" size={14} color="#FFD700" />
               <Text style={styles.rating}>{post.rating}</Text>
             </View>
           </View>
@@ -195,10 +218,15 @@ const Home = ({ navigation }) => {
     ));
   };
 
+  const handleSearchIconPress = () => {
+    // Navigate to Home when the search icon is pressed
+    navigation.navigate("Home");
+  };
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        onPress={focusSearchInput}
+        onPress={handleSearchIconPress}
         style={styles.searchBarContainer}
       >
         <View style={styles.searchBar}>
@@ -218,7 +246,10 @@ const Home = ({ navigation }) => {
               Anywhere • Any week • Add guests
             </Text>
           </View>
-          <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.filterIconContainer}>
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            style={styles.filterIconContainer}
+          >
             <Ionicons name="options-outline" size={18} color="#222222" />
           </TouchableOpacity>
         </View>
@@ -233,7 +264,22 @@ const Home = ({ navigation }) => {
             data={categories}
             keyExtractor={(item) => item}
             renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => handleCategorySelect(item)} style={styles.categoryItem}>
+              <TouchableOpacity
+                onPress={() => handleCategorySelect(item)}
+                style={styles.categoryItem}
+              >
+                {typeof categoryIcons[item] === "function" ? (
+                  categoryIcons[item]({
+                    size: 20,
+                    color: "#007BFF",
+                  })
+                ) : (
+                  <Ionicons
+                    name={categoryIcons[item]}
+                    size={20}
+                    color="#007BFF"
+                  />
+                )}
                 <Text style={styles.categoryText}>{item}</Text>
               </TouchableOpacity>
             )}
@@ -264,11 +310,17 @@ const Home = ({ navigation }) => {
             onChangeText={setTitle}
           />
 
-          <TouchableOpacity onPress={handleFilterSubmit} style={styles.submitButton}>
+          <TouchableOpacity
+            onPress={handleFilterSubmit}
+            style={styles.submitButton}
+          >
             <Text style={styles.submitButtonText}>Apply Filters</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+          <TouchableOpacity
+            onPress={() => setModalVisible(false)}
+            style={styles.closeButton}
+          >
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
         </View>
@@ -277,9 +329,12 @@ const Home = ({ navigation }) => {
       <ScrollView style={styles.scrollView}>
         <View>
           <ScrollView
+            ref={scrollViewRef}
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.categoryTabs}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
           >
             {categories.map((category) => (
               <View key={category} style={styles.tabContainer}>
@@ -287,14 +342,12 @@ const Home = ({ navigation }) => {
                   onPress={() => handleCategoryPress(category)}
                   style={[
                     styles.tab,
-                    selectedCategory === category &&
-                      !searchQuery &&
-                      styles.activeTab,
+                    selectedCategory === category && styles.activeTab,
                   ]}
                 >
                   {typeof categoryIcons[category] === "function" ? (
                     categoryIcons[category]({
-                      size: 24,
+                      size: 21,
                       style: [
                         styles.tabIcon,
                         selectedCategory === category && styles.activeTabIcon,
@@ -303,7 +356,7 @@ const Home = ({ navigation }) => {
                   ) : (
                     <Ionicons
                       name={categoryIcons[category]}
-                      size={24}
+                      size={21}
                       style={[
                         styles.tabIcon,
                         selectedCategory === category && styles.activeTabIcon,
@@ -331,7 +384,7 @@ const Home = ({ navigation }) => {
           </View>
         </View>
       </ScrollView>
-      <Navbar style={styles.navbar} />
+      <Navbar navigation={navigation} style={styles.navbar} />
     </View>
   );
 };
@@ -339,7 +392,7 @@ const Home = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F1EFEF",
+    backgroundColor: "#EAEAEA",
   },
   scrollView: {
     flex: 1,
@@ -420,8 +473,10 @@ const styles = StyleSheet.create({
   tab: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 8,
-    minWidth: 64,
+    paddingVertical: 4,
+    minWidth: 50,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 10,
   },
   tabIcon: {
     color: "#717171",
@@ -435,15 +490,15 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   tabText: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#717171",
     textTransform: "capitalize",
     fontWeight: "400",
     textAlign: "center",
-    marginTop: 4,
+    marginTop: 2,
   },
   activeTabText: {
-    color: "#000000",
+    color: "#FFFFFF",
     fontWeight: "600",
   },
   contentContainer: {
@@ -567,6 +622,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   activeTab: {
+    backgroundColor: "#007BFF",
     transform: [{ scale: 1.05 }],
   },
   imageGrid: {
@@ -590,51 +646,67 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   modalTitle: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
-  },
-  categoryItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  categoryText: {
-    fontSize: 18,
-  },
-  closeButton: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: "#007BFF",
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  closeButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: "#333",
   },
   filterLabel: {
     fontSize: 18,
     marginVertical: 10,
+    color: "#007BFF",
+    fontWeight: "600",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
+    borderColor: "#DDDDDD",
+    borderRadius: 10,
     padding: 10,
     marginBottom: 15,
+    backgroundColor: "#F9F9F9",
+  },
+  categoryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  categoryText: {
+    fontSize: 18,
+    marginLeft: 10,
+    color: "#333",
   },
   submitButton: {
     backgroundColor: "#007BFF",
     padding: 15,
-    borderRadius: 5,
+    borderRadius: 10,
     alignItems: "center",
+    marginTop: 20,
   },
   submitButtonText: {
-    color: "#fff",
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  closeButton: {
+    marginTop: 10,
+    padding: 15,
+    backgroundColor: "#FF4D4D",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "#FFFFFF",
     fontWeight: "bold",
   },
 });

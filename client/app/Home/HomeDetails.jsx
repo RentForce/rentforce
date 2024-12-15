@@ -21,7 +21,7 @@ import ImageZoom from "react-native-image-pan-zoom";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-const HomeDetails = ({ route }) => {
+const HomeDetails = ({ route, navigation }) => {
   const { post } = route.params;
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ const HomeDetails = ({ route }) => {
     const fetchImages = async () => {
       try {
         const response = await axios.get(
-          `http://192.168.179.93:3000/posts/images/${post.id}` // Replace X with your IP
+          `http://192.168.126.93:3000/posts/images/${post.id}` // Replace X with your IP
         );
         setImages(response.data);
         setLoading(false);
@@ -58,6 +58,11 @@ const HomeDetails = ({ route }) => {
   const handleImagePress = (image) => {
     setSelectedImage(image);
     setModalVisible(true);
+  };
+
+  // Confirm Booking Button
+  const handleConfirmBooking = () => {
+    navigation.navigate("Booking"); // Navigate to BookingPage
   };
 
   // Image Modal Component
@@ -313,8 +318,11 @@ const HomeDetails = ({ route }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.bookButton}>
-            <Text style={styles.bookButtonText}>Request to book</Text>
+          <TouchableOpacity
+            style={styles.bookButton}
+            onPress={handleConfirmBooking}
+          >
+            <Text style={styles.bookButtonText}>Confirm Booking</Text>
           </TouchableOpacity>
 
           <View style={styles.spacer} />

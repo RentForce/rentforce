@@ -9,14 +9,19 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 // import PersonalScreen from "./profile/PersonalScreen.jsx";
 import Home from "./Home/Home.jsx";
 import HomeDetails from "./Home/HomeDetails.jsx";
+import BookingPage from "./Home/BookingPage"; // Adjust the path as necessary
 // import Login from './Auth/Login';
 // import SignUpScreen from './Auth/Sign-up';
 const Stack = createNativeStackNavigator();
-
 function App() {
   return (
     // <Stack.Navigator initialRouteName="Login">
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: "red" }, // Change background color to red
+      }}
+    >
       {/* <Stack.Screen
         name="Login"
         component={Login}
@@ -49,6 +54,7 @@ function App() {
       /> */}
       <Stack.Screen name="Home" component={Home} />
       <Stack.Screen name="HomeDetails" component={HomeDetails} />
+      <Stack.Screen name="Booking" component={BookingPage} />
     </Stack.Navigator>
   );
 }

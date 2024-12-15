@@ -44,6 +44,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "0.76.5",
+    "react-native-dialog": "^9.3.0",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-image-pan-zoom": "^2.1.12",
     "react-native-image-picker": "^7.2.3",
@@ -54,7 +55,8 @@
     "react-native-swiper": "^1.6.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
-    "setprototypeof": "^1.2.0"
+    "setprototypeof": "^1.2.0",
+    "sweetalert2": "^11.15.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
