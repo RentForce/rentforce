@@ -4,20 +4,18 @@ import { Ionicons } from "@expo/vector-icons";
 
 const Navbar = ({ navigation }) => {
   const handleConfirmExplore = () => {
+    console.log("Navigating to Home");
     navigation.navigate("Home");
   };
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.iconContainer}>
-        <Ionicons
-          name="search-outline"
-          size={24}
-          style={styles.icon}
-          onPress={handleConfirmExplore}
-        />
-        <Text style={styles.text} onPress={handleConfirmExplore}>
-          Explore
-        </Text>
+      <TouchableOpacity
+        style={styles.iconContainer}
+        onPress={handleConfirmExplore}
+      >
+        <Ionicons name="search-outline" size={24} style={styles.icon} />
+        <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.iconContainer}>
         <Ionicons name="heart-outline" size={24} style={styles.icon} />

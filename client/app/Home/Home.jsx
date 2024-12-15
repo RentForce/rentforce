@@ -384,7 +384,7 @@ const Home = ({ navigation }) => {
           </View>
         </View>
       </ScrollView>
-      <Navbar navigation={navigation} style={styles.navbar} />
+      <Navbar navigation={navigation} />
     </View>
   );
 };
