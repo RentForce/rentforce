@@ -15,6 +15,7 @@ model User {
   password      String?    
   phoneNumber  String? @unique
   image         String?    
+  bio           String?    
   type          UserType?  
   address       String?    
   posts         Post[]     
