@@ -30,22 +30,26 @@ model User {
 }
 
 model Post {
-  id          Int       @id @default(autoincrement())
-  title       String?   
-  images      Json?     
-  description String?   
-  location    String?   
-  price       Decimal?  
-  category    PostCategory?
-  rating      Int?      
-  userId      Int       
-  user        User      @relation(fields: [userId], references: [id])
-  calendar    Calendar[] 
-  favourites  Favourite[] 
-  history     History[]  
-  cartPosts   CartPost[] 
-  map         Map?       
-  
+  id                Int       @id @default(autoincrement())
+  title             String?
+  images            Image[]
+  description       String?
+  location          String?
+  price             Decimal?
+  category          PostCategory?
+  rating            Int?
+  userId            Int
+  user              User      @relation(fields: [userId], references: [id])
+  calendar          Calendar[]
+  favourites        Favourite[]
+  history           History[]
+  cartPosts         CartPost[]
+  map               Map?
+  cancellationPolicy String?
+  roomConfiguration  String?
+  houseRules         String?
+  safetyProperty     String?
+
   @@unique([id])
 }
 
@@ -141,6 +145,15 @@ model Map {
   longitude  Decimal?  
   postId     Int       @unique  // Add @unique attribute here
   post       Post      @relation(fields: [postId], references: [id])
+
+  @@unique([id])
+}
+
+model Image {
+  id     Int    @id @default(autoincrement())
+  url    String
+  postId Int
+  post   Post   @relation(fields: [postId], references: [id])
 
   @@unique([id])
 }

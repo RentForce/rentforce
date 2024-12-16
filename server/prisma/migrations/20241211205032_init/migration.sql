@@ -10,6 +10,7 @@ CREATE TABLE `User` (
     `type` ENUM('host', 'guest') NULL,
     `address` VARCHAR(191) NULL,
 
+    UNIQUE INDEX `User_email_key`(`email`),
     UNIQUE INDEX `User_id_key`(`id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -18,13 +19,16 @@ CREATE TABLE `User` (
 CREATE TABLE `Post` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `title` VARCHAR(191) NULL,
-    `images` JSON NULL,
     `description` VARCHAR(191) NULL,
     `location` VARCHAR(191) NULL,
     `price` DECIMAL(65, 30) NULL,
     `category` ENUM('house', 'apartment', 'villa', 'hotel', 'historical', 'lake', 'beachfront', 'countryside', 'castles', 'experiences', 'camping', 'desert', 'luxe', 'islands') NULL,
     `rating` INTEGER NULL,
     `userId` INTEGER NOT NULL,
+    `cancellationPolicy` VARCHAR(191) NULL,
+    `roomConfiguration` VARCHAR(191) NULL,
+    `houseRules` VARCHAR(191) NULL,
+    `safetyProperty` VARCHAR(191) NULL,
 
     UNIQUE INDEX `Post_id_key`(`id`),
     PRIMARY KEY (`id`)
@@ -131,6 +135,16 @@ CREATE TABLE `Map` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `Image` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `url` VARCHAR(191) NOT NULL,
+    `postId` INTEGER NOT NULL,
+
+    UNIQUE INDEX `Image_id_key`(`id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `Post` ADD CONSTRAINT `Post_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -172,3 +186,6 @@ ALTER TABLE `Message` ADD CONSTRAINT `Message_chatId_fkey` FOREIGN KEY (`chatId`
 
 -- AddForeignKey
 ALTER TABLE `Map` ADD CONSTRAINT `Map_postId_fkey` FOREIGN KEY (`postId`) REFERENCES `Post`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Image` ADD CONSTRAINT `Image_postId_fkey` FOREIGN KEY (`postId`) REFERENCES `Post`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

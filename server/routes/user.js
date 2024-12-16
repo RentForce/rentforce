@@ -1,25 +1,20 @@
-const {signup,login, getUserData, updateUserData,createPost,authenticateToken,addToFavourites,removeFromFavourites,getFavouritePosts } = require("../controller/user")
-const express = require("express")
-const {sendCode,verifyCode,updatePassword} = require("../controller/emailPassword")
-const userroute = express.Router()
+const express = require('express');
+const { getUserData, updateUserData, signup, login, createPost, authenticateToken,addToFavourites,removeFromFavourites,getFavouritePosts} = require('../controller/user');
+const {sendCode , verifyCode , updatePassword} = require('../controller/emailPassword')
+
+const router = express.Router();
+
+router.get('/:userId', getUserData);
+router.put('/:userId', updateUserData);
+router.post("/signup", signup)
+router.post("/send-code", sendCode)
+router.post("/verify-code", verifyCode)
+router.post("/update-password", updatePassword)
+router.post("/login", login)
+router.post('/posts', authenticateToken, createPost);
+router.post("/favourites", addToFavourites)
+router.delete("/favourites", removeFromFavourites)
+router.get("/favourites/:userId", getFavouritePosts)
 
 
-
-
-userroute.post("/signup" , signup)
-userroute.post("/login",login)
-userroute.post("/send-code",sendCode)
-userroute.post("/verify-code",verifyCode)
-userroute.post("/update-password",updatePassword)
-userroute.get('/:userId', getUserData);
-userroute.put('/:userId', updateUserData);
-userroute.post("/send-code",sendCode)
-userroute.post("/verify-code",verifyCode)
-userroute.post("/update-password",updatePassword)
-userroute.post('/posts', authenticateToken, createPost);
-userroute.post('/favourites',  addToFavourites);
-userroute.delete('/favourites',  removeFromFavourites);
-userroute.get('/favourites/:userId',  getFavouritePosts);
-
-
-module.exports = userroute 
+module.exports = router;
