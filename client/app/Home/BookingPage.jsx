@@ -10,7 +10,7 @@ import {
   Modal,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, AntDesign } from "@expo/vector-icons";
 import Navbar from "./Navbar";
 
 const BookingPage = ({ navigation }) => {
@@ -98,7 +98,15 @@ const BookingPage = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <Text style={styles.title}>Booking Information</Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.title}>Booking Information</Text>
+          <TouchableOpacity
+            style={styles.homeIcon}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="home-outline" size={29} color="#007BFF" />
+          </TouchableOpacity>
+        </View>
 
         <Image
           source={{
@@ -481,18 +489,10 @@ const BookingPage = ({ navigation }) => {
           </View>
         )}
 
-        <View style={styles.buttonContainer}>
+        <View style={styles.confirmButtonContainer}>
           <TouchableOpacity style={styles.button} onPress={handleBooking}>
+            <AntDesign name="customerservice" size={24} color="white" />
             <Text style={styles.buttonText}>Confirm Booking</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backButtonText}>Back to Home</Text>
           </TouchableOpacity>
         </View>
 
@@ -508,7 +508,8 @@ const BookingPage = ({ navigation }) => {
               <Ionicons name="checkmark-circle" size={50} color="green" />
               <Text style={styles.modalTitle}>Thank You!</Text>
               <Text style={styles.modalMessage}>
-                Your request is under review for approval.{" "}
+                Your request will only be under review for approval once you
+                click 'Done'.{" "}
               </Text>
               <Text style={styles.modalPayment}>
                 Total Payment: ${totalPayment}
@@ -538,6 +539,13 @@ const BookingPage = ({ navigation }) => {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
+              <Image
+                source={{
+                  uri: "https://c4.wallpaperflare.com/wallpaper/417/817/200/kung-fu-panda-animated-movies-movies-wallpaper-preview.jpg",
+                }} // Replace with your thank you image URL
+                style={styles.thankYouImage}
+                resizeMode="contain" // Adjust the image size
+              />
               <Text style={styles.welcomeTitle}>You're Welcome!</Text>
               <Text style={styles.welcomeMessage}>
                 Thank you, {name}, for your booking!
@@ -549,7 +557,13 @@ const BookingPage = ({ navigation }) => {
                   resetForm();
                 }}
               >
-                <Text style={styles.doneButtonText}>OK</Text>
+                <AntDesign
+                  name="checkcircle"
+                  size={24}
+                  color="white"
+                  style={styles.icon}
+                />
+                <Text style={styles.doneButtonText}>Confirm</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -606,10 +620,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   buttonContainer: {
-    alignItems: "center",
-    marginVertical: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: "row", // Arrange buttons in a row
+    justifyContent: "space-between", // Space between buttons
+    marginTop: 20, // Add some margin above the buttons
+    width: "100%", // Ensure the container takes full width
   },
   button: {
     backgroundColor: "#007BFF",
@@ -617,6 +631,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     width: "80%",
+    height: 100,
+    marginBottom: 10,
   },
   buttonText: {
     color: "#fff",
@@ -638,11 +654,13 @@ const styles = StyleSheet.create({
   errorContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 15,
+    marginLeft: 13,
+    marginTop: -1,
   },
   errorText: {
-    color: "red",
-    fontSize: 12,
+    color: "blue",
+    fontSize: 11,
     marginLeft: 5,
   },
   title: {
@@ -651,7 +669,7 @@ const styles = StyleSheet.create({
     color: "#007BFF",
     marginBottom: 20,
     textAlign: "center",
-    padding: 10,
+    padding: 17,
     backgroundColor: "#E0E7FF",
     borderRadius: 10,
   },
@@ -701,33 +719,36 @@ const styles = StyleSheet.create({
     color: "#007BFF", // Payment amount color
   },
   doneButton: {
-    marginTop: 20,
-    backgroundColor: "#007BFF",
-    paddingVertical: 10,
+    flexDirection: "row", // Arrange icon and text in a row
+    alignItems: "center", // Center the icon and text vertically
+    backgroundColor: "#007BFF", // Button background color
+    paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 5,
-    marginRight: 10,
+    marginTop: 20, // Space above the button
   },
   doneButtonText: {
     color: "#fff",
     fontWeight: "bold",
+    marginLeft: 10, // Space between icon and text
   },
   cancelButton: {
-    marginTop: 20,
     backgroundColor: "red",
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 5,
+    flex: 1, // Allow the button to grow
   },
   cancelButtonText: {
     color: "#fff",
     fontWeight: "bold",
+    textAlign: "center", // Center text
   },
   welcomeTitle: {
     fontSize: 24,
     fontWeight: "bold",
     marginVertical: 10,
-    color: "#007BFF",
+    color: "green",
   },
   welcomeMessage: {
     fontSize: 16,
@@ -739,6 +760,53 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  homeIcon: {
+    position: "absolute",
+    right: 20,
+    top: 10,
+  },
+  confirmButtonContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 20,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: "#007BFF", // Background color for the container
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5, // Elevation for Android
+  },
+  button: {
+    flexDirection: "row", // Arrange icon and text in a row
+    alignItems: "center", // Center the icon and text vertically
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    backgroundColor: "#007BFF", // Button background color
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginLeft: 10, // Space between icon and text
+  },
+  thankYouImage: {
+    width: "100%", // Full width of the modal
+    height: 150, // Adjust height as needed
+    marginBottom: 20, // Space below the image
+    borderRadius: 10, // Optional: rounded corners
   },
 });
 
