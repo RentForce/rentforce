@@ -41,7 +41,7 @@ const HomeDetails = ({ route, navigation }) => {
     const fetchImages = async () => {
       try {
         const response = await axios.get(
-          `http://192.168.126.93:3000/posts/images/${post.id}` // Replace X with your IP
+          `http://192.168.126.93:5000/posts/images/${post.id}` // Replace X with your IP
         );
         setImages(response.data);
         setLoading(false);
