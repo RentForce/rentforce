@@ -46,13 +46,16 @@ const Favourites = ({ navigation }) => {
       if (!token) {
         throw new Error('User token not found');
       }
-
+  
       // const decodedToken = jwtDecode(token);
       // const userId = decodedToken.id; // Extract user ID from the token
-
+  
       const userId = 1; // Hardcoded user ID for testing
-
+  
+      console.log('Removing favourite:', { userId, postId });
+  
       await axios.delete(`http://192.168.104.13:5000/user/favourites`, {
+        data: { userId, postId }, // Ensure postId is included here
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
