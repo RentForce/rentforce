@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, TextInput, Scro
 import axios from 'axios';
 
 
-const API_BASE_URL = 'http://192.168.225.193:5000'; 
+const API_BASE_URL = 'http://192.168.103.6:5000'; 
 
 const ShowProfile = ({ navigation, route }) => {
   const userId = route.params?.userId;
@@ -93,7 +93,7 @@ console.log(userId);
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.editButton} 
-          onPress={() => navigation.navigate('Screen2', { userId: userId })}
+          onPress={() => navigation.navigate('personal', { userId: userId })}
         >
           <Text style={{ color: '#ffffff' }}>Edit</Text>
         </TouchableOpacity>
