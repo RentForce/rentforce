@@ -57,7 +57,7 @@ export default function SignUpScreen({ navigation }) {
 
       if (response.ok) {
         Alert.alert('Success', 'Account created successfully', [
-          { text: 'OK', onPress: () => navigation.navigate('Login') }
+          { text: 'OK', onPress: () => navigation.navigate('login') }
         ]);
       } else {
         Alert.alert('Error', data.message || 'Something went wrong');

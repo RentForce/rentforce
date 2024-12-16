@@ -280,12 +280,22 @@ const addToFavourites = async (req, res) => {
     const { userId, postId } = req.body;
 
     try {
-        // Check if the user and post exist
-        const user = await prisma.User.findUnique({ where: { id: userId } });
-        const post = await prisma.post.findUnique({ where: { id: postId } });
+        console.log(`Attempting to add to favourites: userId=${userId}, postId=${postId}`);
+        if(!userId &&!postId){
+            return   res.status(403).send("userId is required")
+     }
+        // Check if the user exists
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            console.error(`User with ID ${userId} not found`);
+            return res.status(404).json({ message: 'User not found' });
+        }
 
-        if (!user || !post) {
-            return res.status(404).json({ message: 'User or Post not found' });
+        // Check if the post exists
+        const post = await prisma.post.findUnique({ where: { id: postId } });
+        if (!post) {
+            console.error(`Post with ID ${postId} not found`);
+            return res.status(404).json({ message: 'Post not found' });
         }
 
         // Add to favourites
@@ -296,6 +306,7 @@ const addToFavourites = async (req, res) => {
             }
         });
 
+        console.log('Successfully added to favourites:', favourite);
         res.status(201).json({ message: 'Added to favourites', favourite });
     } catch (error) {
         console.error('Error adding to favourites:', error);
@@ -349,16 +360,23 @@ const getFavouritePosts = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Retrieve favourite posts
+        // Retrieve favourite posts with images
         const favouritePosts = await prisma.favourite.findMany({
             where: { userId: Number(userId) },
             include: {
-                post: true, // Include the post details
-            }
+                post: {
+                    include: {
+                        images: true, // Include the images for each post
+                    },
+                },
+            },
         });
 
         // Extract post details from the favourite entries
-        const posts = favouritePosts.map(fav => fav.post);
+        const posts = favouritePosts.map(fav => ({
+            ...fav.post,
+            image: fav.post.images.length > 0 ? fav.post.images[0].url : null, // Use the first image URL
+        }));
 
         res.status(200).json(posts);
     } catch (error) {

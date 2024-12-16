@@ -2,16 +2,25 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const Navbar = () => {
+const Navbar = ({ navigation }) => {
+  const handleConfirmExplore = () => {
+    console.log("Navigating to Home");
+    navigation.navigate("Home");
+  };
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.iconContainer}>
+      <TouchableOpacity
+        style={styles.iconContainer}
+        onPress={handleConfirmExplore}
+      >
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.iconContainer}>
+      <TouchableOpacity style={styles.iconContainer} onPress={() => navigation.navigate('favourites')}>
         <Ionicons name="heart-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Favourites</Text>
+        
       </TouchableOpacity>
       <TouchableOpacity style={styles.iconContainer}>
         <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />

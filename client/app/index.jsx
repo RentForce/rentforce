@@ -1,10 +1,10 @@
-import * as React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ProfileScreen from "./profile/ProfileScreen.jsx";
 import PersonalScreen from "./profile/PersonalScreen.jsx";
-import ShowProfile from "./profile/showprofile"
-import CreatePost from './profile/CreatePost.jsx';
+import ShowProfile from "./profile/showprofile";
+import CreatePost from "./profile/CreatePost.jsx";
 
 import Login from './Auth/Login';
 import SignUpScreen from './Auth/Sign-up';
@@ -13,8 +13,10 @@ import ResetPassword from './Auth/reset';
 import Favourites from './favourites/Favourites.jsx';
 import Home from "./Home/Home.jsx";
 import HomeDetails from "./Home/HomeDetails.jsx";
+import BookingPage from "./Home/BookingPage"; // Adjust the path as necessary
+// import Login from './Auth/Login';
+// import SignUpScreen from './Auth/Sign-up';
 const Stack = createNativeStackNavigator();
-
 function App() {
   return (
 <Stack.Navigator>
@@ -29,6 +31,7 @@ function App() {
         <Stack.Screen name="showprofile" component={ShowProfile} options={{ headerShown: false }} />
         <Stack.Screen name="CreatePost" component={CreatePost} options={{ headerShown: false }} />
         <Stack.Screen name="HomeDetails" component={HomeDetails} options={{ headerShown: false }} />
+        <Stack.Screen name="Booking" component={BookingPage} options={{ headerShown: false }}/>
 
         
 
