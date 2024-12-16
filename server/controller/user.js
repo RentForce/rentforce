@@ -252,10 +252,12 @@ const createPost = async (req, res) => {
             return res.status(401).json({ message: 'User not authenticated' });
         }
 
+
+
         const post = await prisma.post.create({
             data: {
                 title,
-                images: images ? (typeof images === 'string' ? JSON.parse(images) : images) : [], 
+                images: uploadedImages, // Use uploaded image URLs
                 description,
                 location: location || '',
                 price: parseFloat(price),

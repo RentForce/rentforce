@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, TextInput, ScrollView } from 'react-native';
 import axios from 'axios';
-import { Ionicons } from '@expo/vector-icons';
 
-const API_BASE_URL = 'http://192.168.11.149:5000'; 
+
+const API_BASE_URL = 'http://192.168.225.193:5000'; 
 
 const ShowProfile = ({ navigation, route }) => {
   const userId = route.params?.userId;
@@ -38,7 +38,7 @@ console.log(userId);
         });
 
         if (response.data) {
-          setUserData({ ...response.data, trips: dummyTrips }); // Include dummy trips
+          setUserData({ ...response.data, trips: dummyTrips }); 
           setBio(response.data.bio || '');
         } else {
           throw new Error('No data received');
@@ -89,7 +89,7 @@ console.log(userId);
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.editButton} 
@@ -119,13 +119,9 @@ console.log(userId);
         <Text style={styles.name}>
           {userData?.firstName} {userData?.lastName}
         </Text>
-        <TextInput
-          style={styles.bioInput}
-          value={bio}
-          onChangeText={setBio}
-          placeholder="Enter your bio"
-          multiline
-        />
+        <View style={styles.bioContainer}>
+          <Text style={styles.bioText}>{bio}</Text>
+        </View>
       </View>
       <View style={styles.confirmationSection}>
         <Text style={styles.confirmationTitle}>Confirmed Details</Text>
@@ -159,7 +155,7 @@ console.log(userId);
           </View>
         )}
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -278,14 +274,17 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: 'bold',
   },
-  bioInput: {
-    borderColor: '#007bff',
+  bioContainer: {
+    backgroundColor: '#ffffff',
+    borderColor: '#000000',
     borderWidth: 1,
     borderRadius: 10,
     padding: 12,
     marginVertical: 10,
-    height: 100,
-    backgroundColor: '#f0f8ff',
+  },
+  bioText: {
+    fontSize: 16,
+    color: '#333',
   },
 });
 
