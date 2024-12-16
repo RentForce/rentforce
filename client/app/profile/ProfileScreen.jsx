@@ -19,7 +19,7 @@ console.log(route.params , "sss");
     } else {
       const fetchUserData = async () => {
         try {
-          const response = await axios.get(`http://192.168.11.149:5000/user/${userId}`);
+          const response = await axios.get(`http://192.168.103.6:5000/user/${userId}`);
           setUserData(response.data);
           console.log(response , "salem");
         } catch (err) {
@@ -32,11 +32,11 @@ console.log(route.params , "sss");
 
   const handleLogout = () => {
  
-    navigation.navigate('Login');
+    navigation.navigate('login');
   };
 
   const handleNavigateToPersonalScreen = () => {
-    navigation.navigate('Screen2', { userId: userData.id });
+    navigation.navigate('personal', { userId: userData.id });
   };
  
 
@@ -50,7 +50,7 @@ console.log(route.params , "sss");
           />
          
         </View>
-        <Text style={styles.profileName} onPress={() => navigation.navigate('ShowProfile', { userId: userData.id })}>{`${userData.firstName} ${userData.lastName}`}</Text>    
+        <Text style={styles.profileName} onPress={() => navigation.navigate('showprofile', { userId: userData.id })}>{`${userData.firstName} ${userData.lastName}`}</Text>    
             <Text style={styles.profileEmail}>{userData.email}</Text>
       </View>
 

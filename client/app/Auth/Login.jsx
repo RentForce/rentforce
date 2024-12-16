@@ -258,12 +258,21 @@ const Login = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
+<<<<<<< HEAD
       const response = await axios.post("http://192.168.104.13:5000/user/login", {
+=======
+      const response = await axios.post("http://192.168.103.6:5000/user/login", {
+>>>>>>> a52c072902e69649e94340c9e7218b8d4ab5e98e
         email,
         password,
       });
 
+<<<<<<< HEAD
       const token = response.data.token;
+=======
+            console.log('Token successfully stored:', user);
+            navigation.navigate("profile", { updatedUser: user})}
+>>>>>>> a52c072902e69649e94340c9e7218b8d4ab5e98e
 
       await AsyncStorage.setItem('userToken', token);
 

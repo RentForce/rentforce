@@ -7,7 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 const CLOUDINARY_CLOUD_NAME = 'dfbrjaxu7'; 
 const CLOUDINARY_UPLOAD_PRESET = "ignmh24s"; 
 
-const API_BASE_URL = 'http://192.168.11.149:5000'; 
+const API_BASE_URL = 'http://192.168.103.6:5000'; 
 
 const DEFAULT_PROFILE_IMAGE = 'https://www.shutterstock.com/image-vector/user-icon-vector-trendy-flat-600nw-1720665448.jpg';
 
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   editProfileButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#333333',
     padding: 15,
     borderRadius: 5,
     flexDirection: 'row',
@@ -350,17 +350,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   editProfileButtonText: {
-    color: 'white',
+    color: '#FFFFFF',
     marginLeft: 10,
   },
   logoutButton: {
-    backgroundColor: '#dc3545',
+    backgroundColor: '#FFFEFE',
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
   },
   logoutButtonText: {
-    color: 'white',
+    color: 'black',
     fontWeight: 'bold',
   },
   editButtonContainer: {
@@ -369,24 +369,24 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   saveButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#333333',
     padding: 10,
     borderRadius: 5,
     flex: 1,
     marginRight: 10,
   },
   saveButtonText: {
-    color: 'white',
+    color: '#FFFFFF',
     textAlign: 'center',
   },
   cancelButton: {
-    backgroundColor: '#6c757d',
+    backgroundColor: '#A9A9A9',
     padding: 10,
     borderRadius: 5,
     flex: 1,
   },
   cancelButtonText: {
-    color: 'white',
+    color: '#000000',
     textAlign: 'center',
   },
   bioInput: {
