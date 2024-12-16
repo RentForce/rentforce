@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const userRoutes = require("./routes/user");
 const postsRouter = require("./routes/posts");
+const morgan =require("morgan")
 const { PrismaClient } = require("@prisma/client");
 
 const app = express();
@@ -28,7 +29,7 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use(morgan())
 const PORT = process.env.PORT || 5000;
 
 // Mount user routes

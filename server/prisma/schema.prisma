@@ -13,7 +13,7 @@ model User {
   lastName      String?    
   email         String?    @unique
   password      String?    
-  phoneNumber   Int?       
+  phoneNumber  String? @unique
   image         String?    
   bio           String?    
   type          UserType?  

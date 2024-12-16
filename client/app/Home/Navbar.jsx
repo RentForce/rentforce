@@ -17,9 +17,10 @@ const Navbar = ({ navigation }) => {
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.iconContainer}>
+      <TouchableOpacity style={styles.iconContainer} onPress={() => navigation.navigate('favourites')}>
         <Ionicons name="heart-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Favourites</Text>
+        
       </TouchableOpacity>
       <TouchableOpacity style={styles.iconContainer}>
         <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
