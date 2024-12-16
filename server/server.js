@@ -29,7 +29,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // Mount user routes
 app.use("/user", userRoutes);

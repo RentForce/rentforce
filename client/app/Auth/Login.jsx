@@ -14,7 +14,7 @@ const Login = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://192.168.11.149:5000/user/login", {
+      const response = await axios.post("http://192.168.103.6:5000/user/login", {
         email,
         password,
       });
@@ -27,7 +27,7 @@ const Login = ({ navigation }) => {
             await AsyncStorage.setItem('userData', JSON.stringify(user));
 
             console.log('Token successfully stored:', user);
-            navigation.navigate("Screen1", { updatedUser: user})}
+            navigation.navigate("profile", { updatedUser: user})}
 
             return { success: true, user };
 

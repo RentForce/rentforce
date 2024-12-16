@@ -88,7 +88,7 @@ const Home = ({ navigation }) => {
   const fetchPostsByCategory = async (category) => {
     setLoading(true);
     try {
-      const baseUrl = "http://192.168.179.93:3000";
+      const baseUrl = "http://192.168.103.6:3000";
       const endpoint = searchQuery
         ? `${baseUrl}/posts/all`
         : `${baseUrl}/posts/${category}`;
