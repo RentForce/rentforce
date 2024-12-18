@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.0.1",
+    "@prisma/client": "^6.1.0",
     "@vonage/server-sdk": "^3.19.2",
     "agora-access-token": "^2.0.4",
     "axios": "^1.7.9",
@@ -19,15 +19,18 @@
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "expo-av": "^15.0.1",
+    "expo-file-system": "^18.0.6",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.16",
     "nodemon": "^3.1.7",
     "socket.io": "^4.8.1",
     "twilio": "^5.3.7"
   },
   "devDependencies": {
-    "prisma": "^6.0.1"
+    "prisma": "^6.1.0"
   }
 }
