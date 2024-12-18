@@ -5,16 +5,14 @@ import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-
 const Login = ({ navigation }) => {
-  const [email, setEmail] = useState(""); 
-  const [password, setPassword] = useState(""); 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
-
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://192.168.51.193:5000/user/login", {
+      const response = await axios.post("http://192.168.103.15:5000/user/login", {
         email,
         password,
       });
@@ -29,18 +27,17 @@ const Login = ({ navigation }) => {
             console.log('Token successfully stored:', user);
             navigation.navigate("Home", { updatedUser: user})}
 
-            return { success: true, user };
+await AsyncStorage.setItem('userId', response.data.user.id.toString(),
+);
+await AsyncStorage.setItem("token", token);
+await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
+      Alert.alert("Login Successful", "Welcome");
 
-        
-   
-     
+      navigation.navigate('Home');
     } catch (error) {
-      console.error('Login Error:', error.response ? error.response.data : error);
-      return { 
-          success: false, 
-          message: error.response?.data?.message || 'Login failed' 
-      };
-      }
+      console.error('Error:', error);
+      Alert.alert("Login Failed", "Please check your credentials and try again.");
+    }
   };
 
 
@@ -61,7 +58,9 @@ const Login = ({ navigation }) => {
             placeholder="Email"
             style={styles.input}
             value={email}
-            onChangeText={setEmail} 
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
         </View>
         <Text style={styles.inputLabel}>Password</Text>
@@ -72,7 +71,7 @@ const Login = ({ navigation }) => {
             secureTextEntry={!passwordVisible}
             style={styles.input}
             value={password}
-            onChangeText={setPassword} 
+            onChangeText={setPassword}
           />
           <FontAwesome
             name={passwordVisible ? "eye-slash" : "eye"}
@@ -81,7 +80,9 @@ const Login = ({ navigation }) => {
             onPress={() => setPasswordVisible(!passwordVisible)}
           />
         </View>
-        <Text style={styles.forgotPassword}>Forgot Password?</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('forget')}>
+          <Text style={styles.forgotPassword}>Forgot Password?</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.button} onPress={()=> {handleLogin() }}>
           <Text style={styles.buttonText}>Sign In</Text>
@@ -90,7 +91,7 @@ const Login = ({ navigation }) => {
           <Text style={styles.socialLoginText}>Or continue with</Text>
           <View style={styles.socialIcons}>
             <View style={styles.iconBox}>
-              <FontAwesome name="google" size={30} color="white" style={styles.socialIcon} />
+              <FontAwesome name="google" size={30} color="white" style={styles.socialIcon}  />
             </View>
             <View style={styles.iconBox}>
               <FontAwesome name="apple" size={30} color="white" style={styles.socialIcon} />

@@ -20,7 +20,7 @@ console.log(route.params , "sss");
     } else {
       const fetchUserData = async () => {
         try {
-          const response = await axios.get(`http://192.168.51.193:5000/user/${userId}`);
+          const response = await axios.get(`http://192.168.103.15:5000/user/${userId}`);
           setUserData(response.data);
           console.log(response , "salem");
         } catch (err) {

@@ -86,14 +86,14 @@ const BookingPage = ({ navigation }) => {
 
     // Prepare the booking details
     const bookingDetails = {
-      guestEmail: "rtimim2003@gmail.com", // Replace with the actual guest email
+      guestEmail: "yassine2904@gmail.com", // Replace with the actual guest email
       hostEmail: "mejrisaif2020@gmail.com", // Replace with the actual host email
       houseDetails: "House details here", // Replace with actual house details
       price: totalPayment, // Use the calculated total payment
     };
 
     try {
-      const response = await fetch('http://192.168.51.193:5000/confirm-booking', {
+      const response = await fetch('http://192.168.103.15:5000/confirm-booking', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

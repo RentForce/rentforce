@@ -6,6 +6,7 @@ const Navbar = ({ navigation, userId }) => {
   const handleConfirmExplore = () => {
     console.log("Navigating to Home");
     navigation.navigate("Home");
+
   };
 
   return (
@@ -17,14 +18,15 @@ const Navbar = ({ navigation, userId }) => {
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.iconContainer}>
+      <TouchableOpacity style={styles.iconContainer} onPress={() => navigation.navigate('favourites')}>
         <Ionicons name="heart-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Favourites</Text>
+        
       </TouchableOpacity>
-      <TouchableOpacity style={styles.iconContainer}>
+      <TouchableOpacity style={styles.iconContainer} onPress={  ()=>  navigation.navigate("ChatSelectionScreen")}>
         <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
         <View style={styles.notificationDot} />
-        <Text style={styles.text}>Inbox</Text>
+        <Text style={styles.text}  >Inbox</Text>
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.iconContainer} 

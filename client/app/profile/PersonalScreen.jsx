@@ -7,7 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 const CLOUDINARY_CLOUD_NAME = 'dfbrjaxu7'; 
 const CLOUDINARY_UPLOAD_PRESET = "ignmh24s"; 
 
-const API_BASE_URL = 'http://192.168.51.193:5000'; 
+const API_BASE_URL = 'http://192.168.103.15:5000'; 
 
 const DEFAULT_PROFILE_IMAGE = 'https://www.shutterstock.com/image-vector/user-icon-vector-trendy-flat-600nw-1720665448.jpg';
 

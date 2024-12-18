@@ -56,7 +56,7 @@ const CreatePost = () => {
             const uploadedImages = await Promise.all(uploadPromises);
 
             const response = await axios.post(
-                'http://192.168.51.193:5000/user/posts', 
+                'http://192.168.103.15:5000/user/posts', 
                 {
                     ...formData,
                     images: uploadedImages // Use uploaded image URLs
