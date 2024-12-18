@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     View,
     Text,
@@ -7,30 +7,79 @@ import {
     StyleSheet,
     Alert,
     TextInput,
+    KeyboardAvoidingView,
     Platform
 } from 'react-native';
-import { Audio } from 'expo-av';
-//import * as Permissions from 'expo-permissions';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-//import AgoraUIKit from 'agora-rn-uikit';
-import { AGORA_APP_ID } from '../../agoraConfig.js';
-import socket from './Socket.js';
-
-import * as FileSystem from 'expo-file-system'; 
 import { ActivityIndicator } from 'react-native';
+import io from 'socket.io-client';
 
 const UserSelectionScreen = ({ navigation }) => {
+    // State variables
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
     const [messageInput, setMessageInput] = useState('');
     const [messages, setMessages] = useState([]);
-    const [recording, setRecording] = useState();
-    const [videoCallActive, setVideoCallActive] = useState(false);
-    const [agoraTokens, setAgoraTokens] = useState(null);
+    
+    // Refs for socket and network management
+    const socketRef = useRef(null);
+    const isMountedRef = useRef(true);
 
+    // Initialize socket connection
+    useEffect(() => {
+        // Create socket connection
+        socketRef.current = io('http://192.168.103.4:5000', {
+            transports: ['websocket'],
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000
+        });
+
+        // Cleanup socket on component unmount
+        return () => {
+            isMountedRef.current = false;
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+        };
+    }, []);
+
+    // Effect for socket message handling
+    useEffect(() => {
+        if (!socketRef.current || !selectedUser) return;
+
+        // Join the specific chat room
+        socketRef.current.emit('join chat', selectedUser.chatId);
+
+        // Handle incoming messages
+        const handleNewMessage = (message) => {
+            console.log('Incoming message:', message);
+            
+            // Ensure message is for the current chat and component is mounted
+            if (isMountedRef.current && message.chatId === selectedUser.chatId) {
+                setMessages(prevMessages => {
+                    const isDuplicate = prevMessages.some(msg => 
+                        msg.id === message.id || 
+                        (msg.content === message.content && msg.sentAt === message.sentAt)
+                    );
+                    return isDuplicate 
+                        ? prevMessages 
+                        : [...prevMessages, message];
+                });
+            }
+        };
+
+        socketRef.current.on('new message', handleNewMessage);
+
+        return () => {
+            if (socketRef.current) {
+                socketRef.current.off('new message', handleNewMessage);
+            }
+        };
+    }, [selectedUser]);
 
     useEffect(() => {
         const fetchUsersAndCurrentUser = async () => {
@@ -50,20 +99,24 @@ const UserSelectionScreen = ({ navigation }) => {
                     user => user.id.toString() !== currentUserId
                 );
 
-                setUsers(filteredUsers);
-                setCurrentUser(currentUserData);
-                setLoading(false);
+                if (isMountedRef.current) {
+                    setUsers(filteredUsers);
+                    setCurrentUser(currentUserData);
+                    setLoading(false);
+                }
             } catch (error) {
                 console.error('Error fetching users', error);
                 Alert.alert('Error', 'Could not fetch user list');
-                setLoading(false);
+                if (isMountedRef.current) {
+                    setLoading(false);
+                }
             }
         };
 
         fetchUsersAndCurrentUser();
     }, []);
 
-const initiateChat = async (receiver) => {
+    const initiateChat = async (receiver) => {
         try {
             const token = await AsyncStorage.getItem('token');
             const userId = await AsyncStorage.getItem('userId');
@@ -84,6 +137,7 @@ const initiateChat = async (receiver) => {
 
             const newChat = response.data;
 
+            // Fetch existing messages for this chat
             const messagesResponse = await axios.get(
                 `http://192.168.103.4:5000/api/chat/messages/${newChat.id}`,
                 {
@@ -93,15 +147,18 @@ const initiateChat = async (receiver) => {
                 }
             );
 
-            setSelectedUser({
-                ...receiver,
-                chatId: newChat.id
-            });
+            // Update state with selected user and messages
+            if (isMountedRef.current) {
+                setSelectedUser({
+                    ...receiver,
+                    chatId: newChat.id
+                });
 
-            setMessages(messagesResponse.data.map(msg => ({
-                ...msg,
-                sender: msg.user
-            })));
+                setMessages(messagesResponse.data.map(msg => ({
+                    ...msg,
+                    sender: msg.user
+                })));
+            }
 
         } catch (error) {
             console.error('Detailed Error creating chat', error.response ? error.response.data : error);
@@ -114,33 +171,67 @@ const initiateChat = async (receiver) => {
         }
     };
 
-    useEffect(() => {
-        if (selectedUser && selectedUser.chatId) {
-            socket.emit('join chat', selectedUser.chatId);
-        }
+    // Send message function
+    const sendMessage = async () => {
+        if (!messageInput.trim() || !selectedUser) return;
 
-        // Listen for new messages
-        const handleIncomingMessage = (message) => {
-            // Ensure we only process messages for the current chat
-            if (selectedUser && message.chatId === selectedUser.chatId) {
-                setMessages(prevMessages => {
-                    // Prevent duplicate messages
-                    const messageExists = prevMessages.some(m => m.id === message.id);
-                    return messageExists
-                        ? prevMessages
-                        : [...prevMessages, message];
+        try {
+            const token = await AsyncStorage.getItem('token');
+            const userId = await AsyncStorage.getItem('userId');
+
+            const messageData = {
+                chatId: selectedUser.chatId.toString(),
+                userId: userId,
+                content: messageInput,
+                type: 'TEXT',
+                sender: {
+                    id: userId,
+                    firstName: currentUser.firstName,
+                    lastName: currentUser.lastName
+                }
+            };
+
+            const response = await axios.post('http://192.168.103.4:5000/api/chat/message',
+                messageData,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    }
+                }
+            );
+
+            const sentMessage = {
+                ...messageData,
+                id: response.data.id,
+                sentAt: new Date().toISOString(),
+            };
+
+            // Emit message via socket to all clients in the chat room
+            if (socketRef.current) {
+                socketRef.current.emit('send message', {
+                    ...sentMessage,
+                    chatId: selectedUser.chatId
                 });
             }
-        };
 
-        socket.on('new message', handleIncomingMessage);
+            // Update local messages
+            if (isMountedRef.current) {
+                setMessages(prevMessages => [...prevMessages, sentMessage]);
+                setMessageInput('');
+            }
+        } catch (error) {
+            console.error('Error sending message', error.response ? error.response.data : error);
+            Alert.alert('Error',
+                error.response && error.response.data.details
+                    ? error.response.data.details
+                    : 'Could not send message'
+            );
+        }
+    };
 
-        return () => {
-            socket.off('new message', handleIncomingMessage);
-        };
-    }, [selectedUser]);
-    
-const renderMessageItem = ({ item }) => {
+    // Render message item
+    const renderMessageItem = ({ item }) => {
         const isCurrentUserMessage =
             item.userId === currentUser?.id ||
             (item.user && item.user.id === currentUser?.id);
@@ -169,106 +260,8 @@ const renderMessageItem = ({ item }) => {
             </View>
         );
     };
-    const sendMessage = async () => {
-        if (!messageInput.trim()) return;
 
-        try {
-            const token = await AsyncStorage.getItem('token');
-            const userId = await AsyncStorage.getItem('userId');
-         
-
-            const messageData = {
-                chatId: selectedUser.chatId.toString(),
-                userId: userId,
-                content: messageInput,
-                type: 'TEXT',
-                sender: {
-                    id: userId,
-                   
-                }
-            };
-
-            const response = await axios.post('http://192.168.103.4:5000/api/chat/message',
-                messageData,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    }
-                }
-            );
-
-            const sentMessage = {
-                ...messageData,
-                id: response.data.id,
-                sentAt: new Date().toISOString(),
-                user: {
-                    id: userId,
-        
-                }
-            };
-
-            // Change to 'send message' to match server-side event
-            socket.emit('send message', {
-                ...sentMessage,
-                chatId: selectedUser.chatId
-            });
-
-            setMessages(prevMessages => [...prevMessages, sentMessage]);
-            setMessageInput('');
-        } catch (error) {
-            console.error('Error sending message', error.response ? error.response.data : error);
-            Alert.alert('Error',
-                error.response && error.response.data.details
-                    ? error.response.data.details
-                    : 'Could not send message'
-            );
-        }
-    };
-    
-    if (selectedUser) {
-        return (
-            <View style={styles.chatContainer}>
-                <View style={styles.chatHeader}>
-                    <TouchableOpacity onPress={() => setSelectedUser(null)}>
-                        <Text style={styles.backButton}>←</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.chatTitle}>
-                        {selectedUser.firstName} {selectedUser.lastName}
-                    </Text>
-                  
-              
-                </View>
-
-                <FlatList
-                    data={messages}
-                    renderItem={renderMessageItem}
-                    keyExtractor={(item, index) => index.toString()}
-                    style={styles.messagesList}
-                />
-
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.messageInput}
-                        value={messageInput}
-                        onChangeText={setMessageInput}
-                        placeholder="Type a message..."
-                        multiline
-                    />
-                    <TouchableOpacity
-                        style={styles.sendButton}
-                        onPress={sendMessage}
-                    >
-                        <Text style={styles.sendButtonText}>Send</Text>
-                    </TouchableOpacity>
-                
-                </View>
-            </View>
-        );
-    }
-
-
-
+    // Render user list item
     const renderUserItem = ({ item }) => (
         <TouchableOpacity
             style={styles.userItem}
@@ -283,7 +276,7 @@ const renderMessageItem = ({ item }) => {
         </TouchableOpacity>
     );
 
-    
+    // Loading state
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -293,11 +286,23 @@ const renderMessageItem = ({ item }) => {
         );
     }
 
+    // Chat view
     if (selectedUser) {
         return (
-            <View style={styles.chatContainer}>
+            <KeyboardAvoidingView 
+                style={styles.chatContainer}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+            >
                 <View style={styles.chatHeader}>
-                    <TouchableOpacity onPress={() => setSelectedUser(null)}>
+                    <TouchableOpacity onPress={() => {
+                        // Reset state when going back
+                        if (socketRef.current) {
+                            socketRef.current.emit('leave chat', selectedUser.chatId);
+                        }
+                        setSelectedUser(null);
+                        setMessages([]);
+                    }}>
                         <Text style={styles.backButton}>←</Text>
                     </TouchableOpacity>
                     <Text style={styles.chatTitle}>
@@ -308,8 +313,9 @@ const renderMessageItem = ({ item }) => {
                 <FlatList
                     data={messages}
                     renderItem={renderMessageItem}
-                    keyExtractor={(item, index) => index.toString()}
+                    keyExtractor={(item, index) => `${item.id || index}`}
                     style={styles.messagesList}
+                    inverted={false}
                 />
 
                 <View style={styles.inputContainer}>
@@ -327,10 +333,11 @@ const renderMessageItem = ({ item }) => {
                         <Text style={styles.sendButtonText}>Send</Text>
                     </TouchableOpacity>
                 </View>
-            </View>
+            </KeyboardAvoidingView>
         );
     }
 
+    // User list view
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Start a New Conversation</Text>

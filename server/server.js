@@ -120,15 +120,18 @@ io.on('connection', (socket) => {
     console.log('A user connected');
 
     socket.on('join chat', (chatId) => {
+  
+      
         socket.join(`chat:${chatId}`);
         console.log(`User joined chat: ${chatId}`);
     });
 
     socket.on('send message', (messageData) => {
-        io.to(`chat:${messageData.chatId}`).emit('new message', messageData);
-        console.log('Message sent to chat:', messageData.chatId);
-    });
-
+      // Emit the 'new message' event to all clients in the chat room
+      io.to(`chat:${messageData.chatId}`).emit('new message', messageData);
+      console.log('Message sent to chat:', messageData.chatId, messageData);
+  });
+  
     socket.on('disconnect', () => {
         console.log('User disconnected');
     });

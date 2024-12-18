@@ -4,6 +4,7 @@ const prisma = new PrismaClient()
 const jwt=require ('jsonwebtoken')
 const { RtcTokenBuilder, RtcRole } = require('agora-access-token');
 
+
 require('dotenv').config();
 
 const authMiddleware = (req, res, next) => {
@@ -279,6 +280,9 @@ const generateAgoraToken= (req, res) => {
 
   res.json({ token });
 }
+
+
+
 module.exports = {
   createChat,
   sendMessage,
@@ -287,5 +291,7 @@ module.exports = {
   getAllUsers,
   authMiddleware,
   createCallLog,
-generateAgoraToken
+generateAgoraToken,
+
+
 }
