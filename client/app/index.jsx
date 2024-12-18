@@ -5,7 +5,9 @@ import ProfileScreen from "./profile/ProfileScreen.jsx";
 import PersonalScreen from "./profile/PersonalScreen.jsx";
 import ShowProfile from "./profile/showprofile";
 import CreatePost from "./profile/CreatePost.jsx";
-
+import ChatSelectionScreen from './chat/ChatSelectionScreen.jsx';
+import Chat from '../app/chat/Chat.jsx';
+import ChatList from './chat/ChatList.jsx';
 import Login from './Auth/Login';
 import SignUpScreen from './Auth/Sign-up';
 import ForgetPassword from './Auth/Forget';
@@ -32,7 +34,19 @@ function App() {
         <Stack.Screen name="CreatePost" component={CreatePost} options={{ headerShown: false }} />
         <Stack.Screen name="HomeDetails" component={HomeDetails} options={{ headerShown: false }} />
         <Stack.Screen name="Booking" component={BookingPage} options={{ headerShown: false }}/>
-
+      
+        <Stack.Screen
+          name="ChatSelectionScreen"
+          component={ChatSelectionScreen}
+          options={{ title: 'Select User' }}
+        />
+        <Stack.Screen
+          name="Chat"
+          component={Chat}
+          options={({ route }) => ({
+            title: `Chat with ${route.params?.receiverName || 'User'}`,
+          })}
+        />
         
 
 

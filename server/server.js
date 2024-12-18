@@ -1,68 +1,112 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const userRoutes = require("./routes/user");
-const postsRouter = require("./routes/posts");
-const morgan =require("morgan")
-const { PrismaClient } = require("@prisma/client");
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { PrismaClient } = require('@prisma/client');
+
+dotenv.config();
+
+const chatRoutes = require('./routes/chat');
+const userRoutes = require('./routes/user');
+
+const prisma = new PrismaClient();
 
 const app = express();
 
-// Create Prisma client
-const prisma = new PrismaClient();
 
-// Enhanced CORS configuration
-app.use(
-  cors({
-    origin: [
-      "http://localhost:19000",
-      "http://localhost:19001",
-      "http://localhost:19002",
-      "exp://192.168.11.118:19000", // Expo specific
-      "exp://192.168.11.118:19001",
-      "exp://192.168.11.118:19002",
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+const corsOptions = {
+  origin: [
+      'http://localhost:19000',
+      'http://localhost:19001',
+      'http://localhost:19002',
+     
+      'http://localhost:8081',
+      'exp://localhost:19000',  // Add this
+      'exp://localhost:19001',  // Add this
+      'exp://localhost:19002',  // Add this
+      'http://192.168.11.118:19000', // Add your actual IP address variations
+      'http://192.168.11.118:19001',
+      'http://192.168.11.118:19002'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
 
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan())
-const PORT = process.env.PORT || 5000;
 
-// Mount user routes
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+      origin: corsOptions.origin,
+      methods: corsOptions.methods,
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true
+  },
+  transports: ['websocket', 'polling'] // Explicitly set transports
+});
+
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
+app.use('/api/chat', chatRoutes);
 app.use("/user", userRoutes);
-app.use("/posts", postsRouter);
-// Error handling middleware
+
+io.on('connection', (socket) => {
+    console.log('A user connected');
+
+    socket.on('join chat', (chatId) => {
+        socket.join(`chat:${chatId}`);
+        console.log(`User joined chat: ${chatId}`);
+    });
+
+    socket.on('send message', (messageData) => {
+        io.to(`chat:${messageData.chatId}`).emit('new message', messageData);
+        console.log('Message sent to chat:', messageData.chatId);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
+    });
+
+    socket.on('error', (error) => {
+        console.error('Socket error:', error);
+    });
+
+    socket.on('video call invite', (data) => {
+        socket.to(data.to).emit('incoming call', {
+            from: data.from,
+            channelName: data.channelName
+
+        });
+    });
+});
+
 app.use((err, req, res, next) => {
-  console.error("Unhandled Error:", err);
-  res.status(500).json({
-    message: "Internal server error",
-    error: process.env.NODE_ENV === "production" ? {} : err.message,
-  });
+    console.error('Unhandled Error:', err);
+    res.status(500).json({
+        message: 'Internal server error',
+        error: process.env.NODE_ENV !== 'production' ? err.message : {}
+    });
 });
 
-const server = app.listen(PORT, async () => {
-  console.log(`Listening on port ${PORT}`);
-
-  // Verify database connection
-  try {
-    await prisma.$connect();
-    console.log("Database connection verified");
-  } catch (error) {
-    console.error("Database connection failed:", error);
-  }
+const PORT = process.env.PORT || 5000;
+const serverInstance = server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
 
-// Graceful shutdown
-process.on("SIGINT", async () => {
-  await prisma.$disconnect();
-  server.close(() => {
-    console.log("Server closed");
-    process.exit(0);
-  });
+process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received: closing HTTP server');
+    serverInstance.close(() => {
+        console.log('HTTP server closed');
+        prisma.$disconnect();
+        process.exit(0);
+    });
 });
 
-module.exports = app;
+module.exports = { app, server: serverInstance, io };

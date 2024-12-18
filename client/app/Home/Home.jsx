@@ -90,7 +90,7 @@ const Home = ({ navigation }) => {
         const decodedToken = jwtDecode(token);
         const userId = decodedToken.id;
 
-        const response = await axios.get(`http://192.168.104.13:5000/user/favourites/${userId}`, {
+        const response = await axios.get(`http://172.29.32.1:5000/user/favourites/${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -117,7 +117,7 @@ const Home = ({ navigation }) => {
       const userId = decodedToken.id;
 
       // Add to favorites on the server
-      await axios.post(`http://192.168.104.13:5000/user/favourites`, {
+      await axios.post(`http://172.29.32.1:5000/user/favourites`, {
         userId,
         postId,
       }, {
@@ -147,7 +147,7 @@ const Home = ({ navigation }) => {
       const userId = decodedToken.id;
 
       // Remove from favorites on the server
-      await axios.delete(`http://192.168.104.13:5000/user/favourites`, {
+      await axios.delete(`http://172.29.32.1:5000/user/favourites`, {
         data: { userId, postId },
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -196,7 +196,7 @@ const Home = ({ navigation }) => {
   const fetchPostsByCategory = async (category) => {
     setLoading(true);
     try {
-      const baseUrl = "http://192.168.104.13:5000";
+      const baseUrl = "http:// 172.29.32.1:5000";
       const endpoint = searchQuery
         ? `${baseUrl}/posts/all`
         : `${baseUrl}/posts/${category}`;
