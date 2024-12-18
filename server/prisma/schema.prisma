@@ -25,6 +25,8 @@ model User {
   notifications Notification[]
   chat          Chat[]     
   messages      Message[]  
+    bookings      Booking[]  // New relation to Booking model
+
 
   @@unique([id])
 }
@@ -49,10 +51,24 @@ model Post {
   roomConfiguration  String?
   houseRules         String?
   safetyProperty     String?
+    bookings          Booking[]  // New relation to Booking model
+
 
   @@unique([id])
 }
+model Booking {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  postId        Int
+  startDate     DateTime
+  endDate       DateTime
+  totalPrice    Float
+  numberOfGuests Int
+  status        BookingStatus
 
+  user          User     @relation(fields: [userId], references: [id])
+  post          Post     @relation(fields: [postId], references: [id])
+}
 model Calendar {
   id      Int       @id @default(autoincrement())
   date    DateTime? 
@@ -178,4 +194,10 @@ enum PostCategory {
   desert
   luxe
   islands
+}
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  CANCELLED
 }
