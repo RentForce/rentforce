@@ -12,6 +12,8 @@ import {
   FlatList,
   Alert,
 } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
+
 import {
   Ionicons,
   FontAwesome5,
@@ -21,7 +23,6 @@ import {
 } from "@expo/vector-icons";
 import Navbar from "./Navbar";
 import axios from "axios";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 
 
@@ -64,6 +65,8 @@ const categoryIcons = {
 };
 
 const Home = ({ navigation }) => {
+  const [userId, setUserId] = useState(null); 
+
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -78,6 +81,23 @@ const Home = ({ navigation }) => {
   const searchInputRef = useRef(null);
   const scrollViewRef = useRef(null);
 
+ useEffect(() => {
+  const fetchUserId = async () => {
+    try {
+      const storedUserId = await AsyncStorage.getItem('userId');
+      if (storedUserId) {
+        setUserId(storedUserId);
+        console.log('Retrieved userId from local storage:', storedUserId);
+      } else {
+        console.error('No userId found in local storage');
+      }
+    } catch (error) {
+      console.error('Error retrieving userId from local storage:', error);
+    }
+  };
+
+  fetchUserId();
+}, []);
   useEffect(() => {
     // Fetch initial favorite posts from the server
     const fetchFavorites = async () => {
@@ -90,7 +110,7 @@ const Home = ({ navigation }) => {
         const decodedToken = jwtDecode(token);
         const userId = decodedToken.id;
 
-        const response = await axios.get(`http://172.29.32.1:5000/user/favourites/${userId}`, {
+        const response = await axios.get(`http://192.168.103.15:5000/user/favourites/${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -117,7 +137,7 @@ const Home = ({ navigation }) => {
       const userId = decodedToken.id;
 
       // Add to favorites on the server
-      await axios.post(`http://172.29.32.1:5000/user/favourites`, {
+      await axios.post(`http://192.168.103.15:5000/user/favourites`, {
         userId,
         postId,
       }, {
@@ -147,7 +167,7 @@ const Home = ({ navigation }) => {
       const userId = decodedToken.id;
 
       // Remove from favorites on the server
-      await axios.delete(`http://172.29.32.1:5000/user/favourites`, {
+      await axios.delete(`http://192.168.103.15:5000/user/favourites`, {
         data: { userId, postId },
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -196,7 +216,7 @@ const Home = ({ navigation }) => {
   const fetchPostsByCategory = async (category) => {
     setLoading(true);
     try {
-      const baseUrl = "http:// 172.29.32.1:5000";
+      const baseUrl = "http://192.168.103.15:5000";
       const endpoint = searchQuery
         ? `${baseUrl}/posts/all`
         : `${baseUrl}/posts/${category}`;

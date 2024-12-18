@@ -2,16 +2,14 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Use environment variables from expo-constants instead of dotenv
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key";
 
 const prisma = new PrismaClient({
-    // Remove log configuration as it might not be compatible with Expo
 });
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const token = authHeader && authHeader.split(' ')[1];
 
     console.log('Received Authorization Header:', authHeader);
     console.log('Extracted Token:', token);
@@ -31,7 +29,7 @@ const authenticateToken = (req, res, next) => {
                 error: err.message 
             });
         }
-        req.user = user; // Attach the user to the request object
+        req.user = user; 
         next();
     });
 };
@@ -257,7 +255,7 @@ const createPost = async (req, res) => {
         const post = await prisma.post.create({
             data: {
                 title,
-                images: uploadedImages, // Use uploaded image URLs
+                images: uploadedImages, 
                 description,
                 location: location || '',
                 price: parseFloat(price),
@@ -284,21 +282,18 @@ const addToFavourites = async (req, res) => {
         if(!userId &&!postId){
             return   res.status(403).send("userId is required")
      }
-        // Check if the user exists
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) {
             console.error(`User with ID ${userId} not found`);
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Check if the post exists
         const post = await prisma.post.findUnique({ where: { id: postId } });
         if (!post) {
             console.error(`Post with ID ${postId} not found`);
             return res.status(404).json({ message: 'Post not found' });
         }
 
-        // Add to favourites
         const favourite = await prisma.favourite.create({
             data: {
                 userId,
@@ -318,7 +313,6 @@ const removeFromFavourites = async (req, res) => {
     const { userId, postId } = req.body;
 
     try {
-        // Check if the favourite entry exists
         const favourite = await prisma.favourite.findUnique({
             where: {
                 userId_postId: {
@@ -332,7 +326,6 @@ const removeFromFavourites = async (req, res) => {
             return res.status(404).json({ message: 'Favourite not found' });
         }
 
-        // Remove from favourites
         await prisma.favourite.delete({
             where: {
                 userId_postId: {
@@ -353,29 +346,26 @@ const getFavouritePosts = async (req, res) => {
     const { userId } = req.params;
 
     try {
-        // Check if the user exists
         const user = await prisma.user.findUnique({ where: { id: Number(userId) } });
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Retrieve favourite posts with images
         const favouritePosts = await prisma.favourite.findMany({
             where: { userId: Number(userId) },
             include: {
                 post: {
                     include: {
-                        images: true, // Include the images for each post
+                        images: true,
                     },
                 },
             },
         });
 
-        // Extract post details from the favourite entries
         const posts = favouritePosts.map(fav => ({
             ...fav.post,
-            image: fav.post.images.length > 0 ? fav.post.images[0].url : null, // Use the first image URL
+            image: fav.post.images.length > 0 ? fav.post.images[0].url : null, 
         }));
 
         res.status(200).json(posts);

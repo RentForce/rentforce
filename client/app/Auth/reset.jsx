@@ -17,7 +17,7 @@ function ResetPassword({ route, navigation }) {
         }
 
         try {
-            const response = await fetch('http://192.168.104.13:5000/user/verify-code', {
+            const response = await fetch('http://192.168.103.15:5000/user/verify-code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ function ResetPassword({ route, navigation }) {
         }
 
         try {
-            const response = await fetch('http://192.168.104.13:5000/user/update-password', {
+            const response = await fetch('http://192.168.103.15:5000/user/update-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

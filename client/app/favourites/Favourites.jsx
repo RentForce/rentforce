@@ -24,7 +24,7 @@ const Favourites = ({ navigation }) => {
         const decodedToken = jwtDecode(token);
         const userId = decodedToken.id;
 
-        const response = await axios.get(`http://192.168.104.13:5000/user/favourites/${userId}`, {
+        const response = await axios.get(`http://192.168.103.15:5000/user/favourites/${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ const Favourites = ({ navigation }) => {
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.id;
 
-      await axios.delete(`http://192.168.104.13:5000/user/favourites`, {
+      await axios.delete(`http://192.168.103.15:5000/user/favourites`, {
         data: { userId, postId },
         headers: {
           'Authorization': `Bearer ${token}`,
