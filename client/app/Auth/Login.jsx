@@ -258,15 +258,18 @@ const Login = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://192.168.104.13:5000/user/login", {
+      const response = await axios.post("http://192.168.103.4:5000/user/login", {
         email,
         password,
       });
 
       const token = response.data.token;
+console.log(response.data);
 
-      await AsyncStorage.setItem('userToken', token);
-
+await AsyncStorage.setItem('userId', response.data.user.id.toString(),
+);
+await AsyncStorage.setItem("token", token);
+await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
       Alert.alert("Login Successful", "Welcome");
 
       navigation.navigate('Home');
