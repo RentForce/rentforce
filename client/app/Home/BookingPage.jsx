@@ -15,6 +15,7 @@ import { Ionicons, AntDesign } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import { Picker } from "@react-native-picker/picker";
 import * as Animatable from "react-native-animatable";
+import Navbar from "./Navbar";
 import axios from "axios";
 
 // Define getDatesInRange helper function OUTSIDE the component
@@ -93,38 +94,41 @@ const BookingPage = ({ navigation, route }) => {
 
         if (response.data && Array.isArray(response.data)) {
           response.data.forEach((booking) => {
-            const start = new Date(booking.startDate);
-            const end = new Date(booking.endDate);
+            if (booking.postId === post.id) {
+              const start = new Date(booking.startDate);
+              const end = new Date(booking.endDate);
 
-            for (
-              let date = new Date(start);
-              date <= end;
-              date.setDate(date.getDate() + 1)
-            ) {
-              const dateString = date.toISOString().split("T")[0];
-              bookedDatesObj[dateString] = {
-                disabled: true,
-                disableTouchEvent: true,
-                textColor: "#BBBBBB",
-                selectedColor: "#F0F0F0",
-                marked: true,
-                dotColor: "#FF6B6B",
-                customStyles: {
-                  text: {
-                    textDecorationLine: "line-through",
-                    textDecorationColor: "#FF6B6B",
+              for (
+                let date = new Date(start);
+                date <= end;
+                date.setDate(date.getDate() + 1)
+              ) {
+                const dateString = date.toISOString().split("T")[0];
+                bookedDatesObj[dateString] = {
+                  disabled: true,
+                  disableTouchEvent: true,
+                  textColor: "#BBBBBB",
+                  selectedColor: "#F0F0F0",
+                  marked: true,
+                  dotColor: "#FF6B6B",
+                  customStyles: {
+                    text: {
+                      textDecorationLine: "line-through",
+                      textDecorationColor: "#FF6B6B",
+                    },
                   },
-                },
-              };
+                };
+              }
             }
           });
-        } else {
-          console.log("Invalid response data format:", response.data);
         }
 
         setBookedDates(bookedDatesObj);
       } catch (error) {
-        console.error("Error fetching booked dates:", error);
+        console.error(
+          `Error fetching booked dates for post ${post.id}:`,
+          error
+        );
         if (error.response) {
           console.error("Error response:", error.response.data);
         }
@@ -417,9 +421,244 @@ const BookingPage = ({ navigation, route }) => {
                   setFormData((prev) => ({ ...prev, country: itemValue }))
                 }
               >
-                <Picker.Item label="Select Your Country" value="" />
+                <Picker.Item
+                  label="   Select Your Country"
+                  value=""
+                  style={styles.pickerPlaceholder}
+                />
+                <Picker.Item label="Afghanistan" value="Afghanistan" />
+                <Picker.Item label="Albania" value="Albania" />
+                <Picker.Item label="Algeria" value="Algeria" />
+                <Picker.Item label="Andorra" value="Andorra" />
+                <Picker.Item label="Angola" value="Angola" />
+                <Picker.Item
+                  label="Antigua and Barbuda"
+                  value="Antigua and Barbuda"
+                />
+                <Picker.Item label="Argentina" value="Argentina" />
+                <Picker.Item label="Armenia" value="Armenia" />
+                <Picker.Item label="Australia" value="Australia" />
+                <Picker.Item label="Austria" value="Austria" />
+                <Picker.Item label="Azerbaijan" value="Azerbaijan" />
+                <Picker.Item label="Bahamas" value="Bahamas" />
+                <Picker.Item label="Bahrain" value="Bahrain" />
+                <Picker.Item label="Bangladesh" value="Bangladesh" />
+                <Picker.Item label="Barbados" value="Barbados" />
+                <Picker.Item label="Belarus" value="Belarus" />
+                <Picker.Item label="Belgium" value="Belgium" />
+                <Picker.Item label="Belize" value="Belize" />
+                <Picker.Item label="Benin" value="Benin" />
+                <Picker.Item label="Bhutan" value="Bhutan" />
+                <Picker.Item label="Bolivia" value="Bolivia" />
+                <Picker.Item
+                  label="Bosnia and Herzegovina"
+                  value="Bosnia and Herzegovina"
+                />
+                <Picker.Item label="Botswana" value="Botswana" />
+                <Picker.Item label="Brazil" value="Brazil" />
+                <Picker.Item label="Brunei" value="Brunei" />
+                <Picker.Item label="Bulgaria" value="Bulgaria" />
+                <Picker.Item label="Burkina Faso" value="Burkina Faso" />
+                <Picker.Item label="Burundi" value="Burundi" />
+                <Picker.Item label="Cabo Verde" value="Cabo Verde" />
+                <Picker.Item label="Cambodia" value="Cambodia" />
+                <Picker.Item label="Cameroon" value="Cameroon" />
+                <Picker.Item label="Canada" value="Canada" />
+                <Picker.Item
+                  label="Central African Republic"
+                  value="Central African Republic"
+                />
+                <Picker.Item label="Chad" value="Chad" />
+                <Picker.Item label="Chile" value="Chile" />
+                <Picker.Item label="China" value="China" />
+                <Picker.Item label="Colombia" value="Colombia" />
+                <Picker.Item label="Comoros" value="Comoros" />
+                <Picker.Item
+                  label="Congo, Democratic Republic of the"
+                  value="Congo, Democratic Republic of the"
+                />
+                <Picker.Item
+                  label="Congo, Republic of the"
+                  value="Congo, Republic of the"
+                />
+                <Picker.Item label="Costa Rica" value="Costa Rica" />
+                <Picker.Item label="Croatia" value="Croatia" />
+                <Picker.Item label="Cuba" value="Cuba" />
+                <Picker.Item label="Cyprus" value="Cyprus" />
+                <Picker.Item label="Czech Republic" value="Czech Republic" />
+                <Picker.Item label="Denmark" value="Denmark" />
+                <Picker.Item label="Djibouti" value="Djibouti" />
+                <Picker.Item label="Dominica" value="Dominica" />
+                <Picker.Item
+                  label="Dominican Republic"
+                  value="Dominican Republic"
+                />
+                <Picker.Item label="Ecuador" value="Ecuador" />
+                <Picker.Item label="Egypt" value="Egypt" />
+                <Picker.Item label="El Salvador" value="El Salvador" />
+                <Picker.Item
+                  label="Equatorial Guinea"
+                  value="Equatorial Guinea"
+                />
+                <Picker.Item label="Eritrea" value="Eritrea" />
+                <Picker.Item label="Estonia" value="Estonia" />
+                <Picker.Item label="Eswatini" value="Eswatini" />
+                <Picker.Item label="Ethiopia" value="Ethiopia" />
+                <Picker.Item label="Fiji" value="Fiji" />
+                <Picker.Item label="Finland" value="Finland" />
+                <Picker.Item label="France" value="France" />
+                <Picker.Item label="Gabon" value="Gabon" />
+                <Picker.Item label="Gambia" value="Gambia" />
+                <Picker.Item label="Georgia" value="Georgia" />
+                <Picker.Item label="Germany" value="Germany" />
+                <Picker.Item label="Ghana" value="Ghana" />
+                <Picker.Item label="Greece" value="Greece" />
+                <Picker.Item label="Grenada" value="Grenada" />
+                <Picker.Item label="Guatemala" value="Guatemala" />
+                <Picker.Item label="Guinea" value="Guinea" />
+                <Picker.Item label="Guinea-Bissau" value="Guinea-Bissau" />
+                <Picker.Item label="Guyana" value="Guyana" />
+                <Picker.Item label="Haiti" value="Haiti" />
+                <Picker.Item label="Honduras" value="Honduras" />
+                <Picker.Item label="Hungary" value="Hungary" />
+                <Picker.Item label="Iceland" value="Iceland" />
+                <Picker.Item label="India" value="India" />
+                <Picker.Item label="Indonesia" value="Indonesia" />
+                <Picker.Item label="Iran" value="Iran" />
+                <Picker.Item label="Iraq" value="Iraq" />
+                <Picker.Item label="Ireland" value="Ireland" />
+                <Picker.Item label="Italy" value="Italy" />
+                <Picker.Item label="Jamaica" value="Jamaica" />
+                <Picker.Item label="Japan" value="Japan" />
+                <Picker.Item label="Jordan" value="Jordan" />
+                <Picker.Item label="Kazakhstan" value="Kazakhstan" />
+                <Picker.Item label="Kenya" value="Kenya" />
+                <Picker.Item label="Kiribati" value="Kiribati" />
+                <Picker.Item label="Kuwait" value="Kuwait" />
+                <Picker.Item label="Kyrgyzstan" value="Kyrgyzstan" />
+                <Picker.Item label="Laos" value="Laos" />
+                <Picker.Item label="Latvia" value="Latvia" />
+                <Picker.Item label="Lebanon" value="Lebanon" />
+                <Picker.Item label="Lesotho" value="Lesotho" />
+                <Picker.Item label="Liberia" value="Liberia" />
+                <Picker.Item label="Libya" value="Libya" />
+                <Picker.Item label="Liechtenstein" value="Liechtenstein" />
+                <Picker.Item label="Lithuania" value="Lithuania" />
+                <Picker.Item label="Luxembourg" value="Luxembourg" />
+                <Picker.Item label="Madagascar" value="Madagascar" />
+                <Picker.Item label="Malawi" value="Malawi" />
+                <Picker.Item label="Malaysia" value="Malaysia" />
+                <Picker.Item label="Maldives" value="Maldives" />
+                <Picker.Item label="Mali" value="Mali" />
+                <Picker.Item label="Malta" value="Malta" />
+                <Picker.Item
+                  label="Marshall Islands"
+                  value="Marshall Islands"
+                />
+                <Picker.Item label="Mauritania" value="Mauritania" />
+                <Picker.Item label="Mauritius" value="Mauritius" />
+                <Picker.Item label="Mexico" value="Mexico" />
+                <Picker.Item label="Micronesia" value="Micronesia" />
+                <Picker.Item label="Moldova" value="Moldova" />
+                <Picker.Item label="Monaco" value="Monaco" />
+                <Picker.Item label="Mongolia" value="Mongolia" />
+                <Picker.Item label="Montenegro" value="Montenegro" />
+                <Picker.Item label="Morocco" value="Morocco" />
+                <Picker.Item label="Mozambique" value="Mozambique" />
+                <Picker.Item label="Myanmar" value="Myanmar" />
+                <Picker.Item label="Namibia" value="Namibia" />
+                <Picker.Item label="Nauru" value="Nauru" />
+                <Picker.Item label="Nepal" value="Nepal" />
+                <Picker.Item label="Netherlands" value="Netherlands" />
+                <Picker.Item label="New Zealand" value="New Zealand" />
+                <Picker.Item label="Nicaragua" value="Nicaragua" />
+                <Picker.Item label="Niger" value="Niger" />
+                <Picker.Item label="Nigeria" value="Nigeria" />
+                <Picker.Item label="North Macedonia" value="North Macedonia" />
+                <Picker.Item label="Norway" value="Norway" />
+                <Picker.Item label="Oman" value="Oman" />
+                <Picker.Item label="Pakistan" value="Pakistan" />
+                <Picker.Item label="Palau" value="Palau" />
+                <Picker.Item label="Panama" value="Panama" />
+                <Picker.Item
+                  label="Papua New Guinea"
+                  value="Papua New Guinea"
+                />
+                <Picker.Item label="Paraguay" value="Paraguay" />
+                <Picker.Item label="Peru" value="Peru" />
+                <Picker.Item label="Philippines" value="Philippines" />
+                <Picker.Item label="Poland" value="Poland" />
+                <Picker.Item label="Portugal" value="Portugal" />
+                <Picker.Item label="Qatar" value="Qatar" />
+                <Picker.Item label="Romania" value="Romania" />
+                <Picker.Item label="Russia" value="Russia" />
+                <Picker.Item label="Rwanda" value="Rwanda" />
+                <Picker.Item
+                  label="Saint Kitts and Nevis"
+                  value="Saint Kitts and Nevis"
+                />
+                <Picker.Item label="Saint Lucia" value="Saint Lucia" />
+                <Picker.Item
+                  label="Saint Vincent and the Grenadines"
+                  value="Saint Vincent and the Grenadines"
+                />
+                <Picker.Item label="Samoa" value="Samoa" />
+                <Picker.Item label="San Marino" value="San Marino" />
+                <Picker.Item
+                  label="Sao Tome and Principe"
+                  value="Sao Tome and Principe"
+                />
+                <Picker.Item label="Saudi Arabia" value="Saudi Arabia" />
+                <Picker.Item label="Senegal" value="Senegal" />
+                <Picker.Item label="Serbia" value="Serbia" />
+                <Picker.Item label="Seychelles" value="Seychelles" />
+                <Picker.Item label="Sierra Leone" value="Sierra Leone" />
+                <Picker.Item label="Singapore" value="Singapore" />
+                <Picker.Item label="Slovakia" value="Slovakia" />
+                <Picker.Item label="Slovenia" value="Slovenia" />
+                <Picker.Item label="Solomon Islands" value="Solomon Islands" />
+                <Picker.Item label="Somalia" value="Somalia" />
+                <Picker.Item label="South Africa" value="South Africa" />
+                <Picker.Item label="South Korea" value="South Korea" />
+                <Picker.Item label="South Sudan" value="South Sudan" />
+                <Picker.Item label="Spain" value="Spain" />
+                <Picker.Item label="Sri Lanka" value="Sri Lanka" />
+                <Picker.Item label="Sudan" value="Sudan" />
+                <Picker.Item label="Suriname" value="Suriname" />
+                <Picker.Item label="Sweden" value="Sweden" />
+                <Picker.Item label="Switzerland" value="Switzerland" />
+                <Picker.Item label="Syria" value="Syria" />
+                <Picker.Item label="Taiwan" value="Taiwan" />
+                <Picker.Item label="Tajikistan" value="Tajikistan" />
+                <Picker.Item label="Tanzania" value="Tanzania" />
+                <Picker.Item label="Thailand" value="Thailand" />
+                <Picker.Item label="Togo" value="Togo" />
+                <Picker.Item label="Tonga" value="Tonga" />
+                <Picker.Item
+                  label="Trinidad and Tobago"
+                  value="Trinidad and Tobago"
+                />
+                <Picker.Item label="Tunisia" value="Tunisia" />
+                <Picker.Item label="Turkey" value="Turkey" />
+                <Picker.Item label="Turkmenistan" value="Turkmenistan" />
+                <Picker.Item label="Tuvalu" value="Tuvalu" />
+                <Picker.Item label="Uganda" value="Uganda" />
+                <Picker.Item label="Ukraine" value="Ukraine" />
+                <Picker.Item
+                  label="United Arab Emirates"
+                  value="United Arab Emirates"
+                />
+                <Picker.Item label="United Kingdom" value="United Kingdom" />
                 <Picker.Item label="United States" value="United States" />
-                {/* Add more countries */}
+                <Picker.Item label="Uruguay" value="Uruguay" />
+                <Picker.Item label="Uzbekistan" value="Uzbekistan" />
+                <Picker.Item label="Vanuatu" value="Vanuatu" />
+                <Picker.Item label="Vatican City" value="Vatican City" />
+                <Picker.Item label="Venezuela" value="Venezuela" />
+                <Picker.Item label="Vietnam" value="Vietnam" />
+                <Picker.Item label="Yemen" value="Yemen" />
+                <Picker.Item label="Zambia" value="Zambia" />
+                <Picker.Item label="Zimbabwe" value="Zimbabwe" />
               </Picker>
             </View>
             {errorMessages.country && (
@@ -434,7 +673,7 @@ const BookingPage = ({ navigation, route }) => {
               style={styles.calendar}
               minDate={new Date().toISOString().split("T")[0]}
               theme={{
-                calendarBackground: "#fff",
+                calendarBackground: "#F9F9F9",
                 textSectionTitleColor: "#1A3C40",
                 selectedDayBackgroundColor: "#2D5A27",
                 selectedDayTextColor: "#fff",
@@ -449,6 +688,11 @@ const BookingPage = ({ navigation, route }) => {
                 textDayFontSize: 16,
                 textMonthFontSize: 16,
                 textDayHeaderFontSize: 14,
+                backgroundColor: "#FFFFFF",
+                dayStyle: {
+                  borderRadius: 10,
+                  margin: 2,
+                },
               }}
               onDayPress={handleDateRangeChange}
               markedDates={{
@@ -467,6 +711,25 @@ const BookingPage = ({ navigation, route }) => {
                       },
                     }
                   : {}),
+
+                // Add grey background for booked dates
+                ...Object.keys(bookedDates).reduce((acc, date) => {
+                  acc[date] = {
+                    disabled: true,
+                    disableTouchEvent: true,
+                    textColor: "#BBBBBB",
+                    selectedColor: "#D3D3D3", // Grey background for booked dates
+                    marked: true,
+                    dotColor: "#FF6B6B",
+                    customStyles: {
+                      text: {
+                        textDecorationLine: "line-through",
+                        textDecorationColor: "#FF6B6B",
+                      },
+                    },
+                  };
+                  return acc;
+                }, {}),
               }}
               markingType={"period"}
               disableAllTouchEventsForDisabledDays={true}
@@ -489,7 +752,7 @@ const BookingPage = ({ navigation, route }) => {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Number of guests"
+                  placeholder="Guests"
                   keyboardType="numeric"
                   value={formData.numberOfGuests}
                   onChangeText={(text) =>
@@ -554,6 +817,7 @@ const BookingPage = ({ navigation, route }) => {
 
       <ConfirmationModal />
       <SuccessModal />
+      <Navbar navigation={navigation} />
     </View>
   );
 };
@@ -561,37 +825,41 @@ const BookingPage = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F1EFEF",
   },
   scrollViewContent: {
     paddingBottom: 30,
+    paddingHorizontal: 15,
   },
   propertyPreview: {
     marginBottom: 20,
     borderRadius: 15,
     overflow: "hidden",
-    backgroundColor: "#fff",
-    elevation: 3,
+    backgroundColor: "#FFFFFF",
+    elevation: 5,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
   },
   propertyImage: {
     width: "100%",
-    height: 200,
+    height: 220,
+    borderBottomWidth: 2,
+    borderBottomColor: "#E8E8E8",
   },
   propertyDetails: {
     padding: 15,
+    backgroundColor: "#f9f9f9",
   },
   propertyPrice: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#1A3C40",
+    color: "#08232C",
   },
   propertyLocation: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 18,
+    color: "#08232C",
     marginTop: 5,
   },
   formContainer: {
@@ -599,11 +867,12 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     marginBottom: 20,
+    flexDirection: "column",
   },
   inputLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A3C40",
+    color: "#08232C",
     marginBottom: 8,
   },
   inputContainer: {
@@ -611,40 +880,66 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
     borderRadius: 10,
-    paddingHorizontal: 15,
     borderWidth: 1,
     borderColor: "#ddd",
+    height: 50,
+    paddingHorizontal: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   icon: {
     marginRight: 10,
+    position: "absolute",
+    left: 15,
   },
   input: {
     flex: 1,
     paddingVertical: 12,
+    paddingLeft: 40,
     fontSize: 16,
+    height: "100%",
   },
   pickerContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: "#ddd",
+    height: 70,
+    paddingHorizontal: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   picker: {
     flex: 1,
-    height: 50,
+    marginRight: -11,
+    height: "100%",
+    color: "#08232C",
+    fontSize: 16,
+    paddingLeft: 40,
+  },
+  pickerPlaceholder: {
+    alignItems: "center",
+    fontSize: 16,
+    color: "#999",
   },
   calendarSection: {
-    backgroundColor: "#fff",
+    backgroundColor: "pink",
     borderRadius: 10,
-    padding: 15,
+    padding: 10,
     marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#1A3C40",
+    color: "#08232C",
     marginBottom: 10,
   },
   calendar: {
@@ -658,7 +953,7 @@ const styles = StyleSheet.create({
     width: "48%",
   },
   summaryCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     borderRadius: 15,
     padding: 20,
     marginVertical: 20,
@@ -676,7 +971,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
   submitButton: {
-    backgroundColor: "#2D5A27",
+    backgroundColor: "#2C3E50",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
@@ -691,13 +986,13 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 20,
     width: "100%",
@@ -723,11 +1018,11 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 16,
-    color: "#666",
+    color: "#08232C",
   },
   detailValue: {
     fontSize: 16,
-    color: "#1A3C40",
+    color: "#08232C",
     fontWeight: "500",
   },
   totalRow: {
@@ -784,13 +1079,13 @@ const styles = StyleSheet.create({
   confirmationTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#1A3C40",
+    color: "#08232C",
     marginBottom: 10,
     textAlign: "center",
   },
   confirmationText: {
     fontSize: 16,
-    color: "#666",
+    color: "#08232C",
     textAlign: "center",
     marginBottom: 20,
     lineHeight: 22,
@@ -805,7 +1100,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#1A3C40",
+    color: "#08232C",
     marginBottom: 15,
   },
   summaryItem: {
@@ -817,7 +1112,7 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 16,
-    color: "#495057",
+    color: "#08232C",
   },
   summaryValue: {
     fontSize: 16,
@@ -838,9 +1133,20 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   errorText: {
-    color: "#ff3b30",
+    color: "#FF3B30",
     fontSize: 14,
     marginTop: 5,
+  },
+  navbar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  detailText: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 12,
   },
 });
 

@@ -162,20 +162,21 @@ const getBookedDates = async (req, res) => {
       where: {
         postId: Number(postId),
         status: {
-          in: ["CONFIRMED", "PENDING"], // Include both confirmed and pending bookings
+          in: ["CONFIRMED", "PENDING"],
         },
       },
       select: {
         startDate: true,
         endDate: true,
         status: true,
+        postId: true, // Add postId to verify the filtering
       },
     });
 
     // Return the bookings array directly
     res.status(200).json(bookings);
   } catch (error) {
-    console.error("Error fetching booked dates:", error);
+    console.error(`Error fetching booked dates for post ${postId}:`, error);
     res.status(500).json({
       message: "Error fetching booked dates",
       error: error.message,

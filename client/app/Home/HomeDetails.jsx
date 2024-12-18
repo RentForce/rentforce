@@ -28,6 +28,7 @@ const HomeDetails = ({ route, navigation }) => {
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [showMoreRules, setShowMoreRules] = useState(false);
 
   const imageSizes = [
     { width: "100%", height: 180 }, // Full width
@@ -237,16 +238,7 @@ const HomeDetails = ({ route, navigation }) => {
           </Text>
         </View>
         <View style={styles.detailsContainer}>
-          <View style={styles.detailRow}>
-            <View style={styles.checkInOut}>
-              <Text style={styles.detailLabel}>Check-in</Text>
-              <Text style={styles.detailValue}>Mon, 5 Dec</Text>
-            </View>
-            <View style={styles.checkInOut}>
-              <Text style={styles.detailLabel}>Check-out</Text>
-              <Text style={styles.detailValue}>Mon, 10 Dec</Text>
-            </View>
-          </View>
+          <View style={styles.detailRow}></View>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Rooms and Guests</Text>
             <Text style={styles.detailText}>1 room • 2 adults • 1 child</Text>
@@ -285,12 +277,6 @@ const HomeDetails = ({ route, navigation }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>House rules</Text>
             <Text style={styles.detailText}>{post.houseRules}</Text>
-            <Text style={styles.detailText}>Check-in: 6:00 PM - 11:00 PM</Text>
-            <Text style={styles.detailText}>Checkout before 9:00 AM</Text>
-            <Text style={styles.detailText}>2 guests maximum</Text>
-            <TouchableOpacity>
-              <Text style={styles.showMoreText}>Show more</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
@@ -460,7 +446,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 8,
-    textAlign: "left",
+    textAlign: "center",
   },
   detailsContainer: {
     padding: 16,
@@ -491,14 +477,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#F1EFEF",
   },
   sectionTitle: {
+    marginLeft: 6,
     fontWeight: "bold",
     fontSize: 16,
-    marginTop: 16,
+    marginTop: 7,
     marginBottom: 4,
   },
   detailText: {
+    marginLeft: 11,
     fontSize: 14,
     marginBottom: 8,
+    textAlign: "left",
   },
   roomConfig: {
     flexDirection: "row",
@@ -535,9 +524,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   showMoreText: {
-    color: "#007BFF",
-    fontSize: 14,
-    marginTop: 8,
+    marginLeft: 10,
+    color: "blue",
+    textDecorationLine: "underline",
   },
   review: {
     flexDirection: "row",
