@@ -8,13 +8,13 @@ export default function ForgetPassword({ navigation }) {
 
   const handleOptionSelect = (option) => {
     setSelectedOption(option);
-    setInputValue(''); // Clear input when switching options
+    setInputValue(''); 
   };
 
   const handleSubmit = async () => {
     if (selectedOption === 'email' || selectedOption === 'sms') {
       try {
-        const response = await fetch('http://192.168.104.13:5000/user/send-code', {
+        const response = await fetch('http://192.168.103.15:5000/user/send-code', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -28,7 +28,7 @@ export default function ForgetPassword({ navigation }) {
         console.log('Response status:', response.status);
 
         if (!response.ok) {
-          const errorData = await response.text(); // Read as text if not JSON
+          const errorData = await response.text();
           console.error('Error data:', errorData);
           throw new Error(errorData);
         }
@@ -36,7 +36,6 @@ export default function ForgetPassword({ navigation }) {
         const data = await response.json();
         Alert.alert('Success', `Code sent to ${inputValue}`);
         
-        // Navigate to ResetPassword screen
         navigation.navigate('reset', { [selectedOption]: inputValue });
       } catch (error) {
         console.error('Error:', error);

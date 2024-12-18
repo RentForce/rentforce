@@ -38,7 +38,7 @@ const ChatScreen = () => {
             setChatDetails({ chatId, userId, receiverId })
             
             // Fetch chat messages with token
-            const response = await axios.get(`http://192.168.103.4:5000/api/chats/messages/${chatId}`, {
+            const response = await axios.get(`http://192.168.103.15:5000/api/chats/messages/${chatId}`, {
               headers: { 
                 'Authorization': `Bearer ${token}` 
               }

@@ -40,7 +40,7 @@ const UserSelectionScreen = ({ navigation }) => {
                 const currentUserString = await AsyncStorage.getItem('currentUser');
                 const currentUserData = JSON.parse(currentUserString);
 
-                const response = await axios.get('http://192.168.103.4:5000/api/chat/users', {
+                const response = await axios.get('http://192.168.103.15:5000/api/chat/users', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },

@@ -41,7 +41,7 @@ const HomeDetails = ({ route, navigation }) => {
     const fetchImages = async () => {
       try {
         const response = await axios.get(
-          `http://192.168.104.13:5000/posts/images/${post.id}` // Replace X with your IP
+          `http://192.168.103.15:5000/posts/images/${post.id}` // Replace X with your IP
         );
         setImages(response.data);
         setLoading(false);
@@ -328,7 +328,7 @@ const HomeDetails = ({ route, navigation }) => {
           <View style={styles.spacer} />
         </View>
       </ScrollView>
-      <Navbar style={styles.navbar} />
+      <Navbar navigation={navigation} style={styles.navbar} />
       <ImageModal />
     </View>
   );

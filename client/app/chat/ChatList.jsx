@@ -25,7 +25,7 @@ const ChatListScreen = () => {
         if (storedUserId && token) {
           setCurrentUserId(storedUserId);
           
-          const response = await axios.get(`http://192.168.103.4:5000/api/chats/user/${storedUserId}`, {
+          const response = await axios.get(`http://192.168.103.15:5000/api/chats/user/${storedUserId}`, {
             headers: { 
               'Authorization': `Bearer ${token}` 
             }
