@@ -21,17 +21,17 @@ function App() {
   return (
     <Stack.Navigator>
       {/* <Stack.Screen name="favourites" component={Favourites} options={{ headerShown: false }} /> */}
-      {/* <Stack.Screen name="login" component={Login} options={{ headerShown: false }} /> */}
-      {/* <Stack.Screen name="forget" component={ForgetPassword} options={{ headerShown: false }} />
-        <Stack.Screen name="reset" component={ResetPassword} options={{ headerShown: false }} /> */}
-      {/* <Stack.Screen name="profile" component={ProfileScreen} options={{ headerShown: false }} />
+      {/* <Stack.Screen name="signup" component={SignUpScreen} options={{ headerShown: false }} />  */}
+      <Stack.Screen name="login" component={Login} options={{ headerShown: false }} />
+       {/* <Stack.Screen name="forget" component={ForgetPassword} options={{ headerShown: false }} /> */}
+        {/* <Stack.Screen name="reset" component={ResetPassword} options={{ headerShown: false }} />   */}
+      <Stack.Screen name="profile" component={ProfileScreen} options={{ headerShown: false }} />
         <Stack.Screen name="personal" component={PersonalScreen} options={{ headerShown: false }} />
         <Stack.Screen name="showprofile" component={ShowProfile} options={{ headerShown: false }} />
-        <Stack.Screen name="CreatePost" component={CreatePost} options={{ headerShown: false }} /> */}
-      {/* <Stack.Screen name="signup" component={SignUpScreen} options={{ headerShown: false }} /> */}
+        <Stack.Screen name="CreatePost" component={CreatePost} options={{ headerShown: false }} /> 
       <Stack.Screen
         name="Home"
-        component={Home}
+        component={Home} 
         options={{ headerShown: false }}
       />
       <Stack.Screen

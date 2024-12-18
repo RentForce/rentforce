@@ -14,7 +14,7 @@ const Login = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://192.168.103.6:5000/user/login", {
+      const response = await axios.post("http://192.168.51.193:5000/user/login", {
         email,
         password,
       });
@@ -23,11 +23,11 @@ const Login = ({ navigation }) => {
             // Securely store the token
             await AsyncStorage.setItem('userToken', token);
             
-            // Optional: Store user info if needed
+            // Optional: ²Store user info if needed
             await AsyncStorage.setItem('userData', JSON.stringify(user));
 
             console.log('Token successfully stored:', user);
-            navigation.navigate("profile", { updatedUser: user})}
+            navigation.navigate("Home", { updatedUser: user})}
 
             return { success: true, user };
 

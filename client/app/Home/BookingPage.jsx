@@ -80,9 +80,36 @@ const BookingPage = ({ navigation }) => {
     setErrorMessages({});
   };
 
-  const handleDone = () => {
+  const handleDone = async () => {
     setDialogVisible(false);
     setWelcomeVisible(true);
+
+    // Prepare the booking details
+    const bookingDetails = {
+      guestEmail: "rtimim2003@gmail.com", // Replace with the actual guest email
+      hostEmail: "mejrisaif2020@gmail.com", // Replace with the actual host email
+      houseDetails: "House details here", // Replace with actual house details
+      price: totalPayment, // Use the calculated total payment
+    };
+
+    try {
+      const response = await fetch('http://192.168.51.193:5000/confirm-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingDetails),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send booking confirmation emails');
+      }
+
+      const data = await response.json();
+      console.log(data.message); // Log success message
+    } catch (error) {
+      console.error('Error sending booking confirmation:', error);
+    }
   };
 
   const resetForm = () => {

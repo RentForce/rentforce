@@ -11,6 +11,8 @@ import {
   Modal,
   FlatList,
 } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
+
 import {
   Ionicons,
   FontAwesome5,
@@ -60,6 +62,8 @@ const categoryIcons = {
 };
 
 const Home = ({ navigation }) => {
+  const [userId, setUserId] = useState(null); 
+
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -73,6 +77,23 @@ const Home = ({ navigation }) => {
   const searchInputRef = useRef(null);
   const scrollViewRef = useRef(null);
 
+ useEffect(() => {
+  const fetchUserId = async () => {
+    try {
+      const storedUserId = await AsyncStorage.getItem('userId');
+      if (storedUserId) {
+        setUserId(storedUserId);
+        console.log('Retrieved userId from local storage:', storedUserId);
+      } else {
+        console.error('No userId found in local storage');
+      }
+    } catch (error) {
+      console.error('Error retrieving userId from local storage:', error);
+    }
+  };
+
+  fetchUserId();
+}, []);
   const focusSearchInput = () => {
     if (searchInputRef.current) {
       searchInputRef.current.focus();
@@ -93,7 +114,7 @@ const Home = ({ navigation }) => {
   const fetchPostsByCategory = async (category) => {
     setLoading(true);
     try {
-      const baseUrl = "http://192.168.126.93:5000";
+      const baseUrl = "http://192.168.51.193:5000";
       const endpoint = searchQuery
         ? `${baseUrl}/posts/all`
         : `${baseUrl}/posts/${category}`;

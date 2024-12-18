@@ -4,20 +4,29 @@ const cors = require("cors");
 const userRoutes = require("./routes/user");
 const postsRouter = require("./routes/posts");
 const { PrismaClient } = require("@prisma/client");
+const nodemailer = require('nodemailer');
 
 const app = express();
 
-// Create Prisma client
 const prisma = new PrismaClient();
 
-// Enhanced CORS configuration
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 587, // Use 465 for SSL
+  secure: false, // Set to true if using port 465
+  auth: {
+      user: 'mejrisaif2020@gmail.com',
+      pass: 'hxqk duxl gtwz jyrw', // Consider using an app password instead
+  },
+});
+
 app.use(
   cors({
     origin: [
       "http://localhost:19000",
       "http://localhost:19001",
       "http://localhost:19002",
-      "exp://192.168.11.118:19000", // Expo specific
+      "exp://192.168.11.118:19000", 
       "exp://192.168.11.118:19001",
       "exp://192.168.11.118:19002",
     ],
@@ -31,10 +40,44 @@ app.use(express.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 5000;
 
-// Mount user routes
 app.use("/user", userRoutes);
 app.use("/posts", postsRouter);
-// Error handling middleware
+
+const sendBookingEmails = async (guestEmail, hostEmail, houseDetails, price) => {
+    const guestMailOptions = {
+        from: 'mejrisaif2020@gmail.com',
+        to: "rtimim2003@gmail.com",
+        subject: 'Booking Confirmation',
+        text: `Your booking for the house is confirmed. Details: ${houseDetails}, Price: ${price}`,
+    };
+
+    const hostMailOptions = {
+        from: 'mejrisaif2020@gmail.com',
+        to: "rtimim2003@gmail.com",
+        subject: 'New Booking Request',
+        text: `A guest has requested to book your house. Details: ${houseDetails}, Price: ${price}. Please accept or reject the booking.`,
+    };
+
+    try {
+        await transporter.sendMail(guestMailOptions);
+        await transporter.sendMail(hostMailOptions);
+        console.log('Booking confirmation emails sent successfully.');
+    } catch (error) {
+        console.error('Error sending emails:', error);
+    }
+};
+
+app.post('/confirm-booking', async (req, res) => {
+    const { guestEmail, hostEmail, houseDetails, price } = req.body; 
+
+    try {
+        await sendBookingEmails(guestEmail, hostEmail, houseDetails, price);
+        res.status(200).json({ message: 'Booking confirmed and emails sent.' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error confirming booking and sending emails.' });
+    }
+});
+
 app.use((err, req, res, next) => {
   console.error("Unhandled Error:", err);
   res.status(500).json({
@@ -46,7 +89,6 @@ app.use((err, req, res, next) => {
 const server = app.listen(PORT, async () => {
   console.log(`Listening on port ${PORT}`);
 
-  // Verify database connection
   try {
     await prisma.$connect();
     console.log("Database connection verified");
@@ -55,7 +97,6 @@ const server = app.listen(PORT, async () => {
   }
 });
 
-// Graceful shutdown
 process.on("SIGINT", async () => {
   await prisma.$disconnect();
   server.close(() => {

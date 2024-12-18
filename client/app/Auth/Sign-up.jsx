@@ -40,7 +40,7 @@ export default function SignUpScreen({navigation}) {
     };
 
     try {
-      const response = await fetch('http://192.168.103.6:5000/user/signup', {
+      const response = await fetch('http://192.168.51.193:5000/user/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ export default function SignUpScreen({navigation}) {
 
       if (response.ok) {
         Alert.alert('Success', 'Account created successfully', [
-          { text: 'OK', onPress: () => navigation.navigate('Login') }
+          { text: 'OK', onPress: () => navigation.navigate('login') }
         ]);
       } else {
         Alert.alert('Error', data.message || 'Something went wrong');

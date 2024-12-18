@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const DEFAULT_PROFILE_IMAGE = 'https://www.shutterstock.com/image-vector/user-icon-vector-trendy-flat-600nw-1720665448.jpg';
 
@@ -19,7 +20,7 @@ console.log(route.params , "sss");
     } else {
       const fetchUserData = async () => {
         try {
-          const response = await axios.get(`http://192.168.103.6:5000/user/${userId}`);
+          const response = await axios.get(`http://192.168.51.193:5000/user/${userId}`);
           setUserData(response.data);
           console.log(response , "salem");
         } catch (err) {
@@ -27,8 +28,23 @@ console.log(route.params , "sss");
         }
       };
       fetchUserData();
+      fetshUser()
     }
   }, [route.params?.updatedUser, userId, image]);
+
+  const fetshUser =async ()=>{
+    const user = await AsyncStorage.getItem('userData');
+    const parsedUser = user ? JSON.parse(user) : null; // Parse the string back to an object
+    setUserData(parsedUser)
+    setProfileImage(parsedUser.image)
+    console.log("user data", parsedUser);
+  }
+
+
+  // useEffect(()=>{
+  //   fetshUser()
+  // },[])
+
 
   const handleLogout = () => {
  

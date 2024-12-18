@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const Navbar = ({ navigation }) => {
+const Navbar = ({ navigation, userId }) => {
   const handleConfirmExplore = () => {
     console.log("Navigating to Home");
     navigation.navigate("Home");
@@ -26,7 +26,10 @@ const Navbar = ({ navigation }) => {
         <View style={styles.notificationDot} />
         <Text style={styles.text}>Inbox</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.iconContainer}>
+      <TouchableOpacity 
+        style={styles.iconContainer} 
+        onPress={() => navigation.navigate('profile', { userId })}
+      >
         <Ionicons name="person-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Profile</Text>
       </TouchableOpacity>
