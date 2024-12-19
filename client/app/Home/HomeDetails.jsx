@@ -29,6 +29,8 @@ const HomeDetails = ({ route, navigation }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showMoreRules, setShowMoreRules] = useState(false);
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL
+
 
   const imageSizes = [
     { width: "100%", height: 180 }, // Full width
@@ -42,7 +44,7 @@ const HomeDetails = ({ route, navigation }) => {
     const fetchImages = async () => {
       try {
         const response = await axios.get(
-          `http://192.168.255.93:5000/posts/images/${post.id}` // Replace X with your IP
+          `${apiUrl}/posts/images/${post.id}` // Replace X with your IP
         );
         setImages(response.data);
         setLoading(false);

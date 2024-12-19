@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, TextInput, ScrollView } from 'react-native';
 import axios from 'axios';
 
+const apiUrl = process.env.EXPO_PUBLIC_API_URL
 
-const API_BASE_URL = 'http://192.168.103.15:5000'; 
+
+// const API_BASE_URL = 'http://192.168.255.93:5000'; 
 
 const ShowProfile = ({ navigation, route }) => {
   const userId = route.params?.userId;
@@ -29,7 +31,7 @@ console.log(userId);
 
       try {
         setLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/user/${userId}`, {
+        const response = await axios.get(`${apiUrl}/user/${userId}`, {
           timeout: 10000, // 10 second timeout
           headers: {
             'Accept': 'application/json',
@@ -57,7 +59,7 @@ console.log(userId);
 
   const handleBioUpdate = async () => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/user/${userId}`, {
+      const response = await axios.put(`${apiUrl}/user/${userId}`, {
         ...userData,
         bio: bio
       });
