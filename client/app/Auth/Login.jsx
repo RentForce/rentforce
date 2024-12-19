@@ -1,9 +1,16 @@
 import React, { useState } from "react";
-import { Image, StyleSheet, View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
+import {
+  Image,
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+} from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -12,48 +19,63 @@ const Login = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://192.168.103.15:5000/user/login", {
-        email,
-        password,
-      });
+      const response = await axios.post(
+        "http://192.168.255.93:5000/user/login",
+        {
+          email,
+          password,
+        }
+      );
       const { token, user } = response.data;
       if (token) {
-            // Securely store the token
-            await AsyncStorage.setItem('userToken', token);
-            
-            // Optional: ²Store user info if needed
-            await AsyncStorage.setItem('userData', JSON.stringify(user));
+        // Securely store the token
+        await AsyncStorage.setItem("userToken", token);
 
-            console.log('Token successfully stored:', user);
-            navigation.navigate("Home", { updatedUser: user})}
+        // Optional: ²Store user info if needed
+        await AsyncStorage.setItem("userData", JSON.stringify(user));
 
-await AsyncStorage.setItem('userId', response.data.user.id.toString(),
-);
-await AsyncStorage.setItem("token", token);
-await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
+        console.log("Token successfully stored:", user);
+        navigation.navigate("Home", { updatedUser: user });
+      }
+
+      await AsyncStorage.setItem("userId", response.data.user.id.toString());
+      await AsyncStorage.setItem("token", token);
+      await AsyncStorage.setItem(
+        "currentUser",
+        JSON.stringify(response.data.user)
+      );
       Alert.alert("Login Successful", "Welcome");
 
-      navigation.navigate('Home');
+      navigation.navigate("Home");
     } catch (error) {
-      console.error('Error:', error);
-      Alert.alert("Login Failed", "Please check your credentials and try again.");
+      console.error("Error:", error);
+      Alert.alert(
+        "Login Failed",
+        "Please check your credentials and try again."
+      );
     }
   };
-
 
   return (
     <View style={styles.signin}>
       <Image
         style={styles.backgroundImage}
         resizeMode="cover"
-        source={{ uri: "https://64.media.tumblr.com/a64e82aaf7f19908d6461003902469c3/ba494dfd33843672-b2/s1280x1920/665eeb3a2dc55350f6668344557099385a99b6ea.jpg" }}
+        source={{
+          uri: "https://64.media.tumblr.com/a64e82aaf7f19908d6461003902469c3/ba494dfd33843672-b2/s1280x1920/665eeb3a2dc55350f6668344557099385a99b6ea.jpg",
+        }}
       />
       <Text style={styles.welcome}>Welcome Back!</Text>
 
       <View style={styles.formContainer}>
         <Text style={styles.inputLabel}>Email</Text>
         <View style={styles.inputContainer}>
-          <FontAwesome name="user" size={20} color="black" style={styles.icon} />
+          <FontAwesome
+            name="user"
+            size={20}
+            color="black"
+            style={styles.icon}
+          />
           <TextInput
             placeholder="Email"
             style={styles.input}
@@ -65,7 +87,12 @@ await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
         </View>
         <Text style={styles.inputLabel}>Password</Text>
         <View style={styles.inputContainer}>
-          <FontAwesome name="lock" size={20} color="black" style={styles.icon} />
+          <FontAwesome
+            name="lock"
+            size={20}
+            color="black"
+            style={styles.icon}
+          />
           <TextInput
             placeholder="Password"
             secureTextEntry={!passwordVisible}
@@ -80,24 +107,44 @@ await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
             onPress={() => setPasswordVisible(!passwordVisible)}
           />
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('forget')}>
+        <TouchableOpacity onPress={() => navigation.navigate("forget")}>
           <Text style={styles.forgotPassword}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={()=> {handleLogin() }}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => {
+            handleLogin();
+          }}
+        >
           <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
         <View style={styles.socialLoginContainer}>
           <Text style={styles.socialLoginText}>Or continue with</Text>
           <View style={styles.socialIcons}>
             <View style={styles.iconBox}>
-              <FontAwesome name="google" size={30} color="white" style={styles.socialIcon}  />
+              <FontAwesome
+                name="google"
+                size={30}
+                color="white"
+                style={styles.socialIcon}
+              />
             </View>
             <View style={styles.iconBox}>
-              <FontAwesome name="apple" size={30} color="white" style={styles.socialIcon} />
+              <FontAwesome
+                name="apple"
+                size={30}
+                color="white"
+                style={styles.socialIcon}
+              />
             </View>
             <View style={styles.iconBox}>
-              <FontAwesome name="facebook" size={30} color="white" style={styles.socialIcon} />
+              <FontAwesome
+                name="facebook"
+                size={30}
+                color="white"
+                style={styles.socialIcon}
+              />
             </View>
           </View>
         </View>
@@ -113,17 +160,17 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   button: {
-    backgroundColor: '#1A3C40',
+    backgroundColor: "#1A3C40",
     padding: 15,
     borderRadius: 8,
-    alignItems: 'center',
-    width: '100%',
-    alignSelf: 'center',
+    alignItems: "center",
+    width: "100%",
+    alignSelf: "center",
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   backgroundImage: {
     position: "absolute",
@@ -133,11 +180,11 @@ const styles = StyleSheet.create({
     height: "49%",
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
     borderRadius: 8,
-    width: '100%',
+    width: "100%",
     padding: 10,
     marginVertical: 10,
   },
@@ -147,7 +194,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: 'black',
+    color: "black",
   },
   formContainer: {
     position: "absolute",
@@ -165,8 +212,8 @@ const styles = StyleSheet.create({
   },
   welcome: {
     fontSize: 60,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     marginTop: 250,
     marginLeft: 25,
   },
@@ -205,7 +252,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     borderWidth: 0.5,
-    borderColor: 'white',
+    borderColor: "white",
   },
   socialIcon: {
     color: "#fff",

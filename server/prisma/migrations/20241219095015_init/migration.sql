@@ -19,14 +19,41 @@ CREATE TABLE `User` (
 CREATE TABLE `Post` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `title` VARCHAR(191) NULL,
-    `images` JSON NULL,
     `description` VARCHAR(191) NULL,
     `location` VARCHAR(191) NULL,
     `price` DECIMAL(65, 30) NULL,
     `category` ENUM('house', 'apartment', 'villa', 'hotel', 'historical', 'lake', 'beachfront', 'countryside', 'castles', 'experiences', 'camping', 'desert', 'luxe', 'islands') NULL,
     `rating` INTEGER NULL,
     `userId` INTEGER NOT NULL,
+    `cancellationPolicy` VARCHAR(191) NULL,
+    `roomConfiguration` VARCHAR(191) NULL,
+    `houseRules` VARCHAR(191) NULL,
+    `safetyProperty` VARCHAR(191) NULL,
 
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Booking` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `userId` INTEGER NOT NULL,
+    `postId` INTEGER NOT NULL,
+    `startDate` DATETIME(3) NOT NULL,
+    `endDate` DATETIME(3) NOT NULL,
+    `totalPrice` DOUBLE NOT NULL,
+    `numberOfGuests` INTEGER NOT NULL,
+    `status` ENUM('PENDING', 'CONFIRMED', 'REJECTED', 'CANCELLED') NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Image` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `url` VARCHAR(191) NOT NULL,
+    `postId` INTEGER NOT NULL,
+
+    UNIQUE INDEX `Image_id_key`(`id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -80,6 +107,7 @@ CREATE TABLE `History` (
     `userId` INTEGER NOT NULL,
     `postId` INTEGER NOT NULL,
 
+    UNIQUE INDEX `History_id_key`(`id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -91,6 +119,7 @@ CREATE TABLE `Notification` (
     `createdAt` DATETIME(3) NULL,
     `userId` INTEGER NOT NULL,
 
+    UNIQUE INDEX `Notification_id_key`(`id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -141,11 +170,21 @@ CREATE TABLE `Map` (
     `postId` INTEGER NOT NULL,
 
     UNIQUE INDEX `Map_postId_key`(`postId`),
+    UNIQUE INDEX `Map_id_key`(`id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
 ALTER TABLE `Post` ADD CONSTRAINT `Post_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Booking` ADD CONSTRAINT `Booking_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Booking` ADD CONSTRAINT `Booking_postId_fkey` FOREIGN KEY (`postId`) REFERENCES `Post`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Image` ADD CONSTRAINT `Image_postId_fkey` FOREIGN KEY (`postId`) REFERENCES `Post`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Calendar` ADD CONSTRAINT `Calendar_postId_fkey` FOREIGN KEY (`postId`) REFERENCES `Post`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

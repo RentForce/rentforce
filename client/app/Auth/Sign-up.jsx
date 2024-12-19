@@ -1,39 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function SignUpScreen({ navigation }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-;
-
-
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const validatePassword = (password) => {
     const errors = [];
-    const passwordChecking = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[a-zA-Z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
+    const passwordChecking =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[a-zA-Z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
     if (password.length < 8) {
       errors.push("Password must contain at least 8 characters.");
     }
     if (!passwordChecking.test(password)) {
-      errors.push("Password must contain at least one upper case, one lower case, and one symbol");
+      errors.push(
+        "Password must contain at least one upper case, one lower case, and one symbol"
+      );
     }
     return {
       isValid: errors.length === 0,
-      errors: errors
+      errors: errors,
     };
   };
 
   const handleSignUp = async () => {
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
-      Alert.alert('Weak Password', passwordValidation.errors.join(' '));
+      Alert.alert("Weak Password", passwordValidation.errors.join(" "));
       return;
     }
 
@@ -45,10 +50,10 @@ export default function SignUpScreen({ navigation }) {
     };
 
     try {
-      const response = await fetch('http://192.168.103.15:5000/user/signup', {
-        method: 'POST',
+      const response = await fetch("http://192.168.255.93:5000/user/signup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(userData),
       });
@@ -56,21 +61,21 @@ export default function SignUpScreen({ navigation }) {
       const data = await response.json();
 
       if (response.ok) {
-        Alert.alert('Success', 'Account created successfully', [
-          { text: 'OK', onPress: () => navigation.navigate('login') }
+        Alert.alert("Success", "Account created successfully", [
+          { text: "OK", onPress: () => navigation.navigate("login") },
         ]);
       } else {
-        Alert.alert('Error', data.message || 'Something went wrong');
+        Alert.alert("Error", data.message || "Something went wrong");
       }
     } catch (error) {
-      console.error('Error:', error);
-      Alert.alert('Error', 'Failed to create account');
+      console.error("Error:", error);
+      Alert.alert("Error", "Failed to create account");
     }
   };
 
   return (
     <LinearGradient
-      colors={['rgba(61,85,96,1)', 'rgba(144,146,150,1)']}
+      colors={["rgba(61,85,96,1)", "rgba(144,146,150,1)"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       style={styles.container}
@@ -80,7 +85,12 @@ export default function SignUpScreen({ navigation }) {
         <Text style={styles.subtitle}>Enter your Personal Data</Text>
 
         <View style={styles.inputContainer}>
-          <FontAwesome name="user" size={20} color="black" style={styles.icon} />
+          <FontAwesome
+            name="user"
+            size={20}
+            color="black"
+            style={styles.icon}
+          />
           <TextInput
             placeholder="First Name"
             style={styles.input}
@@ -89,7 +99,12 @@ export default function SignUpScreen({ navigation }) {
           />
         </View>
         <View style={styles.inputContainer}>
-          <FontAwesome name="user" size={20} color="black" style={styles.icon} />
+          <FontAwesome
+            name="user"
+            size={20}
+            color="black"
+            style={styles.icon}
+          />
           <TextInput
             placeholder="Last Name"
             style={styles.input}
@@ -98,7 +113,12 @@ export default function SignUpScreen({ navigation }) {
           />
         </View>
         <View style={styles.inputContainer}>
-          <FontAwesome name="envelope" size={20} color="black" style={styles.icon} />
+          <FontAwesome
+            name="envelope"
+            size={20}
+            color="black"
+            style={styles.icon}
+          />
           <TextInput
             placeholder="Email Address"
             style={styles.input}
@@ -107,7 +127,12 @@ export default function SignUpScreen({ navigation }) {
           />
         </View>
         <View style={styles.inputContainer}>
-          <FontAwesome name="lock" size={20} color="black" style={styles.icon} />
+          <FontAwesome
+            name="lock"
+            size={20}
+            color="black"
+            style={styles.icon}
+          />
           <TextInput
             placeholder="Password"
             secureTextEntry={!passwordVisible}
@@ -139,15 +164,27 @@ export default function SignUpScreen({ navigation }) {
             />
           </View>
           <View style={styles.iconBox}>
-            <FontAwesome name="apple" size={30} color="white" style={styles.socialIcon} />
+            <FontAwesome
+              name="apple"
+              size={30}
+              color="white"
+              style={styles.socialIcon}
+            />
           </View>
           <View style={styles.iconBox}>
-            <FontAwesome name="facebook" size={30} color="white" style={styles.socialIcon} />
+            <FontAwesome
+              name="facebook"
+              size={30}
+              color="white"
+              style={styles.socialIcon}
+            />
           </View>
         </View>
 
-        <TouchableOpacity onPress={() => navigation.navigate('login')}>
-          <Text style={styles.accountText}>Already have an account? Log in</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("login")}>
+          <Text style={styles.accountText}>
+            Already have an account? Log in
+          </Text>
         </TouchableOpacity>
       </View>
     </LinearGradient>
@@ -157,27 +194,27 @@ export default function SignUpScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     padding: 20,
   },
   title: {
     fontSize: 60,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     marginTop: 50,
   },
   subtitle: {
     fontSize: 25,
-    color: '#909296',
+    color: "#909296",
     marginVertical: 20,
     marginLeft: 45,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
     borderRadius: 8,
-    width: '100%',
+    width: "100%",
     padding: 10,
     marginVertical: 10,
   },
@@ -187,79 +224,47 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: 'black',
+    color: "black",
   },
   button: {
-    backgroundColor: '#1A3C40',
+    backgroundColor: "#1A3C40",
     padding: 15,
     borderRadius: 8,
-    alignItems: 'center',
-    width: '100%',
-    alignSelf: 'center',
+    alignItems: "center",
+    width: "100%",
+    alignSelf: "center",
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   orText: {
-    color: 'white',
+    color: "white",
     marginVertical: 10,
     marginLeft: 130,
   },
   socialContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '60%',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "60%",
     marginLeft: 70,
   },
   socialIcon: {
     marginHorizontal: 10,
   },
   iconBox: {
-    backgroundColor: '#909296',
+    backgroundColor: "#909296",
     padding: 10,
     borderRadius: 8,
     marginHorizontal: 5,
     borderWidth: 0.5,
-    borderColor: 'white',
+    borderColor: "white",
   },
   accountText: {
-    color: 'white',
+    color: "white",
     marginTop: 20,
-    textAlign: 'center',
-    textDecorationLine: 'underline',
+    textAlign: "center",
+    textDecorationLine: "underline",
   },
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

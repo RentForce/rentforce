@@ -8,50 +8,79 @@ datasource db {
 }
 
 model User {
-  id            Int        @id @default(autoincrement())
-  firstName     String?    
-  lastName      String?    
-  email         String?    @unique
-  password      String?    
-  phoneNumber   String?    // Changed from Int to String for better compatibility
-  image         String?    
-  bio           String?    
-  type          UserType?  
-  address       String?    
-  posts         Post[]     
-  cart          Cart?      
-  favourites    Favourite[] 
-  history       History[]  
-  notifications Notification[]
-  chatsInitiated Chat[]     @relation("UserChats")       
-  chatsReceived  Chat[]     @relation("ReceiverChats")   
-  messages       Message[]  
+  id             Int            @id @default(autoincrement())
+  firstName      String?
+  lastName       String?
+  email          String?        @unique
+  password       String?
+  phoneNumber    String? // Changed from Int to String for better compatibility
+  image          String?
+  bio            String?
+  type           UserType?
+  address        String?
+  posts          Post[]
+  cart           Cart?
+  favourites     Favourite[]
+  history        History[]
+  notifications  Notification[]
+  chatsInitiated Chat[]         @relation("UserChats")
+  chatsReceived  Chat[]         @relation("ReceiverChats")
+  messages       Message[]
+  Booking        Booking[]
 }
 
 model Post {
-  id          Int       @id @default(autoincrement())
-  title       String?   
-  images      Json?     
-  description String?   
-  location    String?   
-  price       Decimal?  
-  category    PostCategory?
-  rating      Int?      
-  userId      Int       
-  user        User      @relation(fields: [userId], references: [id])
-  calendar    Calendar[] 
-  favourites  Favourite[] 
-  history     History[]  
-  cartPosts   CartPost[] 
-  map         Map?       
+  id                 Int           @id @default(autoincrement())
+  title              String?
+  images             Image[]
+  description        String?
+  location           String?
+  price              Decimal?
+  category           PostCategory?
+  rating             Int?
+  userId             Int
+  user               User          @relation(fields: [userId], references: [id])
+  cancellationPolicy String?
+  roomConfiguration  String?
+  houseRules         String?
+  safetyProperty     String?
+  bookings           Booking[] // New relation to Booking model
+  calendar           Calendar[]
+  favourites         Favourite[]
+  history            History[]
+  cartPosts          CartPost[]
+  map                Map?
+}
+
+model Booking {
+  id             Int           @id @default(autoincrement())
+  userId         Int
+  postId         Int
+  startDate      DateTime
+  endDate        DateTime
+  totalPrice     Float
+  numberOfGuests Int
+  status         BookingStatus
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+}
+
+model Image {
+  id     Int    @id @default(autoincrement())
+  url    String
+  postId Int
+  post   Post   @relation(fields: [postId], references: [id])
+
+  @@unique([id])
 }
 
 model Calendar {
-  id      Int       @id @default(autoincrement())
-  date    DateTime? 
-  isBooked Boolean  
-  postId  Int       
-  post    Post      @relation(fields: [postId], references: [id])
+  id       Int       @id @default(autoincrement())
+  date     DateTime?
+  isBooked Boolean
+  postId   Int
+  post     Post      @relation(fields: [postId], references: [id])
 }
 
 model Favourite {
@@ -64,72 +93,75 @@ model Favourite {
 }
 
 model Cart {
-  id        Int       @id @default(autoincrement())
+  id         Int        @id @default(autoincrement())
   totalPrice Decimal?
-  status    String?
-  userId    Int       @unique
-  user      User      @relation(fields: [userId], references: [id])
-  cartPosts CartPost[]
+  status     String?
+  userId     Int        @unique
+  user       User       @relation(fields: [userId], references: [id])
+  cartPosts  CartPost[]
 }
 
 model CartPost {
-  id       Int     @id @default(autoincrement())
-  postId   Int     @unique  
-  post     Post    @relation(fields: [postId], references: [id])
-  cartId   Int
-  cart     Cart    @relation(fields: [cartId], references: [id])
+  id     Int  @id @default(autoincrement())
+  postId Int  @unique
+  post   Post @relation(fields: [postId], references: [id])
+  cartId Int
+  cart   Cart @relation(fields: [cartId], references: [id])
 }
 
 model History {
-  id          Int       @id @default(autoincrement())
-  bookingDate DateTime? 
-  checkInDate DateTime? 
-  checkOutDate DateTime? 
-  status      String?   
-  totalPrice  Decimal?  
-  userId      Int       
-  postId      Int       
-  user        User      @relation(fields: [userId], references: [id])
-  post        Post      @relation(fields: [postId], references: [id])
+  id           Int       @id @default(autoincrement())
+  bookingDate  DateTime?
+  checkInDate  DateTime?
+  checkOutDate DateTime?
+  status       String?
+  totalPrice   Decimal?
+  userId       Int
+  postId       Int
+  user         User      @relation(fields: [userId], references: [id])
+  post         Post      @relation(fields: [postId], references: [id])
+
+  @@unique([id])
 }
 
 model Notification {
   id        Int       @id @default(autoincrement())
-  message   String?   
-  status    String?   
-  createdAt DateTime? 
-  userId    Int       
+  message   String?
+  status    String?
+  createdAt DateTime?
+  userId    Int
   user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([id])
 }
 
 model Chat {
-  id           Int       @id @default(autoincrement())
-  userId       Int       
-  receiverId   Int    
-  user         User      @relation("UserChats", fields: [userId], references: [id])
-  receiver     User      @relation("ReceiverChats", fields: [receiverId], references: [id])
-  messages     Message[]
-  createdAt    DateTime  @default(now())
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  receiverId Int
+  user       User      @relation("UserChats", fields: [userId], references: [id])
+  receiver   User      @relation("ReceiverChats", fields: [receiverId], references: [id])
+  messages   Message[]
+  createdAt  DateTime  @default(now())
 }
 
 model Message {
-  id               Int       @id @default(autoincrement())
+  id               Int          @id @default(autoincrement())
   content          String?
-  sentAt           DateTime  @default(now())
-  isRead           Boolean   @default(false)
-  userId           Int      
-  chatId           Int       
-  callStatus       String?    
-  duration         Int?        
+  sentAt           DateTime     @default(now())
+  isRead           Boolean      @default(false)
+  userId           Int
+  chatId           Int
+  callStatus       String?
+  duration         Int?
   type             MessageType? @default(TEXT)
   voiceMessagePath String?
-  
-  user     User     @relation(fields: [userId], references: [id])
-  chat     Chat     @relation(fields: [chatId], references: [id])
+  user             User         @relation(fields: [userId], references: [id])
+  chat             Chat         @relation(fields: [chatId], references: [id])
 }
 
 model CallLog {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   callerId   Int
   receiverId Int
   startTime  DateTime
@@ -139,11 +171,13 @@ model CallLog {
 }
 
 model Map {
-  id         Int       @id @default(autoincrement())
-  latitude   Decimal?  
-  longitude  Decimal?  
-  postId     Int       @unique
-  post       Post      @relation(fields: [postId], references: [id])
+  id        Int      @id @default(autoincrement())
+  latitude  Decimal?
+  longitude Decimal?
+  postId    Int      @unique
+  post      Post     @relation(fields: [postId], references: [id])
+
+  @@unique([id])
 }
 
 enum UserType {
@@ -166,6 +200,13 @@ enum PostCategory {
   desert
   luxe
   islands
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  CANCELLED
 }
 
 enum MessageType {

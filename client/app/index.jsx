@@ -18,8 +18,8 @@ import BookingPage from "./Home/BookingPage";
 const Stack = createNativeStackNavigator();
 function App() {
   return (
-<Stack.Navigator>
-        {/* <Stack.Screen name="signup" component={SignUpScreen} options={{ headerShown: false }} /> */}
+<Stack.Navigator  >
+        <Stack.Screen name="signup" component={SignUpScreen} options={{ headerShown: false }} />
         <Stack.Screen name="login" component={Login} options={{ headerShown: false }} />
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
         <Stack.Screen name="favourites" component={Favourites} options={{ headerShown: false }} />        
