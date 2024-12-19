@@ -18,11 +18,15 @@ import * as Animatable from "react-native-animatable";
 import Navbar from "./Navbar";
 import axios from "axios";
 
+const apiUrl = process.env.EXPO_PUBLIC_API_URL
+
 // Define getDatesInRange helper function OUTSIDE the component
 const getDatesInRange = (startDate, endDate) => {
   const dates = {};
   const start = new Date(startDate);
   const end = new Date(endDate);
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL
+
 
   for (
     let date = new Date(start);
@@ -85,7 +89,7 @@ const BookingPage = ({ navigation, route }) => {
     const fetchBookedDates = async () => {
       try {
         const response = await axios.get(
-          `http://192.168.255.93:5000/posts/${post.id}/booked-dates`
+          `${apiUrl}/posts/${post.id}/booked-dates`
         );
 
         console.log("Booked dates response:", response.data);
@@ -213,7 +217,7 @@ const BookingPage = ({ navigation, route }) => {
       };
 
       const response = await axios.post(
-        "http://192.168.255.93:5000/posts/booking",
+        `${apiUrl}/posts/booking`,
         bookingData
       );
 

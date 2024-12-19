@@ -16,6 +16,8 @@ export default function SignUpScreen({ navigation }) {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+console.log(apiUrl , "hi");
 
   const validatePassword = (password) => {
     const errors = [];
@@ -50,7 +52,7 @@ export default function SignUpScreen({ navigation }) {
     };
 
     try {
-      const response = await fetch("http://192.168.255.93:5000/user/signup", {
+      const response = await fetch(`${apiUrl}/user/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
