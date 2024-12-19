@@ -10,7 +10,10 @@ import {
   TextInput,
   Modal,
   FlatList,
+  Alert,
 } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
+
 import {
   Ionicons,
   FontAwesome5,
@@ -20,6 +23,8 @@ import {
 } from "@expo/vector-icons";
 import Navbar from "./Navbar";
 import axios from "axios";
+import { jwtDecode } from 'jwt-decode';
+
 
 const categories = [
   "house",
@@ -60,6 +65,8 @@ const categoryIcons = {
 };
 
 const Home = ({ navigation }) => {
+  const [userId, setUserId] = useState(null); 
+
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -69,9 +76,125 @@ const Home = ({ navigation }) => {
   const [price, setPrice] = useState("");
   const [location, setLocation] = useState("");
   const [title, setTitle] = useState("");
+  const [favorites, setFavorites] = useState(new Set());
 
   const searchInputRef = useRef(null);
   const scrollViewRef = useRef(null);
+
+ useEffect(() => {
+  const fetchUserId = async () => {
+    try {
+      const storedUserId = await AsyncStorage.getItem('userId');
+      if (storedUserId) {
+        setUserId(storedUserId);
+        console.log('Retrieved userId from local storage:', storedUserId);
+      } else {
+        console.error('No userId found in local storage');
+      }
+    } catch (error) {
+      console.error('Error retrieving userId from local storage:', error);
+    }
+  };
+
+  fetchUserId();
+}, []);
+  useEffect(() => {
+    // Fetch initial favorite posts from the server
+    const fetchFavorites = async () => {
+      try {
+        const token = await AsyncStorage.getItem('userToken');
+        if (!token) {
+          throw new Error('User token not found');
+        }
+
+        const decodedToken = jwtDecode(token);
+        const userId = decodedToken.id;
+
+        const response = await axios.get(`http://192.168.255.93:5000/user/favourites/${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        const favoritePostIds = new Set(response.data.map(post => post.id));
+        setFavorites(favoritePostIds);
+      } catch (err) {
+        console.error('Error fetching favorites:', err);
+      }
+    };
+
+    fetchFavorites();
+  }, []);
+
+  const handleAddFavourite = async (postId) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        throw new Error('User token not found');
+      }
+
+      const decodedToken = jwtDecode(token);
+      const userId = decodedToken.id;
+
+      // Add to favorites on the server
+      await axios.post(`http://192.168.255.93:5000/user/favourites`, {
+        userId,
+        postId,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Update local state
+      setFavorites((prevFavorites) => new Set(prevFavorites).add(postId));
+      Alert.alert('Success', 'Post added to favourites');
+    } catch (err) {
+      console.error('Error adding favourite:', err);
+      Alert.alert('Error', 'Failed to add post to favourites');
+    }
+  };
+
+  const handleRemoveFavourite = async (postId) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        throw new Error('User token not found');
+      }
+
+      const decodedToken = jwtDecode(token);
+      const userId = decodedToken.id;
+
+      // Remove from favorites on the server
+      await axios.delete(`http://192.168.255.93:5000/user/favourites`, {
+        data: { userId, postId },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Update local state
+      setFavorites((prevFavorites) => {
+        const updatedFavorites = new Set(prevFavorites);
+        updatedFavorites.delete(postId);
+        return updatedFavorites;
+      });
+      Alert.alert('Success', 'Post removed from favourites');
+    } catch (err) {
+      console.error('Error removing favourite:', err);
+      Alert.alert('Error', 'Failed to remove post from favourites');
+    }
+  };
+
+  const toggleFavorite = (postId) => {
+    if (favorites.has(postId)) {
+      handleRemoveFavourite(postId);
+    } else {
+      handleAddFavourite(postId);
+    }
+  };
 
   const focusSearchInput = () => {
     if (searchInputRef.current) {
@@ -192,10 +315,11 @@ const Home = ({ navigation }) => {
             <View style={styles.imageOverlay} />
           </View>
           <Ionicons
-            name="heart-outline"
+            name={favorites.has(post.id) ? "heart" : "heart-outline"}
             size={24}
-            color="black"
+            color={favorites.has(post.id) ? "red" : "black"}
             style={styles.favoriteIcon}
+            onPress={() => toggleFavorite(post.id)}
           />
         </TouchableOpacity>
         <View style={styles.postDetails}>

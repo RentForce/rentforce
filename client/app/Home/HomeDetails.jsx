@@ -314,7 +314,7 @@ const HomeDetails = ({ route, navigation }) => {
           <View style={styles.spacer} />
         </View>
       </ScrollView>
-      <Navbar style={styles.navbar} />
+      <Navbar navigation={navigation} style={styles.navbar} />
       <ImageModal />
     </View>
   );

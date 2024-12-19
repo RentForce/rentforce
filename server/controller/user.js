@@ -2,16 +2,14 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Use environment variables from expo-constants instead of dotenv
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key";
 
 const prisma = new PrismaClient({
-    // Remove log configuration as it might not be compatible with Expo
 });
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const token = authHeader && authHeader.split(' ')[1];
 
     console.log('Received Authorization Header:', authHeader);
     console.log('Extracted Token:', token);
@@ -31,7 +29,7 @@ const authenticateToken = (req, res, next) => {
                 error: err.message 
             });
         }
-        req.user = user; // Attach the user to the request object
+        req.user = user; 
         next();
     });
 };
@@ -257,7 +255,7 @@ const createPost = async (req, res) => {
         const post = await prisma.post.create({
             data: {
                 title,
-                images: uploadedImages, // Use uploaded image URLs
+                images: uploadedImages, 
                 description,
                 location: location || '',
                 price: parseFloat(price),
@@ -276,6 +274,107 @@ const createPost = async (req, res) => {
     }
 };
 
+const addToFavourites = async (req, res) => {
+    const { userId, postId } = req.body;
+
+    try {
+        console.log(`Attempting to add to favourites: userId=${userId}, postId=${postId}`);
+        if(!userId &&!postId){
+            return   res.status(403).send("userId is required")
+     }
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            console.error(`User with ID ${userId} not found`);
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const post = await prisma.post.findUnique({ where: { id: postId } });
+        if (!post) {
+            console.error(`Post with ID ${postId} not found`);
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        const favourite = await prisma.favourite.create({
+            data: {
+                userId,
+                postId
+            }
+        });
+
+        console.log('Successfully added to favourites:', favourite);
+        res.status(201).json({ message: 'Added to favourites', favourite });
+    } catch (error) {
+        console.error('Error adding to favourites:', error);
+        res.status(500).json({ message: 'Error adding to favourites', error: error.message });
+    }
+};
+
+const removeFromFavourites = async (req, res) => {
+    const { userId, postId } = req.body;
+
+    try {
+        const favourite = await prisma.favourite.findUnique({
+            where: {
+                userId_postId: {
+                    userId,
+                    postId
+                }
+            }
+        });
+
+        if (!favourite) {
+            return res.status(404).json({ message: 'Favourite not found' });
+        }
+
+        await prisma.favourite.delete({
+            where: {
+                userId_postId: {
+                    userId,
+                    postId
+                }
+            }
+        });
+
+        res.status(200).json({ message: 'Removed from favourites' });
+    } catch (error) {
+        console.error('Error removing from favourites:', error);
+        res.status(500).json({ message: 'Error removing from favourites', error: error.message });
+    }
+};
+
+const getFavouritePosts = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const user = await prisma.user.findUnique({ where: { id: Number(userId) } });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const favouritePosts = await prisma.favourite.findMany({
+            where: { userId: Number(userId) },
+            include: {
+                post: {
+                    include: {
+                        images: true,
+                    },
+                },
+            },
+        });
+
+        const posts = favouritePosts.map(fav => ({
+            ...fav.post,
+            image: fav.post.images.length > 0 ? fav.post.images[0].url : null, 
+        }));
+
+        res.status(200).json(posts);
+    } catch (error) {
+        console.error('Error retrieving favourite posts:', error);
+        res.status(500).json({ message: 'Error retrieving favourite posts', error: error.message });
+    }
+};
+
 module.exports = {
     getUserData,
     updateUserData,
@@ -283,5 +382,9 @@ module.exports = {
     authenticateToken, 
     prisma,
     signup,
-    login
+    login,
+    getFavouritePosts,
+    removeFromFavourites,
+    addToFavourites
+
 };
