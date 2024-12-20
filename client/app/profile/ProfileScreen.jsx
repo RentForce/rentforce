@@ -32,6 +32,10 @@ const ProfileScreen = ({ navigation, route }) => {
           setProfileImage(
             route.params.updatedUser.image || DEFAULT_PROFILE_IMAGE
           );
+          await AsyncStorage.setItem(
+            "userData",
+            JSON.stringify(route.params.updatedUser)
+          );
           return;
         }
 

@@ -88,7 +88,7 @@ const UserSelectionScreen = ({ navigation }) => {
         const currentUserString = await AsyncStorage.getItem("currentUser");
         const currentUserData = JSON.parse(currentUserString);
 
-        const response = await axios.get(`${apiUrl}/api/chat/users`, {
+        const response = await axios.get(`${apiUrl}api/chat/users`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -121,7 +121,7 @@ const UserSelectionScreen = ({ navigation }) => {
       const userId = await AsyncStorage.getItem("userId");
 
       const response = await axios.post(
-        `${apiUrl}/api/chat/create`,
+        `${apiUrl}api/chat/create`,
         {
           userId: userId,
           receiverId: receiver.id,
@@ -138,7 +138,7 @@ const UserSelectionScreen = ({ navigation }) => {
 
       // Fetch existing messages for this chat
       const messagesResponse = await axios.get(
-        `${apiUrl}/api/chat/messages/${newChat.id}`,
+        `${apiUrl}api/chat/messages/${newChat.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -195,7 +195,7 @@ const UserSelectionScreen = ({ navigation }) => {
       };
 
       const response = await axios.post(
-        `${apiUrl}/api/chat/message`,
+        `${apiUrl}api/chat/message`,
         messageData,
         {
           headers: {

@@ -40,7 +40,7 @@ const ChatScreen = () => {
 
             // Fetch chat messages with token
             const response = await axios.get(
-              `${apiUrl}/api/chats/messages/${chatId}`,
+              `${apiUrl}api/chats/messages/${chatId}`,
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -70,7 +70,7 @@ const ChatScreen = () => {
       const token = await AsyncStorage.getItem("token");
 
       const response = await axios.post(
-        `${apiUrl}/api/chats/create`,
+        `${apiUrl}api/chats/create`,
         {
           userId: currentUserId,
           receiverId: receiverId,
@@ -113,7 +113,7 @@ const ChatScreen = () => {
       }
 
       const response = await axios.post(
-        `${apiUrl}/api/chats/message`,
+        `${apiUrl}api/chats/message`,
         {
           chatId: chatDetails.chatId,
           userId: chatDetails.userId,

@@ -10,10 +10,10 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function ForgetPassword({ navigation }) {
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const [selectedOption, setSelectedOption] = useState(null);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState('');
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const handleOptionSelect = (option) => {
     setSelectedOption(option);

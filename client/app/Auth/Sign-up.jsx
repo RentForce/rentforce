@@ -5,12 +5,12 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import SweetAlert from '../../components/SweetAlert';
 
 export default function SignUpScreen({ navigation }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -19,6 +19,12 @@ export default function SignUpScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: '',
+    message: '',
+    type: '',
+  });
 
   const validatePassword = (password) => {
     const errors = [];
@@ -41,7 +47,12 @@ export default function SignUpScreen({ navigation }) {
   const handleSignUp = async () => {
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
-      Alert.alert("Weak Password", passwordValidation.errors.join(" "));
+      setAlertConfig({
+        title: 'Weak Password',
+        message: passwordValidation.errors.join(' '),
+        type: 'error'
+      });
+      setShowAlert(true);
       return;
     }
 
@@ -64,15 +75,28 @@ export default function SignUpScreen({ navigation }) {
       const data = await response.json();
 
       if (response.ok) {
-        Alert.alert("Success", "Account created successfully", [
-          { text: "OK", onPress: () => navigation.navigate("login") },
-        ]);
+        setAlertConfig({
+          title: 'Success',
+          message: 'Account created successfully',
+          type: 'success'
+        });
+        setShowAlert(true);
       } else {
-        Alert.alert("Error", data.message || "Something went wrong");
+        setAlertConfig({
+          title: 'Error',
+          message: data.message || 'Something went wrong',
+          type: 'error'
+        });
+        setShowAlert(true);
       }
     } catch (error) {
       console.error("Error:", error);
-      Alert.alert("Error", "Failed to create account");
+      setAlertConfig({
+        title: 'Error',
+        message: 'Failed to create account',
+        type: 'error'
+      });
+      setShowAlert(true);
     }
   };
 
@@ -195,6 +219,18 @@ export default function SignUpScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </LinearGradient>
+      <SweetAlert
+        visible={showAlert}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onConfirm={() => {
+          setShowAlert(false);
+          if (alertConfig.type === 'success') {
+            navigation.navigate('login');
+          }
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }
