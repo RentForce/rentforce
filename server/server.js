@@ -10,6 +10,7 @@ const { Server } = require('socket.io');
 const chatRoutes = require('./routes/chat');
 const stripe = require('stripe')('sk_test_51QWZjFIMfjBRRWpm6iHBv9hhM8aJjzg436fkGQIat8OLzaV4U5524lynVZp7OhkDYZ1Bne5RxWzl3fOu0LIsmWsa00GEIswlHy');
 const bodyParser = require('body-parser');
+const { sendBookingRequestEmail } = require('./services/emailService');
 
 const prisma = new PrismaClient();
 const app = express();
@@ -83,40 +84,20 @@ app.post('/create-payment-intent', async (req, res) => {
   }
 });
 
-const sendBookingEmails = async (guestEmail, hostEmail, houseDetails, price) => {
-    const guestMailOptions = {
-        from: 'mejrisaif2020@gmail.com',
-        to: "yassine2904@gmail.com",
-        subject: 'Booking Confirmation',
-        text: `Your booking for the house is confirmed. Details: ${houseDetails}, Price: ${price}`,
-    };
-
-    const hostMailOptions = {
-        from: 'mejrisaif2020@gmail.com',
-        to: "yassine2904@gmail.com",
-        subject: 'New Booking Request',
-        text: `A guest has requested to book your house. Details: ${houseDetails}, Price: ${price}. Please accept or reject the booking.`,
-    };
-
-    try {
-        await transporter.sendMail(guestMailOptions);
-        await transporter.sendMail(hostMailOptions);
-        console.log('Booking confirmation emails sent successfully.');
-    } catch (error) {
-        console.error('Error sending emails:', error);
-    }
-};
-
 app.post('/confirm-booking', async (req, res) => {
-    const { guestEmail, hostEmail, houseDetails, price } = req.body; 
+  const { guestEmail, hostEmail, houseDetails, price } = req.body;
 
-    try {
-        await sendBookingEmails(guestEmail, hostEmail, houseDetails, price);
-        res.status(200).json({ message: 'Booking confirmed and emails sent.' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error confirming booking and sending emails.' });
-    }
-  })
+  try {
+    await sendBookingRequestEmail(guestEmail, hostEmail, houseDetails, price);
+    res.status(200).json({ message: 'Booking request sent and emails delivered successfully.' });
+  } catch (error) {
+    console.error('Error processing booking confirmation:', error);
+    res.status(500).json({ 
+      message: 'Error sending booking confirmation emails',
+      error: error.message 
+    });
+  }
+});
 
 const io = new Server(server, {
   cors: {
@@ -140,15 +121,18 @@ io.on('connection', (socket) => {
     console.log('A user connected');
 
     socket.on('join chat', (chatId) => {
+  
+      
         socket.join(`chat:${chatId}`);
         console.log(`User joined chat: ${chatId}`);
     });
 
     socket.on('send message', (messageData) => {
-        io.to(`chat:${messageData.chatId}`).emit('new message', messageData);
-        console.log('Message sent to chat:', messageData.chatId);
-    });
-
+      // Emit the 'new message' event to all clients in the chat room
+      io.to(`chat:${messageData.chatId}`).emit('new message', messageData);
+      console.log('Message sent to chat:', messageData.chatId, messageData);
+  });
+  
     socket.on('disconnect', () => {
         console.log('User disconnected');
     });

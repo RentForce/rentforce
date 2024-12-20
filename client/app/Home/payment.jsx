@@ -10,7 +10,7 @@ export default function App() {
   useEffect(() => {
     async function createPaymentIntent() {
       try {
-        const response = await fetch('http://192.168.123.193:5000/create-payment-intent', {
+        const response = await fetch(`${apiUrl}/create-payment-intent`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

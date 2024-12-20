@@ -4,14 +4,14 @@ import ProfileScreen from "./profile/ProfileScreen.jsx";
 import PersonalScreen from "./profile/PersonalScreen.jsx";
 import ShowProfile from "./profile/showprofile";
 import CreatePost from "./profile/CreatePost.jsx";
-import ChatSelectionScreen from './chat/ChatSelectionScreen.jsx';
-import Chat from '../app/chat/Chat.jsx';
-import ChatList from './chat/ChatList.jsx';
-import Login from './Auth/Login';
-import SignUpScreen from './Auth/Sign-up';
-import ForgetPassword from './Auth/Forget';
-import ResetPassword from './Auth/reset';
-import Favourites from './favourites/Favourites.jsx';
+import ChatSelectionScreen from "./chat/ChatSelectionScreen.jsx";
+import Chat from "../app/chat/Chat.jsx";
+import ChatList from "./chat/ChatList.jsx";
+import Login from "./Auth/Login";
+import SignUpScreen from "./Auth/Sign-up";
+import ForgetPassword from "./Auth/Forget";
+import ResetPassword from "./Auth/reset";
+import Favourites from "./favourites/Favourites.jsx";
 import Home from "./Home/Home.jsx";
 import HomeDetails from "./Home/HomeDetails.jsx";
 import BookingPage from "./Home/BookingPage"; 
@@ -20,7 +20,7 @@ const Stack = createNativeStackNavigator();
 function App() {
   return (
 <Stack.Navigator>
-        {/* <Stack.Screen name="signup" component={SignUpScreen} options={{ headerShown: false }} /> */}
+        <Stack.Screen name="signup" component={SignUpScreen} options={{ headerShown: false }} />
         <Stack.Screen name="login" component={Login} options={{ headerShown: false }} />
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
         <Stack.Screen name="favourites" component={Favourites} options={{ headerShown: false }} />        
