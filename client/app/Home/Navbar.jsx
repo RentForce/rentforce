@@ -11,10 +11,7 @@ const Navbar = ({ navigation, userId }) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.iconContainer}
-        onPress={handleConfirmExplore}
-      >
+      <TouchableOpacity onPress={  ()=>  navigation.navigate("Home")}>
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>

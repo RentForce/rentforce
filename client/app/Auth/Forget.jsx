@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   View,
@@ -27,7 +26,9 @@ export default function ForgetPassword({ navigation }) {
         const response = await fetch(`${apiUrl}/user/send-code`, {
           method: "POST",
           headers: {
+            "User-Agent":"Thunder Client (https://www.thunderclient.com)",
             "Content-Type": "application/json",
+            "Authorization":"App daa6aec38feddaf03cb3b0f318706f0d-5770c954-04d6-46cd-a3f7-9fd4abdd4e29",
           },
           body: JSON.stringify({
             [selectedOption]: inputValue,
@@ -46,7 +47,8 @@ export default function ForgetPassword({ navigation }) {
         const data = await response.json();
         Alert.alert("Success", `Code sent to ${inputValue}`);
 
-        navigation.navigate("reset", { [selectedOption]: inputValue });
+        const params = selectedOption === "sms" ? { phoneNumber: inputValue } : { email: inputValue };
+        navigation.navigate("reset", params);
       } catch (error) {
         console.error("Error:", error);
         Alert.alert("Error", "Failed to send code");
