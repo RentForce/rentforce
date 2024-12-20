@@ -19,11 +19,11 @@ const Stack = createNativeStackNavigator();
 function App() {
   return (
     <Stack.Navigator>
-      <Stack.Screen
+      {/* <Stack.Screen
         name="signup"
         component={SignUpScreen}
         options={{ headerShown: false }}
-      />
+      /> */}
       <Stack.Screen
         name="login"
         component={Login}
