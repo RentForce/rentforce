@@ -22,8 +22,7 @@ const transporter = nodemailer.createTransport({
       pass: 'hxqk duxl gtwz jyrw', 
   },
 });
-
-app.use(
+app.use( 
   cors({
     origin: [
       "http://localhost:19000",
@@ -37,7 +36,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-const corsOptions = {
+const corsOptions = { 
   origin: [
       'http://localhost:19000',
       'http://localhost:19001',
@@ -55,7 +54,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
-app.use(cors(corsOptions));
+app.use(cors(corsOptions)); 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
