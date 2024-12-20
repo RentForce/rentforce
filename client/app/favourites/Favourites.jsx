@@ -61,7 +61,7 @@ const Favourites = ({ navigation }) => {
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.id;
 
-      await axios.delete(`${apiUrl}/api/user/favourites`, {
+      await axios.delete(`${apiUrl}/user/favourites`, {
         data: { userId, postId },
         headers: {
           Authorization: `Bearer ${token}`,

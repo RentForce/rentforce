@@ -49,9 +49,24 @@ const ProfileScreen = ({ navigation, userId, route }) => {
   //   fetshUser()
   // },[])
 
-  const handleLogout = () => {
-    navigation.navigate("login");
-  };
+  const handleLogout = async () => {
+      try {
+        // Clear AsyncStorage
+        await AsyncStorage.removeItem("userToken");
+        await AsyncStorage.removeItem("userId");
+        await AsyncStorage.removeItem("currentUser");
+        console.log("cleared")
+        
+        // Navigate back to the sign-up page
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "signup" }], // Change to "signup"
+        });
+      } catch (error) {
+        console.error("Error during logout:", error);
+        Alert.alert("Logout Failed", "Could not log out. Please try again.");
+      }
+    };
 
   const handleNavigateToPersonalScreen = () => {
     navigation.navigate("personal", { userId: userData.id });

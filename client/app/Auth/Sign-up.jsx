@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,7 +19,6 @@ export default function SignUpScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-console.log(apiUrl , "hi");
 
   const validatePassword = (password) => {
     const errors = [];
@@ -76,140 +77,152 @@ console.log(apiUrl , "hi");
   };
 
   return (
-    <LinearGradient
-      colors={["rgba(61,85,96,1)", "rgba(144,146,150,1)"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
+    <KeyboardAvoidingView
       style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View>
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Enter your Personal Data</Text>
+      <LinearGradient
+        colors={["rgba(61,85,96,1)", "rgba(144,146,150,1)"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradient}
+      >
+        <View style={styles.innerContainer}>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Enter your Personal Data</Text>
 
-        <View style={styles.inputContainer}>
-          <FontAwesome
-            name="user"
-            size={20}
-            color="black"
-            style={styles.icon}
-          />
-          <TextInput
-            placeholder="First Name"
-            style={styles.input}
-            value={firstName}
-            onChangeText={setFirstName}
-          />
-        </View>
-        <View style={styles.inputContainer}>
-          <FontAwesome
-            name="user"
-            size={20}
-            color="black"
-            style={styles.icon}
-          />
-          <TextInput
-            placeholder="Last Name"
-            style={styles.input}
-            value={lastName}
-            onChangeText={setLastName}
-          />
-        </View>
-        <View style={styles.inputContainer}>
-          <FontAwesome
-            name="envelope"
-            size={20}
-            color="black"
-            style={styles.icon}
-          />
-          <TextInput
-            placeholder="Email Address"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-          />
-        </View>
-        <View style={styles.inputContainer}>
-          <FontAwesome
-            name="lock"
-            size={20}
-            color="black"
-            style={styles.icon}
-          />
-          <TextInput
-            placeholder="Password"
-            secureTextEntry={!passwordVisible}
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <FontAwesome
-            name={passwordVisible ? "eye-slash" : "eye"}
-            size={20}
-            color="black"
-            onPress={() => setPasswordVisible(!passwordVisible)}
-          />
-        </View>
-
-        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-          <Text style={styles.buttonText}>Sign Up</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.orText}>Or continue with</Text>
-        <View style={styles.socialContainer}>
-          <View style={styles.iconBox}>
+          <View style={styles.inputContainer}>
             <FontAwesome
-              name="google"
-              size={30}
-              color="white"
-              style={styles.socialIcon}
-              onPress={() => promptAsync()}
+              name="user"
+              size={20}
+              color="black"
+              style={styles.icon}
+            />
+            <TextInput
+              placeholder="First Name"
+              style={styles.input}
+              value={firstName}
+              onChangeText={setFirstName}
             />
           </View>
-          <View style={styles.iconBox}>
+          <View style={styles.inputContainer}>
             <FontAwesome
-              name="apple"
-              size={30}
-              color="white"
-              style={styles.socialIcon}
+              name="user"
+              size={20}
+              color="black"
+              style={styles.icon}
+            />
+            <TextInput
+              placeholder="Last Name"
+              style={styles.input}
+              value={lastName}
+              onChangeText={setLastName}
             />
           </View>
-          <View style={styles.iconBox}>
+          <View style={styles.inputContainer}>
             <FontAwesome
-              name="facebook"
-              size={30}
-              color="white"
-              style={styles.socialIcon}
+              name="envelope"
+              size={20}
+              color="black"
+              style={styles.icon}
+            />
+            <TextInput
+              placeholder="Email Address"
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
-        </View>
+          <View style={styles.inputContainer}>
+            <FontAwesome
+              name="lock"
+              size={20}
+              color="black"
+              style={styles.icon}
+            />
+            <TextInput
+              placeholder="Password"
+              secureTextEntry={!passwordVisible}
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <FontAwesome
+              name={passwordVisible ? "eye-slash" : "eye"}
+              size={20}
+              color="black"
+              onPress={() => setPasswordVisible(!passwordVisible)}
+            />
+          </View>
 
-        <TouchableOpacity onPress={() => navigation.navigate("login")}>
-          <Text style={styles.accountText}>
-            Already have an account? Log in
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </LinearGradient>
+          <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+            <Text style={styles.buttonText}>Sign Up</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.orText}>Or continue with</Text>
+          <View style={styles.socialContainer}>
+            <View style={styles.iconBox}>
+              <FontAwesome
+                name="google"
+                size={30}
+                color="white"
+                style={styles.socialIcon}
+                onPress={() => promptAsync()}
+              />
+            </View>
+            <View style={styles.iconBox}>
+              <FontAwesome
+                name="apple"
+                size={30}
+                color="white"
+                style={styles.socialIcon}
+              />
+            </View>
+            <View style={styles.iconBox}>
+              <FontAwesome
+                name="facebook"
+                size={30}
+                color="white"
+                style={styles.socialIcon}
+              />
+            </View>
+          </View>
+
+          <TouchableOpacity onPress={() => navigation.navigate("login")}>
+            <Text style={styles.accountText}>
+              Already have an account? Log in
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  gradient: {
+    flex: 1,
     alignItems: "center",
-    padding: 20,
+    justifyContent: "center",
+  },
+  innerContainer: {
+    width: "90%", // Use percentage for responsiveness
+    alignItems: "center",
   },
   title: {
-    fontSize: 60,
+    fontSize: 30, // Adjusted for better responsiveness
     fontWeight: "bold",
     color: "white",
     marginTop: 50,
   },
   subtitle: {
-    fontSize: 25,
+    fontSize: 20, // Adjusted for better responsiveness
     color: "#909296",
     marginVertical: 20,
-    marginLeft: 45,
+    textAlign: "center",
   },
   inputContainer: {
     flexDirection: "row",
@@ -244,13 +257,13 @@ const styles = StyleSheet.create({
   orText: {
     color: "white",
     marginVertical: 10,
-    marginLeft: 130,
+    textAlign: "center",
   },
   socialContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
     width: "60%",
-    marginLeft: 70,
+    marginVertical: 10,
   },
   socialIcon: {
     marginHorizontal: 10,

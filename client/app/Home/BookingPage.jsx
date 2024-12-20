@@ -18,14 +18,12 @@ import * as Animatable from "react-native-animatable";
 import Navbar from "./Navbar";
 import axios from "axios";
 
-const apiUrl = process.env.EXPO_PUBLIC_API_URL
 
 // Define getDatesInRange helper function OUTSIDE the component
 const getDatesInRange = (startDate, endDate) => {
   const dates = {};
   const start = new Date(startDate);
   const end = new Date(endDate);
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL
 
 
   for (
@@ -59,6 +57,8 @@ const getDatesInRange = (startDate, endDate) => {
 };
 
 const BookingPage = ({ navigation, route }) => {
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL
+
   const { post } = route.params || {};
   const initialPaymentAmount = post && post.price ? post.price.toString() : "0";
 

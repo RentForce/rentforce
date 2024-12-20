@@ -18,6 +18,7 @@ import axios from "axios";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Navbar from "./Navbar";
 import ImageZoom from "react-native-image-pan-zoom";
+import MapView, { Marker } from "react-native-maps";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -262,12 +263,26 @@ const HomeDetails = ({ route, navigation }) => {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Location</Text>
-            <Image
-              source={{
-                uri: "https://c8.alamy.com/comp/DWGEWW/round-red-thumb-tack-pinched-through-copenhagen-on-denmark-map-part-DWGEWW.jpg",
-              }} // Replace with actual map image URL
-              style={styles.mapImage}
-            />
+            {post.map && (
+              <MapView
+                style={styles.map}
+                initialRegion={{
+                  latitude: parseFloat(post.map.latitude),
+                  longitude: parseFloat(post.map.longitude),
+                  latitudeDelta: 0.0922,
+                  longitudeDelta: 0.0421,
+                }}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: parseFloat(post.map.latitude),
+                    longitude: parseFloat(post.map.longitude),
+                  }}
+                  title={post.title}
+                  description={post.location}
+                />
+              </MapView>
+            )}
             <View style={styles.locationDetails}>
               <Icon name="location-on" size={24} color="#000" />
               <Text style={styles.locationText}>
@@ -289,7 +304,7 @@ const HomeDetails = ({ route, navigation }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>What guests loved the most</Text>
             <View style={styles.review}>
-              <Text style={styles.flag}>🇩🇰</Text>
+              <Text style={styles.flag}>🇰🇰</Text>
               <Text style={styles.reviewText}>
                 <Text style={styles.boldText}>Liam - Denmark</Text>
                 {"\n"}Amazing place!! Location is great, and the hotel staff are
@@ -622,6 +637,11 @@ const styles = StyleSheet.create({
   priceValue: {
     fontWeight: "bold",
     color: "#2C3E50",
+  },
+  map: {
+    width: "100%",
+    height: 150,
+    marginBottom: 8,
   },
 });
 
