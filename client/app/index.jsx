@@ -15,6 +15,7 @@ import Favourites from './favourites/Favourites.jsx';
 import Home from "./Home/Home.jsx";
 import HomeDetails from "./Home/HomeDetails.jsx";
 import BookingPage from "./Home/BookingPage"; 
+import pay from "./Home/payment.jsx"
 const Stack = createNativeStackNavigator();
 function App() {
   return (
@@ -31,11 +32,12 @@ function App() {
         <Stack.Screen name="CreatePost" component={CreatePost} options={{ headerShown: false }} />
         <Stack.Screen name="HomeDetails" component={HomeDetails} options={{ headerShown: false }} />
         <Stack.Screen name="Booking" component={BookingPage} options={{ headerShown: false }}/>
-      
-        <Stack.Screen name="ChatSelectionScreen" component={ChatSelectionScreen} options={{ title: 'Select User' }}/>
+        <Stack.Screen name="payment" component={pay} options={{ headerShown: false }}/>
+
+        {/* <Stack.Screen name="ChatSelectionScreen" component={ChatSelectionScreen} options={{ title: 'Select User' }}/>
         <Stack.Screen name="Chat" component={Chat} options={({ route }) => ({  title: `Chat with ${route.params?.receiverName || 'User'}`,
           })}
-        />
+        /> */}
 </Stack.Navigator>
    
   );

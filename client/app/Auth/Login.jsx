@@ -9,10 +9,11 @@ const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://192.168.103.15:5000/user/login", {
+      const response = await axios.post("http://192.168.123.193:5000/user/login", {
         email,
         password,
       });

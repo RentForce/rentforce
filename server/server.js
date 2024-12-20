@@ -8,10 +8,11 @@ const nodemailer = require('nodemailer');
 const http = require('http');
 const { Server } = require('socket.io');
 const chatRoutes = require('./routes/chat');
+const stripe = require('stripe')('sk_test_51QWZjFIMfjBRRWpm6iHBv9hhM8aJjzg436fkGQIat8OLzaV4U5524lynVZp7OhkDYZ1Bne5RxWzl3fOu0LIsmWsa00GEIswlHy');
+const bodyParser = require('body-parser');
+
 const prisma = new PrismaClient();
 const app = express();
-
-
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
@@ -44,10 +45,10 @@ const corsOptions = {
       'http://localhost:19002',
      
       'http://localhost:8081',
-      'exp://localhost:19000',  // Add this
-      'exp://localhost:19001',  // Add this
-      'exp://localhost:19002',  // Add this
-      'http://192.168.11.118:19000', // Add your actual IP address variations
+      'exp://localhost:19000',  
+      'exp://localhost:19001',  
+      'exp://localhost:19002',  
+      'http://192.168.11.118:19000', 
       'http://192.168.11.118:19001',
       'http://192.168.11.118:19002'
   ],
@@ -58,11 +59,29 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 const server = http.createServer(app);
 
 app.use("/user", userRoutes);
 app.use("/posts", postsRouter);
+
+// Stripe Payment Intent Route
+app.post('/create-payment-intent', async (req, res) => {
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: req.body.amount, 
+      currency: 'usd', 
+    });
+
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).send(error.message);
+  }
+});
 
 const sendBookingEmails = async (guestEmail, hostEmail, houseDetails, price) => {
     const guestMailOptions = {
@@ -98,6 +117,7 @@ app.post('/confirm-booking', async (req, res) => {
         res.status(500).json({ message: 'Error confirming booking and sending emails.' });
     }
   })
+
 const io = new Server(server, {
   cors: {
       origin: corsOptions.origin,
@@ -105,7 +125,7 @@ const io = new Server(server, {
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true
   },
-  transports: ['websocket', 'polling'] // Explicitly set transports
+  transports: ['websocket', 'polling']
 });
 
 app.use((req, res, next) => {

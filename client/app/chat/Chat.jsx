@@ -15,7 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 const ChatScreen = () => {
   const route = useRoute()
   const navigation = useNavigation()
-  
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
   const [chatDetails, setChatDetails] = useState({
     chatId: null,
     userId: null,

@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import * as ImagePicker from 'expo-image-picker';
+
+const CLOUDINARY_UPLOAD_PRESET = 'your_upload_preset';
+const CLOUDINARY_CLOUD_NAME = 'your_cloud_name';
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
 
 const CreatePost = () => {
     const [formData, setFormData] = useState({
@@ -22,55 +28,75 @@ const CreatePost = () => {
         });
     };
 
-    const handleSubmit = async () => {
-        try {
-            const token = await AsyncStorage.getItem('userToken');
-            
-            // Debug: Log token before sending
-            console.log('Token being sent:', token);
+    const pickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission needed', 'Sorry, we need camera roll permissions to make this work!');
+            return;
+        }
 
-            // Prepare images for upload
-            const imagesArray = formData.images ? JSON.parse(formData.images) : [];
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
 
-            const uploadPromises = imagesArray.map(async (image) => {
+        if (!result.canceled) {
+            const localUri = result.assets[0].uri;
+
+            try {
                 const formData = new FormData();
                 formData.append('file', {
-                    uri: image,
-                    type: `image/${image.split('.').pop()}`,
-                    name: `upload.${image.split('.').pop()}`
+                    uri: localUri,
+                    type: `image/${localUri.split('.').pop()}`,
+                    name: `upload.${localUri.split('.').pop()}`
                 });
-                formData.append('upload_preset', "ignmh24s");
+                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+                formData.append('cloud_name', CLOUDINARY_CLOUD_NAME);
 
-                const response = await axios.post(
-                    `https://api.cloudinary.com/v1_1/ignmh24s/image/upload`,
+                const cloudinaryResponse = await axios.post(
+                    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
                     formData,
                     {
                         headers: {
-                            'Content-Type': 'multipart/form-data',
+                            'Content-Type': 'multipart/form-data'
                         }
                     }
                 );
-                return response.data.secure_url; // Return the uploaded image URL
-            });
 
-            const uploadedImages = await Promise.all(uploadPromises);
+                const uploadedImageUrl = cloudinaryResponse.data.secure_url;
+                setFormData({
+                    ...formData,
+                    images: JSON.stringify([uploadedImageUrl])
+                });
+            } catch (error) {
+                console.error('Image upload error:', error);
+                Alert.alert('Upload Failed', 'Could not upload image. Please try again.');
+            }
+        }
+    };
+
+    const handleSubmit = async () => {
+        try {
+            const token = await AsyncStorage.getItem('userToken');
+            const imagesArray = formData.images ? JSON.parse(formData.images) : [];
 
             const response = await axios.post(
-                'http://192.168.103.15:5000/user/posts', 
+                'http://192.168.123.193:5000/user/posts',
                 {
                     ...formData,
-                    images: uploadedImages // Use uploaded image URLs
-                }, 
+                    images: imagesArray
+                },
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}` // Ensure Bearer prefix
+                        'Authorization': `Bearer ${token}`
                     }
                 }
             );
             console.log('Post created:', response.data);
         } catch (error) {
-            // More detailed error logging
             console.error('Error creating post:', 
                 error.response ? error.response.data : error,
                 'Full error:', error
@@ -80,7 +106,7 @@ const CreatePost = () => {
 
     return (
         <LinearGradient
-            colors={['#F1EFEF', '#FFFFFF']} // Gradient for background
+            colors={['#F1EFEF', '#FFFFFF']}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={styles.container}
@@ -92,12 +118,9 @@ const CreatePost = () => {
                 value={formData.title}
                 style={styles.input}
             />
-            <TextInput
-                placeholder="Images (JSON format)"
-                onChangeText={(value) => handleChange('images', value)}
-                value={formData.images}
-                style={styles.input}
-            />
+            <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
+                <Text style={styles.imagePickerText}>Pick an Image</Text>
+            </TouchableOpacity>
             <TextInput
                 placeholder="Description"
                 onChangeText={(value) => handleChange('description', value)}
@@ -129,7 +152,7 @@ const CreatePost = () => {
                 <Picker.Item label="Hotel" value="hotel" />
             </Picker>
             <LinearGradient
-                colors={['#333333', '#000000']} // Gradient for button
+                colors={['#333333', '#000000']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.buttonContainer}
@@ -142,42 +165,53 @@ const CreatePost = () => {
     );
 };
 
-// Styles for the component
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#F1EFEF', // Soft ash gray for background
+        backgroundColor: '#F1EFEF',
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#333333', // Charcoal black for title
+        color: '#333333',
         marginBottom: 20,
         textAlign: 'center',
     },
     input: {
         height: 50,
-        borderColor: '#A9A9A9', // Soft ash gray border
+        borderColor: '#A9A9A9',
         borderWidth: 1,
         marginBottom: 15,
         paddingHorizontal: 10,
         borderRadius: 8,
-        backgroundColor: '#FFFFFF', // White background for inputs
+        backgroundColor: '#FFFFFF',
         fontSize: 16,
-        color: '#333333', // Charcoal black text
+        color: '#333333',
+    },
+    imagePicker: {
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#A9A9A9',
+        borderRadius: 8,
+        marginBottom: 15,
+    },
+    imagePickerText: {
+        color: '#FFFFFF',
+        fontSize: 16,
     },
     picker: {
         height: 50,
         marginBottom: 15,
         borderRadius: 8,
-        backgroundColor: '#FFFFFF', // White background for picker
-        color: '#333333', // Charcoal black text
+        backgroundColor: '#FFFFFF',
+        color: '#333333',
     },
     buttonContainer: {
         marginTop: 20,
         borderRadius: 8,
-        overflow: 'hidden', // Ensures the gradient follows the button shape
+        overflow: 'hidden',
     },
     button: {
         paddingVertical: 12,
@@ -186,7 +220,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         fontSize: 18,
-        color: '#FFFFFF', // White text for button
+        color: '#FFFFFF',
         fontWeight: 'bold',
     },
 });

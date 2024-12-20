@@ -5,12 +5,13 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const DEFAULT_PROFILE_IMAGE = 'https://www.shutterstock.com/image-vector/user-icon-vector-trendy-flat-600nw-1720665448.jpg';
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 const ProfileScreen = ({navigation, userId, route}) => {
   const { userId: routeUserId, refresh, setRefresh, image } = route.params;
   const [userData, setUserData] = useState(route.params?.updatedUser || {});
   const [profileImage, setProfileImage] = useState(image || DEFAULT_PROFILE_IMAGE);
-console.log(route.params , "sss");
+  console.log(route.params , "sss");
   useEffect(() => {
     if (route.params?.updatedUser) {
       setUserData(route.params.updatedUser);
@@ -20,7 +21,7 @@ console.log(route.params , "sss");
     } else {
       const fetchUserData = async () => {
         try {
-          const response = await axios.get(`http://192.168.103.15:5000/user/${userId}`);
+          const response = await axios.get(`http://192.168.123.193:5000/user/${userId}`);
           setUserData(response.data);
           console.log(response , "salem");
         } catch (err) {
@@ -40,21 +41,17 @@ console.log(route.params , "sss");
     console.log("user data", parsedUser);
   }
 
-
-  // useEffect(()=>{
-  //   fetshUser()
-  // },[])
-
-
   const handleLogout = () => {
- 
     navigation.navigate('login');
   };
 
   const handleNavigateToPersonalScreen = () => {
     navigation.navigate('personal', { userId: userData.id });
   };
- 
+
+  const handleNavigateToPayment = () => {
+    navigation.navigate('payment'); // Ensure 'payment' is the correct route name
+  };
 
   return (
     <View style={styles.container}>
@@ -64,10 +61,9 @@ console.log(route.params , "sss");
             source={{ uri: profileImage }} 
             style={styles.profileImage}
           />
-         
         </View>
         <Text style={styles.profileName} onPress={() => navigation.navigate('showprofile', { userId: userData.id })}>{`${userData.firstName} ${userData.lastName}`}</Text>    
-            <Text style={styles.profileEmail}>{userData.email}</Text>
+        <Text style={styles.profileEmail}>{userData.email}</Text>
       </View>
 
       <View style={styles.accountSettings}>
@@ -79,7 +75,7 @@ console.log(route.params , "sss");
           </View>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.settingItem}>
+        <TouchableOpacity style={styles.settingItem} onPress={handleNavigateToPayment}>
           <View style={styles.settingContent}>
             <Ionicons name="card" size={20} color="#333" />
             <Text style={styles.settingText}>Payments and payouts</Text>

@@ -9,6 +9,7 @@ function ResetPassword({ route, navigation }) {
     const [isCodeVerified, setIsCodeVerified] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [passwordVisible, setPasswordVisible] = useState(false);
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
     const handleCodeSubmit = async () => {
         if (!recoveryCode.trim()) {
@@ -17,7 +18,7 @@ function ResetPassword({ route, navigation }) {
         }
 
         try {
-            const response = await fetch('http://192.168.103.15:5000/user/verify-code', {
+            const response = await fetch('http://192.168.123.193:5000/user/verify-code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -49,7 +50,7 @@ function ResetPassword({ route, navigation }) {
         }
 
         try {
-            const response = await fetch('http://192.168.103.15:5000/user/update-password', {
+            const response = await fetch('http://192.168.123.193:5000/user/update-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

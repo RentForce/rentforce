@@ -25,6 +25,7 @@ const BookingPage = ({ navigation }) => {
   const [dialogVisible, setDialogVisible] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(false);
   const [totalPayment, setTotalPayment] = useState("");
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   useEffect(() => {
     if (rentalDuration && checkInDate) {
@@ -91,9 +92,28 @@ const BookingPage = ({ navigation }) => {
       houseDetails: "House details here", // Replace with actual house details
       price: totalPayment, // Use the calculated total payment
     };
+    Alert.alert(
+      "Payment Confirmation",
+      `You are about to pay $${totalPayment}. Do you want to proceed?`,
+      [
+          {
+              text: "Cancel",
+              onPress: () => console.log("Payment cancelled"),
+              style: "cancel",
+          },
+          {
+              text: "Pay",
+              onPress: async () => {
+                  // Call the payment function here
+                  await handlePayment(); // Ensure handlePayment is defined to process the payment
+              },
+          },
+      ],
+      { cancelable: false }
+  );
 
     try {
-      const response = await fetch('http://192.168.103.15:5000/confirm-booking', {
+      const response = await fetch('http://192.168.123.193:5000/confirm-booking', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

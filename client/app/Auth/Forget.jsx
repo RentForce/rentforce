@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 export default function ForgetPassword({ navigation }) {
   const [selectedOption, setSelectedOption] = useState(null);
   const [inputValue, setInputValue] = useState('');
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const handleOptionSelect = (option) => {
     setSelectedOption(option);
@@ -14,7 +15,7 @@ export default function ForgetPassword({ navigation }) {
   const handleSubmit = async () => {
     if (selectedOption === 'email' || selectedOption === 'sms') {
       try {
-        const response = await fetch('http://192.168.103.15:5000/user/send-code', {
+        const response = await fetch('http://192.168.123.193:5000/user/send-code', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

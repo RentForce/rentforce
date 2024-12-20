@@ -20,6 +20,7 @@ import Navbar from "./Navbar";
 import ImageZoom from "react-native-image-pan-zoom";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 const HomeDetails = ({ route, navigation }) => {
   const { post } = route.params;
@@ -41,7 +42,7 @@ const HomeDetails = ({ route, navigation }) => {
     const fetchImages = async () => {
       try {
         const response = await axios.get(
-          `http://192.168.103.15:5000/posts/images/${post.id}` // Replace X with your IP
+          `http://192.168.123.193:5000/posts/images/${post.id}` // Replace X with your IP
         );
         setImages(response.data);
         setLoading(false);
