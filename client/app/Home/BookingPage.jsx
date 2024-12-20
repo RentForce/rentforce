@@ -58,6 +58,8 @@ const getDatesInRange = (startDate, endDate) => {
 };
 
 const BookingPage = ({ navigation, route }) => {
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL
+
   const { post } = route.params || {};
   const initialPaymentAmount = post && post.price ? post.price.toString() : "0";
 
