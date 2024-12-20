@@ -18,14 +18,12 @@ import * as Animatable from "react-native-animatable";
 import Navbar from "./Navbar";
 import axios from "axios";
 
-const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 // Define getDatesInRange helper function OUTSIDE the component
 const getDatesInRange = (startDate, endDate) => {
   const dates = {};
   const start = new Date(startDate);
   const end = new Date(endDate);
-  // const apiUrl = process.env.EXPO_PUBLIC_API_URL
 
   for (
     let date = new Date(start);
@@ -208,6 +206,7 @@ const BookingPage = ({ navigation, route }) => {
       setIsLoading(true);
       const totalCost = calculateTotalCost();
 
+      // First create the booking
       const bookingData = {
         userId: 1, // Replace with actual user ID
         postId: post.id,
@@ -217,9 +216,28 @@ const BookingPage = ({ navigation, route }) => {
         numberOfGuests: parseInt(formData.numberOfGuests),
       };
 
-      const response = await axios.post(`${apiUrl}/posts/booking`, bookingData);
+      const bookingResponse = await axios.post(
+        `${apiUrl}/posts/booking`,
+        bookingData
+      );
 
-      if (response.status === 201) {
+      if (bookingResponse.status === 201) {
+        // Send email notification
+        const emailData = {
+          guestEmail: "yassine2904@gmail.com", // Replace with actual guest email
+          hostEmail: "mejrisaif2020@gmail.com", // Replace with actual host email
+          houseDetails: {
+            title: post.title,
+            location: post.location,
+            checkIn: formData.dateRange.startDate,
+            checkOut: formData.dateRange.endDate,
+            guests: formData.numberOfGuests
+          },
+          price: totalCost
+        };
+
+        await axios.post(`${apiUrl}/confirm-booking`, emailData);
+
         setShowConfirmModal(false);
         setShowSuccessModal(true);
       }
@@ -252,8 +270,7 @@ const BookingPage = ({ navigation, route }) => {
 
           <Text style={styles.confirmationTitle}>Booking Confirmed!</Text>
           <Text style={styles.confirmationText}>
-            "Your booking request is submitted. Check your email for details and
-            wait for the owner's approval."
+            Your booking has been successfully confirmed. Your request to book has been send successfully, we will send you an update soon.
           </Text>
 
           <View style={styles.bookingSummary}>

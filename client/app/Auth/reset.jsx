@@ -11,12 +11,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome } from "@expo/vector-icons"; // Import if you want to use icons
 
 function ResetPassword({ route, navigation }) {
-  const { email } = route.params;
-  const [recoveryCode, setRecoveryCode] = useState("");
-  const [isCodeVerified, setIsCodeVerified] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+    const { email } = route.params;
+    const [recoveryCode, setRecoveryCode] = useState('');
+    const [isCodeVerified, setIsCodeVerified] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+    const [passwordVisible, setPasswordVisible] = useState(false);
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const handleCodeSubmit = async () => {
     if (!recoveryCode.trim()) {

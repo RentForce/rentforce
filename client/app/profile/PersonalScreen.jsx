@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import SweetAlert from '../../components/SweetAlert';
 
 const CLOUDINARY_CLOUD_NAME = "dfbrjaxu7";
 const CLOUDINARY_UPLOAD_PRESET = "ignmh24s";
@@ -32,6 +33,7 @@ const ProfileScreen = ({ navigation, route }) => {
   const [updatedUserData, setUpdatedUserData] = useState({});
   const [profileImage, setProfileImage] = useState(null);
   const [bio, setBio] = useState("");
+  const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -144,27 +146,28 @@ const ProfileScreen = ({ navigation, route }) => {
     if (!userId) return;
 
     try {
-      // Merge additional data with existing updated user data
       const dataToUpdate = {
         ...updatedUserData,
         ...additionalData,
         bio: bio,
       };
 
-      const response = await axios.put(
-        `${apiUrl}/user/${userId}`,
-        dataToUpdate,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.put(`${apiUrl}/user/${userId}`, dataToUpdate, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.data) {
         setUserData(response.data);
         setIsEditing(false);
-        Alert.alert("Success", "Profile updated successfully");
+        setShowAlert(true);
+        
+        // Navigate after alert is dismissed
+        navigation.navigate("profile", {
+          updatedUser: response.data,
+          image: response.data.image
+        });
       }
     } catch (err) {
       console.error("Error updating user data:", err);
@@ -211,99 +214,109 @@ const ProfileScreen = ({ navigation, route }) => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.profileHeader}>
-        <View style={styles.imageContainer}>
-          <Image
-            source={{
-              uri: profileImage || DEFAULT_PROFILE_IMAGE,
-            }}
-            style={styles.profileImage}
-            onError={(e) =>
-              console.log("Image load error", e.nativeEvent.error)
-            }
-          />
-          <TouchableOpacity style={styles.editImageIcon} onPress={pickImage}>
-            <Ionicons name="camera" size={24} color="white" />
-          </TouchableOpacity>
+    <>
+      <SweetAlert
+        visible={showAlert}
+        title="Success"
+        message="Profile updated successfully"
+        type="success"
+        onConfirm={() => setShowAlert(false)}
+      />
+      
+      <ScrollView style={styles.container}>
+        <View style={styles.profileHeader}>
+          <View style={styles.imageContainer}>
+            <Image
+              source={{
+                uri: profileImage || DEFAULT_PROFILE_IMAGE,
+              }}
+              style={styles.profileImage}
+              onError={(e) =>
+                console.log("Image load error", e.nativeEvent.error)
+              }
+            />
+            <TouchableOpacity style={styles.editImageIcon} onPress={pickImage}>
+              <Ionicons name="camera" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          {isEditing ? (
+            <View style={styles.editForm}>
+              <TextInput
+                style={styles.editInput}
+                placeholder="First Name"
+                value={updatedUserData.firstName}
+                onChangeText={(text) =>
+                  setUpdatedUserData({ ...updatedUserData, firstName: text })
+                }
+              />
+              <TextInput
+                style={styles.editInput}
+                placeholder="Last Name"
+                value={updatedUserData.lastName}
+                onChangeText={(text) =>
+                  setUpdatedUserData({ ...updatedUserData, lastName: text })
+                }
+              />
+              <TextInput
+                style={styles.editInput}
+                placeholder="Email"
+                value={updatedUserData.email}
+                onChangeText={(text) =>
+                  setUpdatedUserData({ ...updatedUserData, email: text })
+                }
+                keyboardType="email-address"
+              />
+              <TextInput
+                style={styles.editInput}
+                placeholder="Bio"
+                value={bio}
+                onChangeText={setBio}
+                multiline
+              />
+              <View style={styles.editButtonContainer}>
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={() => handleUpdateUserData()}
+                >
+                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setIsEditing(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.profileName}>
+                {userData?.firstName} {userData?.lastName}
+              </Text>
+              <Text style={styles.profileEmail}>{userData?.email}</Text>
+              <Text style={styles.profileBio}>{userData?.bio}</Text>
+            </>
+          )}
         </View>
 
-        {isEditing ? (
-          <View style={styles.editForm}>
-            <TextInput
-              style={styles.editInput}
-              placeholder="First Name"
-              value={updatedUserData.firstName}
-              onChangeText={(text) =>
-                setUpdatedUserData({ ...updatedUserData, firstName: text })
-              }
-            />
-            <TextInput
-              style={styles.editInput}
-              placeholder="Last Name"
-              value={updatedUserData.lastName}
-              onChangeText={(text) =>
-                setUpdatedUserData({ ...updatedUserData, lastName: text })
-              }
-            />
-            <TextInput
-              style={styles.editInput}
-              placeholder="Email"
-              value={updatedUserData.email}
-              onChangeText={(text) =>
-                setUpdatedUserData({ ...updatedUserData, email: text })
-              }
-              keyboardType="email-address"
-            />
-            <TextInput
-              style={styles.editInput}
-              placeholder="Bio"
-              value={bio}
-              onChangeText={setBio}
-              multiline
-            />
-            <View style={styles.editButtonContainer}>
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={() => handleUpdateUserData()}
-              >
-                <Text style={styles.saveButtonText}>Save Changes</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setIsEditing(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : (
-          <>
-            <Text style={styles.profileName}>
-              {userData?.firstName} {userData?.lastName}
-            </Text>
-            <Text style={styles.profileEmail}>{userData?.email}</Text>
-            <Text style={styles.profileBio}>{userData?.bio}</Text>
-          </>
-        )}
-      </View>
+        <View style={styles.actionContainer}>
+          {!isEditing && (
+            <TouchableOpacity
+              style={styles.editProfileButton}
+              onPress={() => setIsEditing(true)}
+            >
+              <Ionicons name="pencil" size={20} color="white" />
+              <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
+          )}
 
-      <View style={styles.actionContainer}>
-        {!isEditing && (
-          <TouchableOpacity
-            style={styles.editProfileButton}
-            onPress={() => setIsEditing(true)}
-          >
-            <Ionicons name="pencil" size={20} color="white" />
-            <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
-        )}
-
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </>
   );
 };
 

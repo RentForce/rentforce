@@ -21,6 +21,7 @@ import ImageZoom from "react-native-image-pan-zoom";
 import MapView, { Marker } from "react-native-maps";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 const HomeDetails = ({ route, navigation }) => {
   const { post } = route.params;
@@ -30,7 +31,6 @@ const HomeDetails = ({ route, navigation }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showMoreRules, setShowMoreRules] = useState(false);
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL
 
 
   const imageSizes = [
