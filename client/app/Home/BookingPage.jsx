@@ -14,6 +14,7 @@ import { Ionicons, AntDesign } from "@expo/vector-icons";
 import Navbar from "./Navbar";
 
 const BookingPage = ({ navigation }) => {
+  
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [rentalDuration, setRentalDuration] = useState("");
