@@ -18,13 +18,14 @@ import * as Animatable from "react-native-animatable";
 import Navbar from "./Navbar";
 import axios from "axios";
 
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 // Define getDatesInRange helper function OUTSIDE the component
 const getDatesInRange = (startDate, endDate) => {
   const dates = {};
   const start = new Date(startDate);
   const end = new Date(endDate);
-
+  // const apiUrl = process.env.EXPO_PUBLIC_API_URL
 
   for (
     let date = new Date(start);
@@ -216,10 +217,7 @@ const BookingPage = ({ navigation, route }) => {
         numberOfGuests: parseInt(formData.numberOfGuests),
       };
 
-      const response = await axios.post(
-        `${apiUrl}/posts/booking`,
-        bookingData
-      );
+      const response = await axios.post(`${apiUrl}/posts/booking`, bookingData);
 
       if (response.status === 201) {
         setShowConfirmModal(false);
@@ -254,8 +252,8 @@ const BookingPage = ({ navigation, route }) => {
 
           <Text style={styles.confirmationTitle}>Booking Confirmed!</Text>
           <Text style={styles.confirmationText}>
-            Your booking has been successfully confirmed. We've sent you a
-            confirmation email with all the details.
+            "Your booking request is submitted. Check your email for details and
+            wait for the owner's approval."
           </Text>
 
           <View style={styles.bookingSummary}>
@@ -677,25 +675,33 @@ const BookingPage = ({ navigation, route }) => {
               style={styles.calendar}
               minDate={new Date().toISOString().split("T")[0]}
               theme={{
-                calendarBackground: "#F9F9F9",
-                textSectionTitleColor: "#1A3C40",
+                calendarBackground: "#FFFFFF",
+                textSectionTitleColor: "#1A1A1A",
                 selectedDayBackgroundColor: "#2D5A27",
-                selectedDayTextColor: "#fff",
+                selectedDayTextColor: "#FFFFFF",
                 todayTextColor: "#2D5A27",
-                dayTextColor: "#2d4150",
-                textDisabledColor: "#BBBBBB",
+                dayTextColor: "#1A1A1A",
+                textDisabledColor: "#CCCCCC",
                 dotColor: "#2D5A27",
-                selectedDotColor: "#ffffff",
-                arrowColor: "#1A3C40",
-                monthTextColor: "#1A3C40",
-                textMonthFontWeight: "bold",
+                selectedDotColor: "#FFFFFF",
+                arrowColor: "#2D5A27",
+                monthTextColor: "#1A1A1A",
+                textMonthFontWeight: "700",
                 textDayFontSize: 16,
-                textMonthFontSize: 16,
+                textMonthFontSize: 18,
                 textDayHeaderFontSize: 14,
-                backgroundColor: "#FFFFFF",
-                dayStyle: {
-                  borderRadius: 10,
-                  margin: 2,
+                textDayFontWeight: "500",
+                textDayHeaderFontWeight: "600",
+                "stylesheet.calendar.header": {
+                  header: {
+                    backgroundColor: "#FFFFFF",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    paddingLeft: 10,
+                    paddingRight: 10,
+                    marginTop: 8,
+                    alignItems: "center",
+                  },
                 },
               }}
               onDayPress={handleDateRangeChange}
@@ -935,7 +941,7 @@ const styles = StyleSheet.create({
     color: "#999",
   },
   calendarSection: {
-    backgroundColor: "pink",
+    backgroundColor: "#e0e0e0",
     borderRadius: 10,
     padding: 10,
     marginBottom: 20,
