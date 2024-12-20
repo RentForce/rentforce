@@ -115,6 +115,7 @@ const getPostsByCategory = async (req, res) => {
       },
       include: {
         images: true,
+        map: true,
       },
     });
 

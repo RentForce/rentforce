@@ -11,12 +11,19 @@ import {
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import SweetAlert from '../../components/SweetAlert';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: '',
+    message: '',
+    type: '',
+  });
 
   const handleLogin = async () => {
     try {
@@ -33,6 +40,13 @@ const Login = ({ navigation }) => {
         await AsyncStorage.setItem("userData", JSON.stringify(user));
 
         console.log("Token successfully stored:", user);
+        setAlertConfig({
+          title: 'Login Successful',
+          message: 'Welcome',
+          type: 'success'
+        });
+        setShowAlert(true);
+        
         navigation.navigate("Home", { updatedUser: user });
       }
 
@@ -42,15 +56,14 @@ const Login = ({ navigation }) => {
         "currentUser",
         JSON.stringify(response.data.user)
       );
-      Alert.alert("Login Successful", "Welcome");
-
-      navigation.navigate("Home");
     } catch (error) {
       console.error("Error:", error);
-      Alert.alert(
-        "Login Failed",
-        "Please check your credentials and try again."
-      );
+      setAlertConfig({
+        title: 'Login Failed',
+        message: 'Please check your credentials and try again.',
+        type: 'error'
+      });
+      setShowAlert(true);
     }
   };
 
@@ -147,6 +160,14 @@ const Login = ({ navigation }) => {
           </View>
         </View>
       </View>
+      
+      <SweetAlert
+        visible={showAlert}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onConfirm={() => setShowAlert(false)}
+      />
     </View>
   );
 };

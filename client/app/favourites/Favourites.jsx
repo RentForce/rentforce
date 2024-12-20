@@ -13,12 +13,20 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Navbar from "../Home/Navbar"; // Adjust the path as necessary
+import SweetAlert from '../../components/SweetAlert';
 
 const Favourites = ({ navigation }) => {
   const [favouritePosts, setFavouritePosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: '',
+    postIdToRemove: null,
+  });
 
   useEffect(() => {
     const fetchFavourites = async () => {
@@ -53,26 +61,59 @@ const Favourites = ({ navigation }) => {
   }, []);
 
   const handleRemoveFavourite = async (postId) => {
+    setAlertConfig({
+      visible: true,
+      title: 'Confirm Removal',
+      message: 'Are you sure you want to remove this from favorites?',
+      type: 'warning',
+      postIdToRemove: postId,
+    });
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!alertConfig.postIdToRemove) return;
+
     try {
       const token = await AsyncStorage.getItem("userToken");
-      if (!token) {
-        throw new Error("User token not found");
-      }
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.id;
 
-      await axios.delete(`${apiUrl}/api/user/favourites`, {
-        data: { userId, postId },
+      await axios.delete(`${apiUrl}/user/favourites`, {
+        data: {
+          userId,
+          postId: alertConfig.postIdToRemove,
+        },
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
         },
       });
-      setFavouritePosts(favouritePosts.filter((post) => post.id !== postId));
-      Alert.alert("Success", "Post removed from favourites");
+
+      setFavouritePosts(prevPosts => 
+        prevPosts.filter(post => post.id !== alertConfig.postIdToRemove)
+      );
+
+      setAlertConfig({
+        visible: true,
+        title: 'Success',
+        message: 'Post removed from favourites',
+        type: 'success',
+        postIdToRemove: null,
+      });
     } catch (err) {
-      console.error("Error removing favourite:", err);
-      Alert.alert("Error", "Failed to remove post from favourites");
+      setAlertConfig({
+        visible: true,
+        title: 'Error',
+        message: 'Failed to remove post from favourites',
+        type: 'error',
+        postIdToRemove: null,
+      });
+    }
+  };
+
+  const handleAlertClose = () => {
+    setAlertConfig({ ...alertConfig, visible: false });
+    if (alertConfig.type === 'success') {
+      navigation.navigate('Home');
     }
   };
 
@@ -136,8 +177,17 @@ const Favourites = ({ navigation }) => {
         />
       )}
       <View style={styles.navbarContainer}>
-        <Navbar />
+        <Navbar navigation={navigation} />
       </View>
+      <SweetAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onConfirm={alertConfig.type === 'warning' ? handleConfirmRemove : handleAlertClose}
+        onCancel={handleAlertClose}
+        showCancelButton={alertConfig.type === 'warning'}
+      />
     </View>
   );
 };

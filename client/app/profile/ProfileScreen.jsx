@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Navbar from "../Home/Navbar";
 
 const DEFAULT_PROFILE_IMAGE =
   "https://www.shutterstock.com/image-vector/user-icon-vector-trendy-flat-600nw-1720665448.jpg";
@@ -22,6 +23,7 @@ const ProfileScreen = ({ navigation, route }) => {
         if (route.params?.updatedUser) {
           setUserData(route.params.updatedUser);
           setProfileImage(route.params.updatedUser.image || DEFAULT_PROFILE_IMAGE);
+          await AsyncStorage.setItem('userData', JSON.stringify(route.params.updatedUser));
           return;
         }
 
@@ -46,9 +48,24 @@ const ProfileScreen = ({ navigation, route }) => {
     fetchUserData();
   }, [route.params]);
 
-  const handleLogout = () => {
-    navigation.navigate("login");
-  };
+  const handleLogout = async () => {
+      try {
+        // Clear AsyncStorage
+        await AsyncStorage.removeItem("userToken");
+        await AsyncStorage.removeItem("userId");
+        await AsyncStorage.removeItem("currentUser");
+        console.log("cleared")
+        
+        // Navigate back to the sign-up page
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "signup" }], // Change to "signup"
+        });
+      } catch (error) {
+        console.error("Error during logout:", error);
+        Alert.alert("Logout Failed", "Could not log out. Please try again.");
+      }
+    };
 
   const handleNavigateToPersonalScreen = () => {
     navigation.navigate("personal", { userId: userData.id });
@@ -56,76 +73,80 @@ const ProfileScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.profileHeader}>
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: profileImage }} style={styles.profileImage} />
+      <ScrollView style={styles.mainContent}>
+        <View style={styles.profileHeader}>
+          <View style={styles.imageContainer}>
+            <Image source={{ uri: profileImage }} style={styles.profileImage} />
+          </View>
+          <Text
+            style={styles.profileName}
+            onPress={() =>
+              navigation.navigate("showprofile", { userId: userData.id })
+            }
+          >{`${userData.firstName} ${userData.lastName}`}</Text>
+          <Text style={styles.profileEmail}>{userData.email}</Text>
         </View>
-        <Text
-          style={styles.profileName}
-          onPress={() =>
-            navigation.navigate("showprofile", { userId: userData.id })
-          }
-        >{`${userData.firstName} ${userData.lastName}`}</Text>
-        <Text style={styles.profileEmail}>{userData.email}</Text>
-      </View>
 
-      <View style={styles.accountSettings}>
-        <TouchableOpacity
-          style={styles.settingItem}
-          onPress={handleNavigateToPersonalScreen}
-        >
-          <View style={styles.settingContent}>
-            <Ionicons name="person" size={20} color="#333" />
-            <Text style={styles.settingText}>Personal information</Text>
-            <Ionicons name="chevron-forward" size={20} color="#333" />
-          </View>
-        </TouchableOpacity>
+        <View style={styles.accountSettings}>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={handleNavigateToPersonalScreen}
+          >
+            <View style={styles.settingContent}>
+              <Ionicons name="person" size={20} color="#333" />
+              <Text style={styles.settingText}>Personal information</Text>
+              <Ionicons name="chevron-forward" size={20} color="#333" />
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingItem}>
-          <View style={styles.settingContent}>
-            <Ionicons name="card" size={20} color="#333" />
-            <Text style={styles.settingText}>Payments and payouts</Text>
-          </View>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.settingItem}>
+            <View style={styles.settingContent}>
+              <Ionicons name="card" size={20} color="#333" />
+              <Text style={styles.settingText}>Payments and payouts</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingItem}>
-          <View style={styles.settingContent}>
-            <Ionicons name="notifications" size={20} color="#333" />
-            <Text style={styles.settingText}>Notifications</Text>
-          </View>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.settingItem}>
+            <View style={styles.settingContent}>
+              <Ionicons name="notifications" size={20} color="#333" />
+              <Text style={styles.settingText}>Notifications</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingItem}>
-          <View style={styles.settingContent}>
-            <Ionicons name="lock-closed" size={20} color="#333" />
-            <Text style={styles.settingText}>Privacy and sharing</Text>
-          </View>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.settingItem}>
+            <View style={styles.settingContent}>
+              <Ionicons name="lock-closed" size={20} color="#333" />
+              <Text style={styles.settingText}>Privacy and sharing</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingItem}>
-          <View style={styles.settingContent}>
-            <Ionicons name="briefcase" size={20} color="#333" />
-            <Text style={styles.settingText}>Travel for work</Text>
-          </View>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.settingItem}>
+            <View style={styles.settingContent}>
+              <Ionicons name="briefcase" size={20} color="#333" />
+              <Text style={styles.settingText}>Travel for work</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.settingItem}
-          onPress={() => navigation.navigate("CreatePost")} // Navigate to CreatePost
-        >
-          <View style={styles.settingContent}>
-            <Ionicons name="create" size={20} color="#333" />
-            <Text style={styles.settingText}>Create Post</Text>
-          </View>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => navigation.navigate("CreatePost")} // Navigate to CreatePost
+          >
+            <View style={styles.settingContent}>
+              <Ionicons name="create" size={20} color="#333" />
+              <Text style={styles.settingText}>Create Post</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingItem} onPress={handleLogout}>
-          <View style={styles.settingContent}>
-            <Ionicons name="exit" size={20} color="#333" />
-            <Text style={styles.settingText}>Logout</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity style={styles.settingItem} onPress={handleLogout}>
+            <View style={styles.settingContent}>
+              <Ionicons name="exit" size={20} color="#333" />
+              <Text style={styles.settingText}>Logout</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+      
+      <Navbar navigation={navigation} />
     </View>
   );
 };
@@ -134,6 +155,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+  mainContent: {
+    flex: 1,
+    backgroundColor: '#fff',
   },
   profileHeader: {
     alignItems: "center",

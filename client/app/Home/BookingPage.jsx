@@ -25,7 +25,6 @@ const getDatesInRange = (startDate, endDate) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
 
-
   for (
     let date = new Date(start);
     date <= end;
@@ -693,25 +692,33 @@ const BookingPage = ({ navigation, route }) => {
               style={styles.calendar}
               minDate={new Date().toISOString().split("T")[0]}
               theme={{
-                calendarBackground: "#F9F9F9",
-                textSectionTitleColor: "#1A3C40",
+                calendarBackground: "#FFFFFF",
+                textSectionTitleColor: "#1A1A1A",
                 selectedDayBackgroundColor: "#2D5A27",
-                selectedDayTextColor: "#fff",
+                selectedDayTextColor: "#FFFFFF",
                 todayTextColor: "#2D5A27",
-                dayTextColor: "#2d4150",
-                textDisabledColor: "#BBBBBB",
+                dayTextColor: "#1A1A1A",
+                textDisabledColor: "#CCCCCC",
                 dotColor: "#2D5A27",
-                selectedDotColor: "#ffffff",
-                arrowColor: "#1A3C40",
-                monthTextColor: "#1A3C40",
-                textMonthFontWeight: "bold",
+                selectedDotColor: "#FFFFFF",
+                arrowColor: "#2D5A27",
+                monthTextColor: "#1A1A1A",
+                textMonthFontWeight: "700",
                 textDayFontSize: 16,
-                textMonthFontSize: 16,
+                textMonthFontSize: 18,
                 textDayHeaderFontSize: 14,
-                backgroundColor: "#FFFFFF",
-                dayStyle: {
-                  borderRadius: 10,
-                  margin: 2,
+                textDayFontWeight: "500",
+                textDayHeaderFontWeight: "600",
+                "stylesheet.calendar.header": {
+                  header: {
+                    backgroundColor: "#FFFFFF",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    paddingLeft: 10,
+                    paddingRight: 10,
+                    marginTop: 8,
+                    alignItems: "center",
+                  },
                 },
               }}
               onDayPress={handleDateRangeChange}
@@ -951,7 +958,7 @@ const styles = StyleSheet.create({
     color: "#999",
   },
   calendarSection: {
-    backgroundColor: "pink",
+    backgroundColor: "#e0e0e0",
     borderRadius: 10,
     padding: 10,
     marginBottom: 20,
