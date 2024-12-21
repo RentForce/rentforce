@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import NotificationIcon from "../../components/NotificationIcon";
 
 const Navbar = ({ navigation, userId }) => {
   const handleConfirmExplore = () => {
@@ -43,8 +44,14 @@ const Navbar = ({ navigation, userId }) => {
         onPress={() => navigation.navigate("ChatSelectionScreen")}
       >
         <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
-        <View style={styles.notificationDot} />
         <Text style={styles.text}>Inbox</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.iconContainer}
+        onPress={() => navigation.navigate("notifications")}
+      >
+        <NotificationIcon size={24} color="#fff" />
+        <Text style={styles.text}>Notifications</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.iconContainer}
@@ -74,14 +81,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 12,
     color: "#888",
-  },
-  notificationDot: {
-    position: "absolute",
-    top: -2,
-    right: -10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
   },
 });
 

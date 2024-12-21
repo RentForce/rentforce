@@ -60,7 +60,8 @@ model Booking {
   endDate        DateTime
   totalPrice     Float
   numberOfGuests Int
-  status         BookingStatus
+  status         String     @default("PENDING") // "PENDING", "CONFIRMED", "REJECTED"
+  notifications Notification[]
 
   user User @relation(fields: [userId], references: [id])
   post Post @relation(fields: [postId], references: [id])
@@ -125,14 +126,15 @@ model History {
 }
 
 model Notification {
-  id        Int       @id @default(autoincrement())
-  message   String?
-  status    String?
-  createdAt DateTime?
+  id        Int      @id @default(autoincrement())
+  type      String   // "BOOKING_REQUEST", "BOOKING_ACCEPTED", "BOOKING_REJECTED"
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
   userId    Int
-  user      User      @relation(fields: [userId], references: [id])
-
-  @@unique([id])
+  bookingId Int?
+  user      User     @relation(fields: [userId], references: [id])
+  booking   Booking? @relation(fields: [bookingId], references: [id])
 }
 
 model Chat {

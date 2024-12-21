@@ -1,9 +1,16 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { createNotification } = require("./notification");
+
 const createBooking = async (req, res) => {
   try {
     const { userId, postId, startDate, endDate, numberOfGuests, totalPrice } =
       req.body;
+
+    const post = await prisma.post.findUnique({
+      where: { id: Number(postId) },
+      include: { user: true },
+    });
 
     const existingBookings = await prisma.booking.findMany({
       where: {
@@ -46,7 +53,35 @@ const createBooking = async (req, res) => {
         totalPrice: Number(totalPrice),
         status: "PENDING",
       },
+      include: {
+        user: true,
+        post: true,
+      },
     });
+
+    // Create notification for the host
+    const notification = await createNotification(
+      req,
+      "BOOKING_REQUEST",
+      `New booking request from ${booking.user.firstName} for ${post.title}`,
+      post.user.id,
+      booking.id
+    );
+
+    // Emit real-time notification using socket.io
+    if (req.io) {
+      console.log("Emitting notification to host:", post.user.id); // Debug log
+      req.io.to(`notification-${post.user.id}`).emit("new_notification", {
+        type: "BOOKING_REQUEST",
+        message: `New booking request from ${booking.user.firstName} for ${post.title}`,
+        userId: post.user.id,
+        bookingId: booking.id,
+        booking: booking,
+        id: notification.id,
+        isRead: false,
+        createdAt: new Date(),
+      });
+    }
 
     res.status(201).json(booking);
   } catch (error) {
