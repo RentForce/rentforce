@@ -10,10 +10,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 const ChatListScreen = () => {
   const navigation = useNavigation();
-  const [chats, setChats] = useState([]);
+  const [chats, setChats] = useState([])
   const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ const ChatListScreen = () => {
         if (storedUserId && token) {
           setCurrentUserId(storedUserId);
           
-          const response = await axios.get(`http://192.168.103.4:5000/api/chats/user/${storedUserId}`, {
+          const response = await axios.get(`${apiUrl}/api/chats/user/${storedUserId}`, {
             headers: { 
               'Authorization': `Bearer ${token}` 
             }
@@ -50,7 +50,7 @@ const ChatListScreen = () => {
         return;
       }
 
-      const response = await axios.post('http://192.168.103.4:5000/api/chats/create', 
+      const response = await axios.post(`${apiUrl}/api/chats/create`, 
         {
           userId: currentUserId,
           receiverId: otherUserId

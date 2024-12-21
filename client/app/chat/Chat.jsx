@@ -11,6 +11,7 @@ import {
 import axios from 'axios'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import ChatInput from './ChatInput'
 
 const ChatScreen = () => {
   const route = useRoute()
@@ -38,7 +39,7 @@ const ChatScreen = () => {
             setChatDetails({ chatId, userId, receiverId })
             
             // Fetch chat messages with token
-            const response = await axios.get(`http://192.168.103.4:5000/api/chats/messages/${chatId}`, {
+            const response = await axios.get(`http://192.168.1.15:5000/api/chats/messages/${chatId}`, {
               headers: { 
                 'Authorization': `Bearer ${token}` 
               }
@@ -66,7 +67,7 @@ const ChatScreen = () => {
     try {
       const token = await AsyncStorage.getItem('token')
       
-      const response = await axios.post('http://192.168.103.4:5000/api/chats/create', 
+      const response = await axios.post('http://192.168.1.15:5000/api/chats/create', 
         {
           userId: currentUserId,
           receiverId: receiverId
@@ -160,6 +161,12 @@ const ChatScreen = () => {
               <Text style={styles.sendButtonText}>Send</Text>
             </TouchableOpacity>
           </View>
+          <ChatInput 
+            currentUser={currentUser}
+            selectedUser={selectedUser}
+            onSendMessage={handleSendMessage}
+            // Add any other required props
+          />
         </>
       ) : (
         <View style={styles.errorContainer}>

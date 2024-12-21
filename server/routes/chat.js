@@ -1,25 +1,35 @@
-const express = require('express')
-const { 
-  createChat, 
-  sendMessage, 
-  getUserChats, 
+const express = require('express');
+const router = express.Router();
+const {
+  createChat,
+  sendMessage,
+  getUserChats,
   getChatMessages,
-  getAllUsers ,
+  getAllUsers,
+//   handleImageUpload,
+//   handleVoiceMessage,
+  //translateMessage,
+//   translationLimiter,
   authMiddleware,
-  createCallLog,
-  generateAgoraToken
-} = require('../controller/chat')
+  handleFileUpload
+} = require('../controller/chat');
 
-const router = express.Router()
+// Remove local upload directories since we're using Cloudinary
+// No need for fs and path modules anymore
 
-router.post('/create', createChat)
-router.post('/message', sendMessage)
-router.get('/user/:userId', getUserChats)
-router.get('/messages/:chatId', getChatMessages)
+// Chat routes
+router.post('/create', authMiddleware, createChat);
+router.post('/message', authMiddleware, sendMessage);
+router.get('/user/:userId', authMiddleware, getUserChats);
+router.get('/messages/:chatId', authMiddleware, getChatMessages);
 router.get('/users', authMiddleware, getAllUsers);
-router.post('/createCall',createCallLog)
 
+// File upload routes
+// router.post('/upload/image', authMiddleware, handleImageUpload);
+// router.post('/upload/voice', authMiddleware, handleVoiceMessage);
+router.post('/upload', authMiddleware, handleFileUpload);
 
-router.post('/call/generate-token', authMiddleware,generateAgoraToken);
+// Translation route with rate limiting
+//router.post('/translate', authMiddleware, translationLimiter, translateMessage);
 
-module.exports = router
+module.exports = router;

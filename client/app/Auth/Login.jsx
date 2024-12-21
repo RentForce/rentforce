@@ -249,7 +249,8 @@ import { Image, StyleSheet, View, Text, TouchableOpacity, TextInput, Alert } fro
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { initSocket } from "../chat/Socket.js";
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -258,7 +259,7 @@ const Login = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://192.168.103.4:5000/user/login", {
+      const response = await axios.post(`${apiUrl}/user/login`, {
         email,
         password,
       });
@@ -271,6 +272,7 @@ await AsyncStorage.setItem('userId', response.data.user.id.toString(),
 await AsyncStorage.setItem("token", token);
 await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
       Alert.alert("Login Successful", "Welcome");
+      initSocket(process.env.EXPO_PUBLIC_API_URL);
 
       navigation.navigate('Home');
     } catch (error) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -8,79 +8,408 @@ import {
     Alert,
     TextInput,
     KeyboardAvoidingView,
-    Platform
+    Platform,
+    Image,
+    Modal
 } from 'react-native';
+import AudioMessage from './AudioMessagePlayer.jsx';
+import * as FileSystem from 'expo-file-system';
+import { initSocket,getSocket } from './Socket.js';
+import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator } from 'react-native';
 import io from 'socket.io-client';
+import VoiceRecorder from './VoiceRecorder.jsx';
+import ChatInput from './ChatInput.jsx';
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
-const UserSelectionScreen = ({ navigation }) => {
-    // State variables
+// Create axios instance with default config
+const api = axios.create({
+    baseURL: process.env.EXPO_PUBLIC_API_URL,
+    timeout: 10000,
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+});
+
+// Add request interceptor to add token
+api.interceptors.request.use(
+    async (config) => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+            console.log('API Request:', {
+                url: config.url,
+                method: config.method,
+                headers: config.headers
+            });
+            return config;
+        } catch (error) {
+            console.error('API Request Error:', error);
+            return Promise.reject(error);
+        }
+    },
+    (error) => {
+        console.error('API Request Error:', error);
+        return Promise.reject(error);
+    }
+);
+
+// Add response interceptor for error handling
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        console.error('API Response Error:', {
+            message: error.message,
+            code: error.code,
+            config: error.config
+        });
+        return Promise.reject(error);
+    }
+);
+
+const UserSelectionScreen = ({ navigation ,onSendMessage, onLanguageChange }) => {
+    // Make sure these state declarations are at the top of the component
+    const [showImagePreview, setShowImagePreview] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
     const [messageInput, setMessageInput] = useState('');
     const [messages, setMessages] = useState([]);
-    
-    // Refs for socket and network management
+    const [translations, setTranslations] = useState({});
+    const [selectedLanguage, setSelectedLanguage] = useState('en');
+    const [isUploading, setIsUploading] = useState(false);
+    const [imageModalVisible, setImageModalVisible] = useState(false);
+    const [selectedModalImage, setSelectedModalImage] = useState(null);
+
     const socketRef = useRef(null);
     const isMountedRef = useRef(true);
+    const uploadUrl = `${apiUrl}/api/chat/upload`;
 
-    // Initialize socket connection
-    useEffect(() => {
-        // Create socket connection
-        socketRef.current = io('http://192.168.103.4:5000', {
-            transports: ['websocket'],
-            reconnection: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000
+    const handleSendImage = async () => {
+        if (!selectedImage) return;
+    
+        try {
+            setIsUploading(true);
+            const token = await AsyncStorage.getItem('token');
+            const userId = await AsyncStorage.getItem('userId');
+            
+            const formData = new FormData();
+            
+            formData.append('file', {
+                uri: selectedImage.uri,
+                type: 'image/jpeg',
+                name: 'image.jpg'
+            });
+            
+            formData.append('userId', userId);
+            formData.append('chatId', selectedUser.chatId);
+            formData.append('senderId', userId);
+            formData.append('receiverId', selectedUser.id);
+            formData.append('messageType', 'IMAGE');
+
+            const response = await axios.post(
+                uploadUrl,
+                formData,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data',
+                    },
+                    timeout: 30000,
+                }
+            );
+
+            if (response.data && response.data.url) {
+                await sendMessage({
+                    content: response.data.url,
+                    type: 'IMAGE',
+                    userId: userId
+                });
+                
+                setSelectedImage(null);
+                setShowImagePreview(false);
+            }
+        } catch (error) {
+            console.error('Image upload error:', error);
+            Alert.alert(
+                'Upload Failed',
+                'Failed to upload image. Please try again.'
+            );
+        } finally {
+            setIsUploading(false);
+        }
+    };
+    const renderInputContainer = () => {
+        return (
+            <View>
+                {showImagePreview && selectedImage && (
+                    <View style={styles.selectedImageContainer}>
+                        <Image
+                            source={{ uri: selectedImage.uri }}
+                            style={styles.selectedImagePreview}
+                            resizeMode="contain"
+                        />
+                        <View style={styles.selectedImageActions}>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={() => {
+                                    setSelectedImage(null);
+                                    setShowImagePreview(false);
+                                }}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.sendImageButton}
+                                onPress={handleSendImage}
+                                disabled={isUploading}
+                            >
+                                <Text style={styles.sendButtonText}>
+                                    {isUploading ? 'Sending...' : 'Send Image'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+                <View style={styles.inputContainer}>
+                    <VoiceRecorder onRecordComplete={(uri) => handleVoiceMessage(uri)} chatId={selectedUser.chatId} senderId={currentUser.id}/>
+                    <TextInput
+                        style={styles.messageInput}
+                        value={messageInput}
+                        onChangeText={setMessageInput}
+                        placeholder="Type a message..."
+                        multiline
+                    />
+                    <TouchableOpacity onPress={handleImageUpload} style={styles.imageButton}>
+                        <Text style={styles.imageButtonText}>📷</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.sendButton, messageInput.trim() ? styles.sendButtonActive : null]}
+                        onPress={async () => {
+                            const userId = await AsyncStorage.getItem('userId');
+                            sendMessage({ 
+                                content: messageInput, 
+                                type: 'TEXT',
+                                userId: userId
+                            });
+                        }}
+                    >
+                        <Text style={styles.sendButtonText}>Send</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    };
+const handleImageUpload = async () => {
+    try {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission needed', 'Please grant permission to access your photos');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.8,
         });
 
-        // Cleanup socket on component unmount
-        return () => {
-            isMountedRef.current = false;
-            if (socketRef.current) {
-                socketRef.current.disconnect();
+        if (!result.canceled) {
+            setSelectedImage(result.assets[0]);
+            setShowImagePreview(true);
+        }
+    } catch (error) {
+        console.error('Error selecting image:', error);
+        Alert.alert('Error', 'Failed to select image');
+    }
+};
+
+
+const handleVoiceMessage = async (audioUri) => {
+    if (!audioUri || !selectedUser?.chatId || !currentUser?.id) {
+        console.error('Missing required data:', { audioUri, selectedUser, currentUser });
+        Alert.alert('Error', 'Missing required information for upload');
+        return;
+    }
+
+    try {
+        setIsUploading(true);
+        const token = await AsyncStorage.getItem('token');
+        
+        if (!token) {
+            throw new Error('Authentication token not found');
+        }
+
+        // Check if file exists and is accessible
+        const fileInfo = await FileSystem.getInfoAsync(audioUri);
+        if (!fileInfo.exists) {
+            throw new Error('Audio file not found');
+        }
+
+        // Verify file size
+        if (fileInfo.size > 10 * 1024 * 1024) { // 10MB limit
+            throw new Error('File size exceeds 10MB limit');
+        }
+        
+        const formData = new FormData();
+        
+        // Prepare the audio file
+        const filename = `recording-${Date.now()}.m4a`;
+        const normalizedUri = Platform.OS === 'ios' ? audioUri.replace('file://', '') : audioUri;
+        
+        formData.append('file', {
+            uri: normalizedUri,
+            type: 'audio/m4a',
+            name: filename,
+            size: fileInfo.size
+        });
+        
+        formData.append('chatId', selectedUser.chatId.toString());
+        formData.append('senderId', currentUser.id.toString());
+        formData.append('receiverId', selectedUser.id.toString());
+        formData.append('messageType', 'AUDIO');
+
+        console.log('Starting upload with data:', {
+            filename,
+            size: fileInfo.size,
+            chatId: selectedUser.chatId,
+            senderId: currentUser.id
+        });
+
+        const response = await axios({
+            method: 'POST',
+            url: `${process.env.EXPO_PUBLIC_API_URL}/api/chat/upload`,
+            data: formData,
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${token}`
+            },
+            onUploadProgress: (progressEvent) => {
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                console.log(`Upload progress: ${percentCompleted}%`);
+            },
+            timeout: 30000, // 30 second timeout
+            validateStatus: (status) => {
+                return status >= 200 && status < 300;
             }
-        };
-    }, []);
+        });
 
-    // Effect for socket message handling
-    useEffect(() => {
-        if (!socketRef.current || !selectedUser) return;
+        if (response.data?.url) {
+            const messageData = {
+                content: response.data.url,
+                type: 'AUDIO',
+                chatId: selectedUser.chatId,
+                userId: currentUser.id,
+                id: response.data.messageId
+            };
 
-        // Join the specific chat room
-        socketRef.current.emit('join chat', selectedUser.chatId);
+            // Update local state first
+            setMessages(prev => [...prev, messageData]);
 
-        // Handle incoming messages
-        const handleNewMessage = (message) => {
-            console.log('Incoming message:', message);
-            
-            // Ensure message is for the current chat and component is mounted
-            if (isMountedRef.current && message.chatId === selectedUser.chatId) {
-                setMessages(prevMessages => {
-                    const isDuplicate = prevMessages.some(msg => 
-                        msg.id === message.id || 
-                        (msg.content === message.content && msg.sentAt === message.sentAt)
-                    );
-                    return isDuplicate 
-                        ? prevMessages 
-                        : [...prevMessages, message];
+            // Import the socket using the getSocket function
+            const socket = getSocket();
+            if (socket?.connected) {
+                socket.emit('new message', messageData, (ack) => {
+                    if (!ack?.success) {
+                        console.warn('Socket message not acknowledged');
+                    }
                 });
+            } else {
+                console.warn('Socket not connected, message will sync on reconnection');
             }
-        };
 
-        socketRef.current.on('new message', handleNewMessage);
+            console.log('Audio message processed successfully');
+        } else {
+            throw new Error('No URL received in response');
+        }
 
-        return () => {
-            if (socketRef.current) {
-                socketRef.current.off('new message', handleNewMessage);
-            }
-        };
-    }, [selectedUser]);
+    } catch (error) {
+        console.error('Voice upload error:', {
+            message: error.message,
+            status: error.response?.status,
+            data: error.response?.data
+        });
 
+        let errorMessage = 'Failed to send voice message.';
+        
+        if (error.message.includes('File not found')) {
+            errorMessage = 'Recording file not found. Please try again.';
+        } else if (error.message.includes('size exceeds')) {
+            errorMessage = 'Recording is too large. Please record a shorter message.';
+        } else if (error.response?.status === 500) {
+            errorMessage = 'Server error. Please try again later.';
+        } else if (error.code === 'ECONNABORTED') {
+            errorMessage = 'Upload timed out. Please check your connection.';
+        }
+
+        Alert.alert('Upload Failed', errorMessage);
+    } finally {
+        setIsUploading(false);
+        
+        // Clean up the temporary file
+        try {
+            await FileSystem.deleteAsync(audioUri, { idempotent: true });
+        } catch (cleanupError) {
+            console.warn('Failed to clean up audio file:', cleanupError);
+        }
+    }
+};
+    // Image modal
+    const ImageModal = ({ visible, image, onClose }) => (
+        <Modal
+            animationType="fade"
+            transparent={true}
+            visible={visible}
+            onRequestClose={onClose}
+        >
+            <TouchableOpacity 
+                style={styles.modalOverlay} 
+                activeOpacity={1} 
+                onPress={onClose}
+            >
+                <Image
+                    source={{ uri: image }}
+                    style={styles.modalImage}
+                    resizeMode="contain"
+                />
+            </TouchableOpacity>
+        </Modal>
+    );
+
+    // Language selector
+    const LanguageSelector = () => (
+        <View style={styles.languageSelector}>
+            <TouchableOpacity 
+                style={[styles.languageButton, selectedLanguage === 'en' && styles.selectedLanguage]}
+                onPress={() => setSelectedLanguage('en')}
+            >
+                <Text style={[styles.languageButtonText, selectedLanguage === 'en' && styles.selectedLanguageText]}>English</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+                style={[styles.languageButton, selectedLanguage === 'es' && styles.selectedLanguage]}
+                onPress={() => setSelectedLanguage('es')}
+            >
+                <Text style={[styles.languageButtonText, selectedLanguage === 'es' && styles.selectedLanguageText]}>Spanish</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+                style={[styles.languageButton, selectedLanguage === 'fr' && styles.selectedLanguage]}
+                onPress={() => setSelectedLanguage('fr')}
+            >
+                <Text style={[styles.languageButtonText, selectedLanguage === 'fr' && styles.selectedLanguageText]}>French</Text>
+            </TouchableOpacity>
+        </View>
+    );
+
+    // Fetch users and current user
     useEffect(() => {
         const fetchUsersAndCurrentUser = async () => {
             try {
@@ -89,7 +418,7 @@ const UserSelectionScreen = ({ navigation }) => {
                 const currentUserString = await AsyncStorage.getItem('currentUser');
                 const currentUserData = JSON.parse(currentUserString);
 
-                const response = await axios.get('http://192.168.103.4:5000/api/chat/users', {
+                const response = await axios.get(`${apiUrl}/api/chat/users`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
@@ -116,13 +445,14 @@ const UserSelectionScreen = ({ navigation }) => {
         fetchUsersAndCurrentUser();
     }, []);
 
+    // Initialize chat
     const initiateChat = async (receiver) => {
         try {
             const token = await AsyncStorage.getItem('token');
             const userId = await AsyncStorage.getItem('userId');
 
             const response = await axios.post(
-                'http://192.168.103.4:5000/api/chat/create',
+                `${apiUrl}/api/chat/create`,
                 {
                     userId: userId,
                     receiverId: receiver.id
@@ -137,9 +467,8 @@ const UserSelectionScreen = ({ navigation }) => {
 
             const newChat = response.data;
 
-            // Fetch existing messages for this chat
             const messagesResponse = await axios.get(
-                `http://192.168.103.4:5000/api/chat/messages/${newChat.id}`,
+                `${apiUrl}/api/chat/messages/${newChat.id}`,
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -147,7 +476,6 @@ const UserSelectionScreen = ({ navigation }) => {
                 }
             );
 
-            // Update state with selected user and messages
             if (isMountedRef.current) {
                 setSelectedUser({
                     ...receiver,
@@ -171,71 +499,95 @@ const UserSelectionScreen = ({ navigation }) => {
         }
     };
 
-    // Send message function
-    const sendMessage = async () => {
-        if (!messageInput.trim() || !selectedUser) return;
+    // Send message
+    const sendMessage = async (messageData) => {
+        if (!messageData.content.trim() || !selectedUser) return;
 
         try {
             const token = await AsyncStorage.getItem('token');
             const userId = await AsyncStorage.getItem('userId');
 
-            const messageData = {
-                chatId: selectedUser.chatId.toString(),
+            // Create the proper message structure
+            const message = {
+                chatId: selectedUser.chatId,
                 userId: userId,
-                content: messageInput,
-                type: 'TEXT',
-                sender: {
-                    id: userId,
-                    firstName: currentUser.firstName,
-                    lastName: currentUser.lastName
-                }
+                senderId: userId,
+                content: messageData.content,
+                type: messageData.type || 'TEXT',
+                receiverId: selectedUser.id
             };
 
-            const response = await axios.post('http://192.168.103.4:5000/api/chat/message',
-                messageData,
+            const response = await axios.post(
+                `${apiUrl}/api/chat/message`,
+                message,
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        "Content-Type": "application/json",
+                        'Content-Type': 'application/json',
                     }
                 }
             );
 
             const sentMessage = {
-                ...messageData,
-                id: response.data.id,
-                sentAt: new Date().toISOString(),
+                ...response.data,
+                userId: userId,
+                sender: currentUser
             };
 
-            // Emit message via socket to all clients in the chat room
             if (socketRef.current) {
-                socketRef.current.emit('send message', {
-                    ...sentMessage,
-                    chatId: selectedUser.chatId
-                });
+                socketRef.current.emit('send message', sentMessage);
             }
 
-            // Update local messages
             if (isMountedRef.current) {
                 setMessages(prevMessages => [...prevMessages, sentMessage]);
                 setMessageInput('');
             }
         } catch (error) {
-            console.error('Error sending message', error.response ? error.response.data : error);
-            Alert.alert('Error',
-                error.response && error.response.data.details
-                    ? error.response.data.details
-                    : 'Could not send message'
-            );
+            console.error('Error sending message:', error.response?.data || error);
+            Alert.alert('Error', 'Could not send message');
         }
     };
 
     // Render message item
     const renderMessageItem = ({ item }) => {
-        const isCurrentUserMessage =
-            item.userId === currentUser?.id ||
-            (item.user && item.user.id === currentUser?.id);
-
+        const isCurrentUserMessage = item.userId === currentUser?.id;
+    
+        const renderMessageContent = () => {
+            switch (item.type) {
+                case 'AUDIO':
+                    return (
+                        <AudioMessage 
+                            audioUrl={item.content}
+                            isOwnMessage={isCurrentUserMessage}
+                        />
+                    );
+                case 'IMAGE':
+                    return (
+                        <TouchableOpacity 
+                            onPress={() => {
+                                setSelectedModalImage(item.content);
+                                setImageModalVisible(true);
+                            }}
+                        >
+                            <Image
+                                source={{ uri: item.content }}
+                                style={styles.messageImage}
+                                resizeMode="cover"
+                            />
+                        </TouchableOpacity>
+                    );
+                default:
+                    return (
+                        <Text style={[
+                            styles.messageText,
+                            isCurrentUserMessage ? styles.sentMessageText : styles.receivedMessageText
+                        ]}>
+                            {item.content}
+                        </Text>
+                    );
+            }
+        };
+    
         return (
             <View style={[
                 styles.messageContainer,
@@ -248,20 +600,18 @@ const UserSelectionScreen = ({ navigation }) => {
                 )}
                 <View style={[
                     styles.messageItem,
-                    isCurrentUserMessage ? styles.sentMessage : styles.receivedMessage
+                    isCurrentUserMessage ? styles.sentMessage : styles.receivedMessage,
+                    item.type === 'AUDIO' && styles.audioMessageContainer
                 ]}>
-                    <Text style={[
-                        styles.messageText,
-                        isCurrentUserMessage ? styles.sentMessageText : {}
-                    ]}>
-                        {item.content}
-                    </Text>
+                    {renderMessageContent()}
                 </View>
             </View>
         );
     };
-
-    // Render user list item
+    
+    // Update your existing styles
+  
+    // Render user item
     const renderUserItem = ({ item }) => (
         <TouchableOpacity
             style={styles.userItem}
@@ -276,7 +626,7 @@ const UserSelectionScreen = ({ navigation }) => {
         </TouchableOpacity>
     );
 
-    // Loading state
+    // Loading indicator
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -286,17 +636,15 @@ const UserSelectionScreen = ({ navigation }) => {
         );
     }
 
-    // Chat view
     if (selectedUser) {
         return (
-            <KeyboardAvoidingView 
+            <KeyboardAvoidingView
                 style={styles.chatContainer}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
             >
                 <View style={styles.chatHeader}>
                     <TouchableOpacity onPress={() => {
-                        // Reset state when going back
                         if (socketRef.current) {
                             socketRef.current.emit('leave chat', selectedUser.chatId);
                         }
@@ -310,6 +658,8 @@ const UserSelectionScreen = ({ navigation }) => {
                     </Text>
                 </View>
 
+                <LanguageSelector />
+
                 <FlatList
                     data={messages}
                     renderItem={renderMessageItem}
@@ -318,44 +668,202 @@ const UserSelectionScreen = ({ navigation }) => {
                     inverted={false}
                 />
 
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.messageInput}
-                        value={messageInput}
-                        onChangeText={setMessageInput}
-                        placeholder="Type a message..."
-                        multiline
-                    />
-                    <TouchableOpacity
-                        style={styles.sendButton}
-                        onPress={sendMessage}
-                    >
-                        <Text style={styles.sendButtonText}>Send</Text>
-                    </TouchableOpacity>
-                </View>
+                {renderInputContainer()}
+                <ImageModal
+                    visible={imageModalVisible}
+                    image={selectedModalImage}
+                    onClose={() => {
+                        setImageModalVisible(false);
+                        setSelectedModalImage(null);
+                    }}
+                />
             </KeyboardAvoidingView>
         );
     }
 
-    // User list view
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Start a New Conversation</Text>
             <FlatList
                 data={users}
                 renderItem={renderUserItem}
-                keyExtractor={(item) => item.id.toString()}
-                ListEmptyComponent={() => (
-                    <View style={styles.emptyContainer}>
-                        <Text>No users available to chat with</Text>
-                    </View>
-                )}
+                keyExtractor={(item, index) => `${item.id || index}`}
+                style={styles.userList}
             />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
+    
+        messageContainer: {
+            marginVertical: 5,
+            maxWidth: '80%',
+        },
+        sentMessageContainer: {
+            alignSelf: 'flex-end',
+        },
+        receivedMessageContainer: {
+            alignSelf: 'flex-start',
+        },
+        messageItem: {
+            borderRadius: 20,
+            padding: 10,
+        },
+        sentMessage: {
+            backgroundColor: '#007AFF',
+        },
+        receivedMessage: {
+            backgroundColor: '#E8E8E8',
+        },
+        messageText: {
+            fontSize: 16,
+        },
+        sentMessageText: {
+            color: '#FFFFFF',
+        },
+        receivedMessageText: {
+            color: '#000000',
+        },
+        senderName: {
+            fontSize: 12,
+            color: '#666666',
+            marginBottom: 2,
+            marginLeft: 12,
+        },
+        messageImage: {
+            width: 200,
+            height: 200,
+            borderRadius: 10,
+        },
+        audioMessageContainer: {
+            padding: 0, // Remove padding for audio messages as AudioMessage component has its own padding
+            backgroundColor: 'transparent', // Make background transparent as AudioMessage has its own background
+        },
+    
+    uploadingContainer: {
+        width: '100%',
+        padding: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f5f5f5',
+    },
+    uploadingText: {
+        marginTop: 10,
+        color: '#007bff',
+        fontSize: 16,
+    },
+    selectedImageContainer: {
+        width: '100%',
+        padding: 10,
+        backgroundColor: '#f5f5f5',
+        borderTopWidth: 1,
+        borderTopColor: '#e0e0e0',
+    },
+    selectedImagePreview: {
+        width: '100%',
+        height: 200,
+        borderRadius: 10,
+        marginBottom: 10,
+    },
+    selectedImageActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+    },
+    cancelButton: {
+        backgroundColor: '#dc3545',
+        padding: 10,
+        borderRadius: 5,
+        width: '45%',
+        alignItems: 'center',
+    },
+    sendImageButton: {
+        backgroundColor: '#007bff',
+        padding: 10,
+        borderRadius: 5,
+        width: '45%',
+        alignItems: 'center',
+    },
+    cancelButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    sendImageButton: {
+        padding: 10,
+        backgroundColor: '#007bff',
+        borderRadius: 5,
+        flex: 1,
+        marginLeft: 10,
+        alignItems: 'center',
+    },
+    imageUploadProgress: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        height: '100%',
+    },
+    progressText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    messageImage: {
+        width: 200,
+        height: 200,
+        borderRadius: 10,
+    },
+    imageButton: {
+        padding: 10,
+        marginHorizontal: 5,
+    },
+    imageButtonText: {
+        fontSize: 24,
+    },
+
+    languageSelector: {
+        flexDirection: 'row',
+        padding: 10,
+        backgroundColor: '#f0f0f0',
+        justifyContent: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0',
+    },
+    translatedText: {
+        fontSize: 12,
+        color: '#e0e0e0',
+        fontStyle: 'italic',
+        marginTop: 5,
+    },
+    translateButton: {
+        marginTop: 5,
+        padding: 3,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 5,
+    },
+    translateButtonText: {
+        color: '#fff',
+        fontSize: 10,
+    },
+    languageSelector: {
+        flexDirection: 'row',
+        padding: 10,
+        backgroundColor: '#f0f0f0',
+        justifyContent: 'center',
+    },
+    languageButton: {
+        padding: 8,
+        marginHorizontal: 5,
+        backgroundColor: '#fff',
+        borderRadius: 5,
+    },
+    selectedLanguage: {
+        backgroundColor: '#007bff',
+    },
     container: {
         flex: 1,
         backgroundColor: '#fff',
@@ -491,14 +999,58 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         paddingHorizontal: 15,
         paddingVertical: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     sendButtonText: {
         color: 'white',
         fontWeight: 'bold',
-        fontSize: 14,
     },
+    container: {
+        padding: 8,
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#e0e0e0',
+      },
+      inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f8f8f8',
+        borderRadius: 24,
+        paddingHorizontal: 8,
+      },
+      input: {
+        flex: 1,
+        padding: 8,
+        maxHeight: 100,
+        fontSize: 16,
+      },
+      iconButton: {
+        padding: 8,
+      },
+      sendButton: {
+        padding: 8,
+        borderRadius: 20,
+      },
+      sendButtonActive: {
+        backgroundColor: '#e8f3ff',
+      },
+      modalContainer: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+      },
+      modalContent: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 16,
+        maxHeight: '50%',
+      },
+      languageItem: {
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0',
+      },
+    
 });
 
 
