@@ -1,7 +1,11 @@
-const express = require('express');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const userRoutes = require("./routes/user");
+const postsRouter = require("./routes/posts");
+const nodemailer = require('nodemailer');
 const http = require('http');
 const { Server } = require('socket.io');
-const cors = require('cors');
 const dotenv = require('dotenv');
 const { PrismaClient } = require('@prisma/client');
 const path = require('path');
@@ -9,7 +13,9 @@ const path = require('path');
 dotenv.config();
 
 const chatRoutes = require('./routes/chat');
-const userRoutes = require('./routes/user');
+const stripe = require('stripe')('sk_test_51QWZjFIMfjBRRWpm6iHBv9hhM8aJjzg436fkGQIat8OLzaV4U5524lynVZp7OhkDYZ1Bne5RxWzl3fOu0LIsmWsa00GEIswlHy');
+const bodyParser = require('body-parser');
+const { sendBookingRequestEmail } = require('./services/emailService');
 
 // Add this to debug imports
 console.log('Loaded routes:', {
@@ -18,16 +24,41 @@ console.log('Loaded routes:', {
 });
 
 const prisma = new PrismaClient();
-
 const app = express();
 
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  auth: {
+      user: 'mejrisaif2020@gmail.com',
+      pass: 'hxqk duxl gtwz jyrw', 
+  },
+});
 
+app.use(
+  cors({
+    origin: [
+      "http://localhost:19000",
+      "http://localhost:19001",
+      "http://localhost:19002",
+      "exp://192.168.11.118:19000", 
+      "exp://192.168.11.118:19001",
+      "exp://192.168.11.118:19002",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 const corsOptions = {
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
  
+ ,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
@@ -45,12 +76,54 @@ if (!fs.existsSync('./uploads/audio')) {
 if (!fs.existsSync('./uploads/images')) {
     fs.mkdirSync('./uploads/images');
 }
+app.use(bodyParser.json());
 
 const server = http.createServer(app);
+
+app.use("/user", userRoutes);
+app.use("/posts", postsRouter);
+
+// Stripe Payment Intent Route
+app.post('/create-payment-intent', async (req, res) => {
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: req.body.amount, 
+      currency: 'usd', 
+    });
+
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).send(error.message);
+  }
+});
+
+app.post('/confirm-booking', async (req, res) => {
+  const { guestEmail, hostEmail, houseDetails, price } = req.body;
+
+  try {
+    await sendBookingRequestEmail(guestEmail, hostEmail, houseDetails, price);
+    res.status(200).json({ message: 'Booking request sent and emails delivered successfully.' });
+  } catch (error) {
+    console.error('Error processing booking confirmation:', error);
+    res.status(500).json({ 
+      message: 'Error sending booking confirmation emails',
+      error: error.message 
+    });
+  }
+});
 
 const io = new Server(server, {
   cors: corsOptions,
   pingTimeout: 60000,
+  cors: {
+      origin: corsOptions.origin,
+      methods: corsOptions.methods,
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true
+  },
   transports: ['websocket', 'polling']
 });
 

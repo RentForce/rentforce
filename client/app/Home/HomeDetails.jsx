@@ -18,8 +18,10 @@ import axios from "axios";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Navbar from "./Navbar";
 import ImageZoom from "react-native-image-pan-zoom";
+import MapView, { Marker } from "react-native-maps";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 const HomeDetails = ({ route, navigation }) => {
   const { post } = route.params;
@@ -28,6 +30,8 @@ const HomeDetails = ({ route, navigation }) => {
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [showMoreRules, setShowMoreRules] = useState(false);
+
 
   const imageSizes = [
     { width: "100%", height: 180 }, // Full width
@@ -41,7 +45,7 @@ const HomeDetails = ({ route, navigation }) => {
     const fetchImages = async () => {
       try {
         const response = await axios.get(
-          `http://192.168.104.13:5000/posts/images/${post.id}` // Replace X with your IP
+          `${apiUrl}/posts/images/${post.id}` // Replace X with your IP
         );
         setImages(response.data);
         setLoading(false);
@@ -62,7 +66,7 @@ const HomeDetails = ({ route, navigation }) => {
 
   // Confirm Booking Button
   const handleConfirmBooking = () => {
-    navigation.navigate("Booking"); // Navigate to BookingPage
+    navigation.navigate("Booking", { post }); // Pass the entire post object
   };
 
   // Image Modal Component
@@ -237,16 +241,7 @@ const HomeDetails = ({ route, navigation }) => {
           </Text>
         </View>
         <View style={styles.detailsContainer}>
-          <View style={styles.detailRow}>
-            <View style={styles.checkInOut}>
-              <Text style={styles.detailLabel}>Check-in</Text>
-              <Text style={styles.detailValue}>Mon, 5 Dec</Text>
-            </View>
-            <View style={styles.checkInOut}>
-              <Text style={styles.detailLabel}>Check-out</Text>
-              <Text style={styles.detailValue}>Mon, 10 Dec</Text>
-            </View>
-          </View>
+          <View style={styles.detailRow}></View>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Rooms and Guests</Text>
             <Text style={styles.detailText}>1 room • 2 adults • 1 child</Text>
@@ -268,12 +263,26 @@ const HomeDetails = ({ route, navigation }) => {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Location</Text>
-            <Image
-              source={{
-                uri: "https://c8.alamy.com/comp/DWGEWW/round-red-thumb-tack-pinched-through-copenhagen-on-denmark-map-part-DWGEWW.jpg",
-              }} // Replace with actual map image URL
-              style={styles.mapImage}
-            />
+            {post.map && (
+              <MapView
+                style={styles.map}
+                initialRegion={{
+                  latitude: parseFloat(post.map.latitude),
+                  longitude: parseFloat(post.map.longitude),
+                  latitudeDelta: 0.0922,
+                  longitudeDelta: 0.0421,
+                }}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: parseFloat(post.map.latitude),
+                    longitude: parseFloat(post.map.longitude),
+                  }}
+                  title={post.title}
+                  description={post.location}
+                />
+              </MapView>
+            )}
             <View style={styles.locationDetails}>
               <Icon name="location-on" size={24} color="#000" />
               <Text style={styles.locationText}>
@@ -285,12 +294,6 @@ const HomeDetails = ({ route, navigation }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>House rules</Text>
             <Text style={styles.detailText}>{post.houseRules}</Text>
-            <Text style={styles.detailText}>Check-in: 6:00 PM - 11:00 PM</Text>
-            <Text style={styles.detailText}>Checkout before 9:00 AM</Text>
-            <Text style={styles.detailText}>2 guests maximum</Text>
-            <TouchableOpacity>
-              <Text style={styles.showMoreText}>Show more</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
@@ -301,7 +304,7 @@ const HomeDetails = ({ route, navigation }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>What guests loved the most</Text>
             <View style={styles.review}>
-              <Text style={styles.flag}>🇩🇰</Text>
+              <Text style={styles.flag}>🇰🇰</Text>
               <Text style={styles.reviewText}>
                 <Text style={styles.boldText}>Liam - Denmark</Text>
                 {"\n"}Amazing place!! Location is great, and the hotel staff are
@@ -328,7 +331,7 @@ const HomeDetails = ({ route, navigation }) => {
           <View style={styles.spacer} />
         </View>
       </ScrollView>
-      <Navbar style={styles.navbar} />
+      <Navbar navigation={navigation} style={styles.navbar} />
       <ImageModal />
     </View>
   );
@@ -460,7 +463,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 8,
-    textAlign: "left",
+    textAlign: "center",
   },
   detailsContainer: {
     padding: 16,
@@ -491,14 +494,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#F1EFEF",
   },
   sectionTitle: {
+    marginLeft: 6,
     fontWeight: "bold",
     fontSize: 16,
-    marginTop: 16,
+    marginTop: 7,
     marginBottom: 4,
   },
   detailText: {
+    marginLeft: 11,
     fontSize: 14,
     marginBottom: 8,
+    textAlign: "left",
   },
   roomConfig: {
     flexDirection: "row",
@@ -535,9 +541,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   showMoreText: {
-    color: "#007BFF",
-    fontSize: 14,
-    marginTop: 8,
+    marginLeft: 10,
+    color: "blue",
+    textDecorationLine: "underline",
   },
   review: {
     flexDirection: "row",
@@ -631,6 +637,11 @@ const styles = StyleSheet.create({
   priceValue: {
     fontWeight: "bold",
     color: "#2C3E50",
+  },
+  map: {
+    width: "100%",
+    height: 150,
+    marginBottom: 8,
   },
 });
 

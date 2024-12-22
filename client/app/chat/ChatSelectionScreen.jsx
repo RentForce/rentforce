@@ -391,7 +391,7 @@ const handleVoiceMessage = async (audioUri) => {
         </Modal>
     );
 
-    // // Language selector
+    // Language selector
     // const LanguageSelector = () => (
     //     <View style={styles.languageSelector}>
     //         <TouchableOpacity 
@@ -1176,75 +1176,75 @@ const styles = StyleSheet.create({
         padding: 20,
     },
 
-    // Loading Styles
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
+  // Loading Styles
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-    // Chat Screen Styles
-    chatContainer: {
-        flex: 1,
-        backgroundColor: '#f5f5f5',
-    },
-    chatHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 15,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-    },
-    backButton: {
-        fontSize: 24,
-        marginRight: 10,
-        color: '#007bff',
-    },
-    chatTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    messagesList: {
-        flex: 1,
-        paddingHorizontal: 10,
-        paddingBottom: 10,
-    },
+  // Chat Screen Styles
+  chatContainer: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  chatHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  backButton: {
+    fontSize: 24,
+    marginRight: 10,
+    color: "#007bff",
+  },
+  chatTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  messagesList: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+  },
 
-    // Message Styles
-    messageContainer: {
-        marginBottom: 10,
-        maxWidth: '80%',
-    },
-    sentMessageContainer: {
-        alignSelf: 'flex-end',
-    },
-    receivedMessageContainer: {
-        alignSelf: 'flex-start',
-    },
-    senderName: {
-        fontSize: 12,
-        color: '#666',
-        marginBottom: 3,
-        paddingHorizontal: 5,
-    },
-    messageItem: {
-        padding: 10,
-        borderRadius: 10,
-    },
-    sentMessage: {
-        backgroundColor: '#374957',
-        alignSelf: 'flex-end',
-    },
-    receivedMessage: {
-        backgroundColor: '#797C7B',
-        alignSelf: 'flex-start',
-    },
-    messageText: {
-        fontSize: 14,
-        color: 'white',
-    },
+  // Message Styles
+  messageContainer: {
+    marginBottom: 10,
+    maxWidth: "80%",
+  },
+  sentMessageContainer: {
+    alignSelf: "flex-end",
+  },
+  receivedMessageContainer: {
+    alignSelf: "flex-start",
+  },
+  senderName: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 3,
+    paddingHorizontal: 5,
+  },
+  messageItem: {
+    padding: 10,
+    borderRadius: 10,
+  },
+  sentMessage: {
+    backgroundColor: "#374957",
+    alignSelf: "flex-end",
+  },
+  receivedMessage: {
+    backgroundColor: "#797C7B",
+    alignSelf: "flex-start",
+  },
+  messageText: {
+    fontSize: 14,
+    color: "white",
+  },
 
     // Input Styles
     inputContainer: {
@@ -1325,6 +1325,5 @@ const styles = StyleSheet.create({
       },
     
 });
-
 
 export default UserSelectionScreen;

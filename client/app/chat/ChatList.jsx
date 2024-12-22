@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -15,26 +15,27 @@ const ChatListScreen = () => {
   const navigation = useNavigation();
   const [chats, setChats] = useState([])
   const [currentUserId, setCurrentUserId] = useState(null);
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   useEffect(() => {
     const fetchCurrentUserAndChats = async () => {
       try {
-        const storedUserId = await AsyncStorage.getItem('userId');
-        const token = await AsyncStorage.getItem('token');
-        
+        const storedUserId = await AsyncStorage.getItem("userId");
+        const token = await AsyncStorage.getItem("token");
+
         if (storedUserId && token) {
           setCurrentUserId(storedUserId);
           
           const response = await axios.get(`${apiUrl}/api/chats/user/${storedUserId}`, {
             headers: { 
               'Authorization': `Bearer ${token}` 
-            }
-          });
+            }}
+          );
           setChats(response.data);
         }
       } catch (error) {
-        console.error('Error fetching user or chats', error);
-        Alert.alert('Error', 'Could not fetch chats');
+        console.error("Error fetching user or chats", error);
+        Alert.alert("Error", "Could not fetch chats");
       }
     };
 
@@ -43,80 +44,75 @@ const ChatListScreen = () => {
 
   const createNewChat = async (otherUserId) => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      
+      const token = await AsyncStorage.getItem("token");
+
       if (!currentUserId || !otherUserId) {
-        Alert.alert('Error', 'Missing user details');
+        Alert.alert("Error", "Missing user details");
         return;
       }
 
       const response = await axios.post(`${apiUrl}/api/chats/create`, 
         {
           userId: currentUserId,
-          receiverId: otherUserId
+          receiverId: otherUserId,
         },
         {
-          headers: { 
-            'Authorization': `Bearer ${token}` 
-          }
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
       const newChat = response.data;
-      
-      setChats(prevChats => {
+
+      setChats((prevChats) => {
         const existingChatIndex = prevChats.findIndex(
-          chat => chat.id === newChat.id
+          (chat) => chat.id === newChat.id
         );
-        
+
         if (existingChatIndex !== -1) {
           return prevChats;
         }
-        
+
         return [...prevChats, newChat];
       });
 
-      navigation.navigate('chat/Chat', {
+      navigation.navigate("chat/Chat", {
         chatId: newChat.id,
         userId: currentUserId,
-        receiverId: otherUserId
+        receiverId: otherUserId,
       });
     } catch (error) {
-      console.error('Error creating chat', error);
-      Alert.alert('Error', 'Could not create chat');
+      console.error("Error creating chat", error);
+      Alert.alert("Error", "Could not create chat");
     }
   };
 
   const navigateToNewChat = () => {
-
-    navigation.navigate('chat/ChatSelectionScreen', { 
-      onSelectUser: createNewChat 
+    navigation.navigate("chat/ChatSelectionScreen", {
+      onSelectUser: createNewChat,
     });
   };
 
   const navigateToChat = (chat) => {
-    const otherUserId = chat.userId === currentUserId
-      ? chat.receiverId
-      : chat.userId;
+    const otherUserId =
+      chat.userId === currentUserId ? chat.receiverId : chat.userId;
 
-    navigation.navigate('Chat', {
+    navigation.navigate("Chat", {
       chatId: chat.id,
       userId: currentUserId,
-      receiverId: otherUserId
+      receiverId: otherUserId,
     });
   };
 
   const renderChatItem = ({ item }) => {
-    const otherUser = item.userId === currentUserId
-      ? item.receiver
-      : item.user;
+    const otherUser = item.userId === currentUserId ? item.receiver : item.user;
 
-    const lastMessage = item.messages && item.messages.length > 0
-      ? item.messages[0]
-      : null;
+    const lastMessage =
+      item.messages && item.messages.length > 0 ? item.messages[0] : null;
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={() => navigateToChat(item)}
         style={styles.chatItem}
       >
@@ -125,9 +121,7 @@ const ChatListScreen = () => {
             {otherUser?.firstName} {otherUser?.lastName}
           </Text>
           {lastMessage && (
-            <Text style={styles.lastMessage}>
-              {lastMessage.content}
-            </Text>
+            <Text style={styles.lastMessage}>{lastMessage.content}</Text>
           )}
         </View>
       </TouchableOpacity>
@@ -143,7 +137,7 @@ const ChatListScreen = () => {
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
             <Text>No chats found. Start a new chat!</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={navigateToNewChat}
               style={styles.newChatButton}
             >
@@ -152,7 +146,7 @@ const ChatListScreen = () => {
           </View>
         )}
       />
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={navigateToNewChat}
         style={styles.floatingButton}
       >
@@ -165,58 +159,58 @@ const ChatListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff'
+    backgroundColor: "#fff",
   },
   chatItem: {
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0'
+    borderBottomColor: "#e0e0e0",
   },
   userName: {
     fontSize: 16,
-    fontWeight: 'bold'
+    fontWeight: "bold",
   },
   lastMessage: {
-    color: '#888',
-    marginTop: 5
+    color: "#888",
+    marginTop: 5,
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
   },
   newChatButton: {
     marginTop: 15,
     padding: 10,
-    backgroundColor: '#007bff',
-    borderRadius: 5
+    backgroundColor: "#007bff",
+    borderRadius: 5,
   },
   newChatButtonText: {
-    color: 'white',
-    textAlign: 'center'
+    color: "white",
+    textAlign: "center",
   },
   floatingButton: {
-    position: 'absolute',
+    position: "absolute",
     right: 20,
     bottom: 20,
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#007bff',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#007bff",
+    justifyContent: "center",
+    alignItems: "center",
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
   floatingButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 24,
-    fontWeight: 'bold'
-  }
+    fontWeight: "bold",
+  },
 });
 
 export default ChatListScreen;

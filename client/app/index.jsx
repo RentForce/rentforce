@@ -1,23 +1,21 @@
 import * as React from "react";
-import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ProfileScreen from "./profile/ProfileScreen.jsx";
 import PersonalScreen from "./profile/PersonalScreen.jsx";
 import ShowProfile from "./profile/showprofile";
 import CreatePost from "./profile/CreatePost.jsx";
-import ChatSelectionScreen from './chat/ChatSelectionScreen.jsx';
-import Chat from '../app/chat/Chat.jsx';
-import ChatList from './chat/ChatList.jsx';
-import Login from './Auth/Login';
-import SignUpScreen from './Auth/Sign-up';
-import ForgetPassword from './Auth/Forget';
-import ResetPassword from './Auth/reset';
-import Favourites from './favourites/Favourites.jsx';
+import ChatSelectionScreen from "./chat/ChatSelectionScreen.jsx";
+import Chat from "../app/chat/Chat.jsx";
+import ChatList from "./chat/ChatList.jsx";
+import Login from "./Auth/Login";
+import SignUpScreen from "./Auth/Sign-up";
+import ForgetPassword from "./Auth/Forget";
+import ResetPassword from "./Auth/reset";
+import Favourites from "./favourites/Favourites.jsx";
 import Home from "./Home/Home.jsx";
 import HomeDetails from "./Home/HomeDetails.jsx";
-import BookingPage from "./Home/BookingPage"; // Adjust the path as necessary
-// import Login from './Auth/Login';
-// import SignUpScreen from './Auth/Sign-up';
+import BookingPage from "./Home/BookingPage"; 
+import pay from "./Home/payment.jsx"
 const Stack = createNativeStackNavigator();
 function App() {
   return (
@@ -34,26 +32,13 @@ function App() {
         <Stack.Screen name="CreatePost" component={CreatePost} options={{ headerShown: false }} />
         <Stack.Screen name="HomeDetails" component={HomeDetails} options={{ headerShown: false }} />
         <Stack.Screen name="Booking" component={BookingPage} options={{ headerShown: false }}/>
-      
-        <Stack.Screen
-          name="ChatSelectionScreen"
-          component={ChatSelectionScreen}
-          options={{ title: 'Select User' }}
-        />
-        <Stack.Screen
-          name="Chat"
-          component={Chat}
-          options={({ route }) => ({
-            title: `Chat with ${route.params?.receiverName || 'User'}`,
+        <Stack.Screen name="payment" component={pay} options={{ headerShown: false }}/>
+
+        <Stack.Screen name="ChatSelectionScreen" component={ChatSelectionScreen} options={{ title: 'Select User' }}/>
+        <Stack.Screen name="Chat" component={Chat} options={({ route }) => ({  title: `Chat with ${route.params?.receiverName || 'User'}`,
           })}
         />
-        
-
-
-
-
-
-      </Stack.Navigator>
+</Stack.Navigator>
    
   );
 }

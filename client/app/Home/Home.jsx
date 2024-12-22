@@ -12,6 +12,8 @@ import {
   FlatList,
   Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import {
   Ionicons,
   FontAwesome5,
@@ -21,9 +23,7 @@ import {
 } from "@expo/vector-icons";
 import Navbar from "./Navbar";
 import axios from "axios";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { jwtDecode } from 'jwt-decode';
-
+import { jwtDecode } from "jwt-decode";
 
 const categories = [
   "house",
@@ -64,6 +64,8 @@ const categoryIcons = {
 };
 
 const Home = ({ navigation }) => {
+  const [userId, setUserId] = useState(null);
+
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -77,29 +79,51 @@ const Home = ({ navigation }) => {
 
   const searchInputRef = useRef(null);
   const scrollViewRef = useRef(null);
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  console.log(apiUrl, "saleeemm");
 
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const storedUserId = await AsyncStorage.getItem("userId");
+        if (storedUserId) {
+          setUserId(storedUserId);
+          console.log("Retrieved userId from local storage:", storedUserId);
+        } else {
+          console.error("No userId found in local storage");
+        }
+      } catch (error) {
+        console.error("Error retrieving userId from local storage:", error);
+      }
+    };
+
+    fetchUserId();
+  }, []);
   useEffect(() => {
     // Fetch initial favorite posts from the server
     const fetchFavorites = async () => {
       try {
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem("userToken");
         if (!token) {
-          throw new Error('User token not found');
+          throw new Error("User token not found");
         }
 
         const decodedToken = jwtDecode(token);
         const userId = decodedToken.id;
 
-        const response = await axios.get(`http://172.29.32.1:5000/user/favourites/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          `${apiUrl}/user/favourites/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-        const favoritePostIds = new Set(response.data.map(post => post.id));
+        const favoritePostIds = new Set(response.data.map((post) => post.id));
         setFavorites(favoritePostIds);
       } catch (err) {
-        console.error('Error fetching favorites:', err);
+        console.error("Error fetching favorites:", err);
       }
     };
 
@@ -108,50 +132,54 @@ const Home = ({ navigation }) => {
 
   const handleAddFavourite = async (postId) => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await AsyncStorage.getItem("userToken");
       if (!token) {
-        throw new Error('User token not found');
+        throw new Error("User token not found");
       }
 
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.id;
 
       // Add to favorites on the server
-      await axios.post(`http://172.29.32.1:5000/user/favourites`, {
-        userId,
-        postId,
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+      await axios.post(
+        `${apiUrl}/user/favourites`,
+        {
+          userId,
+          postId,
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       // Update local state
       setFavorites((prevFavorites) => new Set(prevFavorites).add(postId));
-      Alert.alert('Success', 'Post added to favourites');
+      Alert.alert("Success", "Post added to favourites");
     } catch (err) {
-      console.error('Error adding favourite:', err);
-      Alert.alert('Error', 'Failed to add post to favourites');
+      console.error("Error adding favourite:", err);
+      Alert.alert("Error", "Failed to add post to favourites");
     }
   };
 
   const handleRemoveFavourite = async (postId) => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await AsyncStorage.getItem("userToken");
       if (!token) {
-        throw new Error('User token not found');
+        throw new Error("User token not found");
       }
 
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.id;
 
       // Remove from favorites on the server
-      await axios.delete(`http://172.29.32.1:5000/user/favourites`, {
+      await axios.delete(`${apiUrl}/user/favourites`, {
         data: { userId, postId },
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
 
@@ -161,10 +189,10 @@ const Home = ({ navigation }) => {
         updatedFavorites.delete(postId);
         return updatedFavorites;
       });
-      Alert.alert('Success', 'Post removed from favourites');
+      Alert.alert("Success", "Post removed from favourites");
     } catch (err) {
-      console.error('Error removing favourite:', err);
-      Alert.alert('Error', 'Failed to remove post from favourites');
+      console.error("Error removing favourite:", err);
+      Alert.alert("Error", "Failed to remove post from favourites");
     }
   };
 
@@ -196,7 +224,7 @@ const Home = ({ navigation }) => {
   const fetchPostsByCategory = async (category) => {
     setLoading(true);
     try {
-      const baseUrl = "http:// 172.29.32.1:5000";
+      const baseUrl = `${apiUrl}`;
       const endpoint = searchQuery
         ? `${baseUrl}/posts/all`
         : `${baseUrl}/posts/${category}`;
