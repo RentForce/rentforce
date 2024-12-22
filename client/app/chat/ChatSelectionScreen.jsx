@@ -563,6 +563,8 @@ const handleVoiceMessage = async (audioUri) => {
                 case 'AUDIO':
                     return (
                         <AudioMessage 
+                        style={styles.audio}
+
                             audioUrl={item.content}
                             isOwnMessage={isCurrentUserMessage}
                         />
@@ -824,18 +826,7 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: '#e0e0e0',
     },
-    messageInput: {
-        flex: 1,
-        minHeight: 40,
-        maxHeight: 100,
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
-        borderRadius: 20,
-        paddingHorizontal: 15,
-        marginRight: 10,
-        backgroundColor: '#f9f9f9',
-        fontSize: 14,
-    },
+   
     
     // Selected Image Styles
     selectedImageContainer: {
@@ -885,6 +876,11 @@ const styles = StyleSheet.create({
         color: '#007bff',
         fontSize: 16,
     },
+    audio:{
+        backgroundColor: '#ffffff',
+
+    },
+
     selectedImageContainer: {
         width: '100%',
         padding: 10,
@@ -993,6 +989,7 @@ const styles = StyleSheet.create({
         audioMessageContainer: {
             padding: 0, 
             backgroundColor: 'transparent', 
+
         },
     
     uploadingContainer: {
@@ -1268,7 +1265,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     sendButton: {
-        backgroundColor: '#000000',
+        backgroundColor: '#082631',
         borderRadius: 20,
         paddingHorizontal: 15,
         paddingVertical: 10,
@@ -1300,10 +1297,14 @@ const styles = StyleSheet.create({
         padding: 8,
       },
       sendButton: {
+        backgroundColor: '#082631',
+
         padding: 8,
         borderRadius: 20,
       },
       sendButtonActive: {
+        backgroundColor: '#84A9B6',
+
         backgroundColor: '#e8f3ff',
       },
       modalContainer: {
