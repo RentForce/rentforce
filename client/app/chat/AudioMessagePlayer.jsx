@@ -158,6 +158,49 @@ const styles = StyleSheet.create({
     duration: {
         fontSize: 12,
     },
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 10,
+        borderRadius: 20,
+        maxWidth: 250,
+        minWidth: 200,
+    },
+    ownMessage: {
+        backgroundColor: '#007AFF',
+        alignSelf: 'flex-end',
+    },
+    otherMessage: {
+        backgroundColor: '#E8E8E8',
+        alignSelf: 'flex-start',
+    },
+    playButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+    },
+    progressContainer: {
+        flex: 1,
+    },
+    waveform: {
+        height: 20,
+        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+        borderRadius: 10,
+        overflow: 'hidden',
+        marginBottom: 5,
+    },
+    progressBar: {
+        height: '100%',
+        backgroundColor: '#007AFF',
+    },
+    duration: {
+        fontSize: 12,
+    },
+
 });
 
 export default AudioMessage;

@@ -92,101 +92,7 @@ const ChatInput = ({ onSendMessage, selectedLanguage, onLanguageChange, selected
         setIsUploading(false);
     }
   };
-
-    
-    // const handleVoiceMessage = async (audioUri) => {
-    //     if (!audioUri || !selectedUser?.chatId || !currentUser?.id) {
-    //         console.error('Missing required data:', { audioUri, selectedUser, currentUser });
-    //         Alert.alert('Error', 'Missing required information for upload');
-    //         return;
-    //     }
-
-    //     try {
-    //         setIsUploading(true);
-    //         const token = await AsyncStorage.getItem('token');
-            
-    //         if (!token) {
-    //             throw new Error('Authentication token not found');
-    //         }
-            
-    //         // Create form data
-    //         const formData = new FormData();
-            
-    //         // Prepare the audio file
-    //         const filename = `recording-${Date.now()}.m4a`;
-    //         const normalizedUri = Platform.OS === 'ios' ? audioUri.replace('file://', '') : audioUri;
-            
-    //         formData.append('file', {
-    //             uri: normalizedUri,
-    //             type: 'audio/m4a',
-    //             name: filename
-    //         });
-            
-    //         // Add required metadata that matches backend expectations
-    //         formData.append('chatId', selectedUser.chatId.toString());
-    //         formData.append('senderId', currentUser.id.toString());
-    //         formData.append('receiverId', selectedUser.id.toString());
-    //         formData.append('messageType', 'AUDIO');
-
-    //         // Log request details for debugging
-    //         console.log('Upload request details:', {
-    //             url: `${process.env.EXPO_PUBLIC_API_URL}/api/chat/upload`,
-    //             chatId: selectedUser.chatId,
-    //             senderId: currentUser.id,
-    //             receiverId: selectedUser.id,
-    //             filename
-    //         });
-
-    //         const response = await axios({
-    //             method: 'POST',
-    //             url: `${process.env.EXPO_PUBLIC_API_URL}/api/chat/upload`,
-    //             data: formData,
-    //             headers: {
-    //                 'Accept': 'application/json',
-    //                 'Content-Type': 'multipart/form-data',
-    //                 'Authorization': `Bearer ${token}`
-    //             },
-    //             onUploadProgress: (progressEvent) => {
-    //                 const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-    //                 console.log(`Upload progress: ${percentCompleted}%`);
-    //             },
-    //             timeout: 30000 // 30 second timeout
-    //         });
-
-    //         if (response.data?.url) {
-    //             // Send the message with the URL from the response
-    //             await onSendMessage({
-    //                 content: response.data.url,
-    //                 type: 'AUDIO',
-    //                 chatId: selectedUser.chatId,
-    //                 userId: currentUser.id,
-    //             });
-    //             console.log('Message sent successfully with URL:', response.data.url);
-    //         } else {
-    //             throw new Error('No URL received in response');
-    //         }
-    //     } catch (error) {
-    //         console.error('Voice upload error:', {
-    //             message: error.message,
-    //             response: error.response?.data,
-    //             status: error.response?.status
-    //         });
-
-    //         let errorMessage = 'Failed to send voice message. Please try again.';
-            
-    //         if (error.response?.status === 404) {
-    //             errorMessage = 'Upload service not found. Please check your connection.';
-    //         } else if (error.response?.status === 413) {
-    //             errorMessage = 'File too large. Please record a shorter message.';
-    //         } else if (error.response?.status === 401) {
-    //             errorMessage = 'Please log in again to continue.';
-    //         }
-
-    //         Alert.alert('Upload Failed', errorMessage);
-    //     } finally {
-    //         setIsUploading(false);
-    //     }
-    // };
+ 
   const handleSendText = () => {
     if (message.trim()) {
       onSendMessage({
@@ -247,11 +153,14 @@ const ChatInput = ({ onSendMessage, selectedLanguage, onLanguageChange, selected
             selectedUser={selectedUser}
         />
 
-        {message.trim() && (
-          <TouchableOpacity style={[styles.sendButton, styles.sendButtonActive]} onPress={handleSendText}>
-            <Text style={styles.sendButtonTextActive}>Send</Text>
-          </TouchableOpacity>
-        )}
+{message.trim() && (
+  <TouchableOpacity 
+    style={[styles.sendButton, styles.sendButtonActive]} 
+    onPress={handleSendText}
+  >
+    <Ionicons name="send" size={18} color="#FFFFFF" />
+  </TouchableOpacity>
+)}
       </View>
 
    
@@ -306,11 +215,13 @@ const styles = StyleSheet.create({
         width: '100%',
         borderRadius: 8,
         marginBottom: 10,
+
       },
       selectedImageActions: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingHorizontal: 10,
+
       },
       audioMessageContainer: {
         padding: 10,
@@ -381,16 +292,16 @@ const styles = StyleSheet.create({
   imageButtonText: {
     fontSize: 24,
   },
-  languageButton: {
-    padding: 4,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  languageButtonText: {
-    fontSize: 12,
-    color: '#666',
-  },
+//   languageButton: {
+//     padding: 4,
+//     backgroundColor: '#f0f0f0',
+//     borderRadius: 4,
+//     marginRight: 8,
+//   },
+//   languageButtonText: {
+//     fontSize: 12,
+//     color: '#666',
+//   },
   messageInput: {
     flex: 1,
     minHeight: 40,
@@ -404,25 +315,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   sendButton: {
-    padding: 8,
-    borderRadius: 20,
-    minWidth: 60,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    marginLeft: 8,
   },
   sendButtonActive: {
-    backgroundColor: '#007bff',
-  },
-  sendButtonInactive: {
-    backgroundColor: '#e0e0e0',
-  },
-  sendButtonText: {
-    fontWeight: 'bold',
+    backgroundColor: '#0084ff', // Messenger blue
+    transform: [{ scale: 1 }],
   },
   sendButtonTextActive: {
-    color: '#fff',
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
-  sendButtonTextInactive: {
-    color: '#666',
+  cancelButton: {
+    backgroundColor: '#dc3545',
+    padding: 10,
+    borderRadius: 5,
+    width: '45%',
+    alignItems: 'center',
+  },
+  sendImageButton: {
+    backgroundColor: '#0084ff', 
+    padding: 10,
+    borderRadius: 5,
+    width: '45%',
+    alignItems: 'center',
+  },
+  sendButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   modalContainer: {
     flex: 1,

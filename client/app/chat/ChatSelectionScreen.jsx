@@ -12,6 +12,7 @@ import {
     Image,
     Modal
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 import AudioMessage from './AudioMessagePlayer.jsx';
 import * as FileSystem from 'expo-file-system';
 import { initSocket,getSocket } from './Socket.js';
@@ -187,9 +188,14 @@ const UserSelectionScreen = ({ navigation ,onSendMessage, onLanguageChange }) =>
                         placeholder="Type a message..."
                         multiline
                     />
-                    <TouchableOpacity onPress={handleImageUpload} style={styles.imageButton}>
-                        <Text style={styles.imageButtonText}>📷</Text>
-                    </TouchableOpacity>
+                  <TouchableOpacity onPress={handleImageUpload} style={styles.imageButton}>
+    <MaterialCommunityIcons 
+        name="camera" 
+        size={24} 
+        color="#666666" 
+    />
+</TouchableOpacity>
+
                     <TouchableOpacity
                         style={[styles.sendButton, messageInput.trim() ? styles.sendButtonActive : null]}
                         onPress={async () => {
@@ -385,29 +391,29 @@ const handleVoiceMessage = async (audioUri) => {
         </Modal>
     );
 
-    // Language selector
-    const LanguageSelector = () => (
-        <View style={styles.languageSelector}>
-            <TouchableOpacity 
-                style={[styles.languageButton, selectedLanguage === 'en' && styles.selectedLanguage]}
-                onPress={() => setSelectedLanguage('en')}
-            >
-                <Text style={[styles.languageButtonText, selectedLanguage === 'en' && styles.selectedLanguageText]}>English</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-                style={[styles.languageButton, selectedLanguage === 'es' && styles.selectedLanguage]}
-                onPress={() => setSelectedLanguage('es')}
-            >
-                <Text style={[styles.languageButtonText, selectedLanguage === 'es' && styles.selectedLanguageText]}>Spanish</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-                style={[styles.languageButton, selectedLanguage === 'fr' && styles.selectedLanguage]}
-                onPress={() => setSelectedLanguage('fr')}
-            >
-                <Text style={[styles.languageButtonText, selectedLanguage === 'fr' && styles.selectedLanguageText]}>French</Text>
-            </TouchableOpacity>
-        </View>
-    );
+    // // Language selector
+    // const LanguageSelector = () => (
+    //     <View style={styles.languageSelector}>
+    //         <TouchableOpacity 
+    //             style={[styles.languageButton, selectedLanguage === 'en' && styles.selectedLanguage]}
+    //             onPress={() => setSelectedLanguage('en')}
+    //         >
+    //             <Text style={[styles.languageButtonText, selectedLanguage === 'en' && styles.selectedLanguageText]}>English</Text>
+    //         </TouchableOpacity>
+    //         <TouchableOpacity 
+    //             style={[styles.languageButton, selectedLanguage === 'es' && styles.selectedLanguage]}
+    //             onPress={() => setSelectedLanguage('es')}
+    //         >
+    //             <Text style={[styles.languageButtonText, selectedLanguage === 'es' && styles.selectedLanguageText]}>Spanish</Text>
+    //         </TouchableOpacity>
+    //         <TouchableOpacity 
+    //             style={[styles.languageButton, selectedLanguage === 'fr' && styles.selectedLanguage]}
+    //             onPress={() => setSelectedLanguage('fr')}
+    //         >
+    //             <Text style={[styles.languageButtonText, selectedLanguage === 'fr' && styles.selectedLanguageText]}>French</Text>
+    //         </TouchableOpacity>
+    //     </View>
+    // );
 
     // Fetch users and current user
     useEffect(() => {
@@ -658,16 +664,14 @@ const handleVoiceMessage = async (audioUri) => {
                     </Text>
                 </View>
 
-                <LanguageSelector />
-
+                {/* <LanguageSelector /> */}
                 <FlatList
-                    data={messages}
-                    renderItem={renderMessageItem}
-                    keyExtractor={(item, index) => `${item.id || index}`}
-                    style={styles.messagesList}
-                    inverted={false}
-                />
-
+    data={[...messages].reverse()}
+    renderItem={renderMessageItem}
+    keyExtractor={(item, index) => `${item.id || index}`}
+    style={styles.messagesList}
+    inverted={true}
+/>
                 {renderInputContainer()}
                 <ImageModal
                     visible={imageModalVisible}
@@ -695,51 +699,179 @@ const handleVoiceMessage = async (audioUri) => {
 };
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#DBE4E3', // Updated background color
+    },
+    chatContainer: {
+        flex: 1,
+        backgroundColor: '#DBE4E3', // Updated background color
+    },
     
-        messageContainer: {
-            marginVertical: 5,
-            maxWidth: '80%',
+    // Message Container Styles
+
+    messageContainer: {
+        marginVertical: 5,
+        maxWidth: '80%',
+        paddingHorizontal: 10,
+    },
+   
+  
+    messageItem: {
+        borderRadius: 15, // Added consistent border radius
+        padding: 10,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
         },
-        sentMessageContainer: {
-            alignSelf: 'flex-end',
+
+        shadowOpacity: 0.23,
+        shadowRadius: 2.62,
+        elevation: 4,
+    },
+    sentMessageContainer: {
+        alignSelf: 'flex-end',
+    },
+    receivedMessageContainer: {
+        alignSelf: 'flex-start',
+    },
+    modalImage: {
+        width: '100%',
+        height: undefined,
+        aspectRatio: 1,
+        borderRadius: 0,
+        borderWidth: 0,
+    },
+    // Message Colors and Text
+    sentMessage: {
+        backgroundColor: '#A0BFC7', // New sent message color
+    },
+    receivedMessage: {
+        backgroundColor: '#E1E6E4', // New received message color
+    },
+    messageText: {
+        fontSize: 16,
+        color: '#000000', // Black text for all messages
+    },
+    sentMessageText: {
+        color: '#000000',
+    },
+    receivedMessageText: {
+        color: '#000000',
+    },
+    audioMessageContainer: {
+        padding: 10,
+        borderRadius: 15,
+    },
+    audioMessageInner: {
+        backgroundColor: 'transparent',
+    },
+    // Audio Message Styles
+    audioMessageContainer: {
+       // backgroundColor: '#E1E6E4', // Light grey background
+        backgroundColor: '#DFE7E4', // Outer color for voice messages
+        padding: 10,
+        borderRadius: 8,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
         },
-        receivedMessageContainer: {
-            alignSelf: 'flex-start',
+        shadowOpacity: 0.23,
+        shadowRadius: 2.62,
+        elevation: 4,
+    },
+    audioMessageInner: {
+        backgroundColor: '#93BECA', // Inner color for voice messages
+        padding: 10,
+        borderRadius: 8,
+    },
+    
+    // Image Message Styles
+    messageImage: {
+        width: 200,
+        height: 200,
+        borderRadius: 15,
+    },
+    
+    // User List Styles
+    userItem: {
+        flexDirection: 'row',
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        alignItems: 'center',
+        backgroundColor: '#DFE7E4',
+        marginHorizontal: 10,
+        marginVertical: 5,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
         },
-        messageItem: {
-            borderRadius: 20,
-            padding: 10,
-        },
-        sentMessage: {
-            backgroundColor: '#007AFF',
-        },
-        receivedMessage: {
-            backgroundColor: '#E8E8E8',
-        },
-        messageText: {
-            fontSize: 16,
-        },
-        sentMessageText: {
-            color: '#FFFFFF',
-        },
-        receivedMessageText: {
-            color: '#000000',
-        },
-        senderName: {
-            fontSize: 12,
-            color: '#666666',
-            marginBottom: 2,
-            marginLeft: 12,
-        },
-        messageImage: {
-            width: 200,
-            height: 200,
-            borderRadius: 10,
-        },
-        audioMessageContainer: {
-            padding: 0, // Remove padding for audio messages as AudioMessage component has its own padding
-            backgroundColor: 'transparent', // Make background transparent as AudioMessage has its own background
-        },
+        shadowOpacity: 0.23,
+        shadowRadius: 2.62,
+        elevation: 4,
+    },
+    
+    // Input Container Styles
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 10,
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#e0e0e0',
+    },
+    messageInput: {
+        flex: 1,
+        minHeight: 40,
+        maxHeight: 100,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        borderRadius: 20,
+        paddingHorizontal: 15,
+        marginRight: 10,
+        backgroundColor: '#f9f9f9',
+        fontSize: 14,
+    },
+    
+    // Selected Image Styles
+    selectedImageContainer: {
+        width: '100%',
+        padding: 10,
+        backgroundColor: '#f5f5f5',
+        borderTopWidth: 1,
+        borderTopColor: '#e0e0e0',
+    },
+    selectedImagePreview: {
+        width: '100%',
+        height: 200,
+        borderRadius: 0, // Removed border radius
+    },
+    
+    senderName: {
+        fontSize: 12,
+        color: '#666666',
+        marginBottom: 2,
+        marginLeft: 12,
+    },
+    messageImage: {
+        width: 200,
+        height: 200,
+        borderRadius: 0, // No border radius
+        borderWidth: 0, // No border
+    },
+    audioMessageContainer: {
+        padding: 0,
+        backgroundColor: '#DFE7E4',
+    },
+    audioMessageInner: {
+        backgroundColor: '#93BECA',
+        padding: 10,
+        borderRadius: 8,
+    },
     
     uploadingContainer: {
         width: '100%',
@@ -759,6 +891,128 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
         borderTopWidth: 1,
         borderTopColor: '#e0e0e0',
+    },
+    selectedImagePreview: {
+        width: '100%',
+        height: 200,
+        borderRadius: 0, // No border radius
+        borderWidth: 0, // No border
+    },
+    selectedImageActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+    },
+    cancelButton: {
+        backgroundColor: '#dc3545',
+        padding: 10,
+        borderRadius: 5,
+        width: '45%',
+        alignItems: 'center',
+    },
+    sendImageButton: {
+        backgroundColor: '#007bff',
+        padding: 10,
+        borderRadius: 5,
+        width: '45%',
+        alignItems: 'center',
+    },
+    cancelButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    imageUploadProgress: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        height: '100%',
+    },
+    progressText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+   
+    imageButtonText: {
+        fontSize: 24,
+    },
+    imageButton: {
+        padding: 10,
+        marginHorizontal: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    chatContainer: {
+        flex: 1,
+        backgroundColor: '#DBE4E3',
+    },
+        messageContainer: {
+            marginVertical: 5,
+            maxWidth: '80%',
+        },
+        sentMessageContainer: {
+            alignSelf: 'flex-start',
+        },
+        receivedMessageContainer: {
+            alignSelf: 'flex-end',
+        },
+        messageItem: {
+            borderRadius: 0,
+            padding: 0,
+        },
+        sentMessage: {
+            backgroundColor: '#007AFF',
+        },
+        receivedMessage: {
+            backgroundColor: '#E8E8E8',
+        },
+        messageText: {
+            fontSize: 16,
+        },
+        sentMessageText: {
+            color: '#FFFFFF',
+        },
+        receivedMessageText: {
+            color: '#ffffff',
+        },
+        senderName: {
+            fontSize: 12,
+            color: '#666666',
+            marginBottom: 2,
+            marginLeft: 12,
+        },
+        messageImage: {
+            width: 200,
+            height: 200,
+            borderRadius: 10,
+        },
+        audioMessageContainer: {
+            padding: 0, 
+            backgroundColor: 'transparent', 
+        },
+    
+    uploadingContainer: {
+        width: '100%',
+        padding: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f5f5f5',
+    },
+    uploadingText: {
+        marginTop: 10,
+        color: '#007bff',
+        fontSize: 16,
+    },
+    selectedImageContainer: {
+        width: '100%',
+        padding: 0, // Removed padding to eliminate any space
+        backgroundColor: 'transparent', // Made background transparent
+        borderTopWidth: 0, // Removed top border
+        borderTopColor: 'transparent',
     },
     selectedImagePreview: {
         width: '100%',
@@ -825,14 +1079,14 @@ const styles = StyleSheet.create({
         fontSize: 24,
     },
 
-    languageSelector: {
-        flexDirection: 'row',
-        padding: 10,
-        backgroundColor: '#f0f0f0',
-        justifyContent: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-    },
+    // languageSelector: {
+    //     flexDirection: 'row',
+    //     padding: 10,
+    //     backgroundColor: '#f0f0f0',
+    //     justifyContent: 'center',
+    //     borderBottomWidth: 1,
+    //     borderBottomColor: '#e0e0e0',
+    // },
     translatedText: {
         fontSize: 12,
         color: '#e0e0e0',
@@ -849,12 +1103,12 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 10,
     },
-    languageSelector: {
-        flexDirection: 'row',
-        padding: 10,
-        backgroundColor: '#f0f0f0',
-        justifyContent: 'center',
-    },
+    // languageSelector: {
+    //     flexDirection: 'row',
+    //     padding: 10,
+    //     backgroundColor: '#f0f0f0',
+    //     justifyContent: 'center',
+    // },
     languageButton: {
         padding: 8,
         marginHorizontal: 5,
@@ -866,8 +1120,27 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#DBE4E3', // Background color of the conversation
     },
+    centerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    userItem: {
+        flexDirection: 'row',
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        alignItems: 'center',
+        backgroundColor: '#DFE7E4', // Sent message color
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        
+    }},
     title: {
         fontSize: 18,
         fontWeight: 'bold',
@@ -879,13 +1152,13 @@ const styles = StyleSheet.create({
     },
 
     // User List Styles
-    userItem: {
-        padding: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
+    // userItem: {
+    //     padding: 15,
+    //     borderBottomWidth: 1,
+    //     borderBottomColor: '#e0e0e0',
+    //     flexDirection: 'row',
+    //     alignItems: 'center',
+    // },
     userName: {
         fontSize: 16,
         fontWeight: 'bold',
@@ -995,7 +1268,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     sendButton: {
-        backgroundColor: '#007bff',
+        backgroundColor: '#000000',
         borderRadius: 20,
         paddingHorizontal: 15,
         paddingVertical: 10,

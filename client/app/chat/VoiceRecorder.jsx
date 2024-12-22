@@ -203,7 +203,7 @@ const VoiceRecorder = ({ onRecordComplete }) => {
                     color={isRecording ? "#ff0000" : "#000000"}
                 />
                 <Text style={styles.buttonText}>
-                    {isRecording ? formatDuration(recordingDuration) : 'Record'}
+                    {isRecording ? formatDuration(recordingDuration) : ''}
                 </Text>
             </TouchableOpacity>
         </View>
@@ -229,6 +229,7 @@ const styles = StyleSheet.create({
     buttonText: {
         marginLeft: 5,
         fontSize: 14,
+
     },
     previewContainer: {
         flexDirection: 'row',
