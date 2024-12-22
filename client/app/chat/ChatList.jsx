@@ -5,15 +5,15 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  Alert,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
+  Alert
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 const ChatListScreen = () => {
   const navigation = useNavigation();
-  const [chats, setChats] = useState([]);
+  const [chats, setChats] = useState([])
   const [currentUserId, setCurrentUserId] = useState(null);
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
@@ -25,14 +25,11 @@ const ChatListScreen = () => {
 
         if (storedUserId && token) {
           setCurrentUserId(storedUserId);
-
-          const response = await axios.get(
-            `${apiUrl}api/chats/user/${storedUserId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
+          
+          const response = await axios.get(`${apiUrl}/api/chats/user/${storedUserId}`, {
+            headers: { 
+              'Authorization': `Bearer ${token}` 
+            }}
           );
           setChats(response.data);
         }
@@ -54,8 +51,7 @@ const ChatListScreen = () => {
         return;
       }
 
-      const response = await axios.post(
-        `${apiUrl}api/chats/create`,
+      const response = await axios.post(`${apiUrl}/api/chats/create`, 
         {
           userId: currentUserId,
           receiverId: otherUserId,
