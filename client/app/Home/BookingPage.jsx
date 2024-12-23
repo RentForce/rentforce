@@ -246,8 +246,8 @@ const BookingPage = ({ navigation, route }) => {
       if (bookingResponse.status === 201) {
         // Send email notification
         // const emailData = {
-        //   guestEmail: "yassine2904@gmail.com", // Replace with actual guest email
-        //   hostEmail: "mejrisaif2020@gmail.com", // Replace with actual host email
+        //   guestEmail: "Ihebiheb@gmail.com", // Replace with actual guest email
+        //   hostEmail: "safsaf12@gmail.com", // Replace with actual host email
         //   houseDetails: {
         //     title: post.title,
         //     location: post.location,
@@ -975,6 +975,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingLeft: 40,
   },
+
   pickerPlaceholder: {
     alignItems: "center",
     fontSize: 16,
