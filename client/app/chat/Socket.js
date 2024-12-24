@@ -19,7 +19,6 @@
 //   forceNew: true
 // });
 
-
 // socket.on('connect', () => {
 //   console.log('Connected to socket server');
 // });
@@ -30,28 +29,28 @@
 
 // export default socket;
 
-import { io } from 'socket.io-client';
+import { io } from "socket.io-client";
 
 let socket = null;
 
 export const initSocket = (serverUrl) => {
   if (!socket) {
     socket = io(serverUrl, {
-      transports: ['websocket'],
+      transports: ["websocket"],
       autoConnect: true,
       timeout: 10000,
     });
 
-    socket.on('connect', () => {
-      console.log('Socket connected successfully');
+    socket.on("connect", () => {
+      console.log("Socket connected successfully");
     });
 
-    socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
     });
 
-    socket.on('disconnect', () => {
-      console.log('Socket disconnected');
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected");
     });
   }
   return socket;

@@ -1,30 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, TextInput, ScrollView } from 'react-native';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  TextInput,
+  ScrollView,
+} from "react-native";
+import axios from "axios";
 
-const apiUrl = process.env.EXPO_PUBLIC_API_URL
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
-
-// const API_BASE_URL = 'http://192.168.255.93:5000'; 
+// const API_BASE_URL = 'http://192.168.100.9:5000';
 
 const ShowProfile = ({ navigation, route }) => {
   const userId = route.params?.userId;
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [bio, setBio] = useState('');
-console.log(userId);
+  const [bio, setBio] = useState("");
+  console.log(userId);
   // Add dummy trip data for testing
   const dummyTrips = [
-    { id: 1, destination: 'Paris', date: '2023-06-15' },
-    { id: 2, destination: 'New York', date: '2023-07-20' },
-    { id: 3, destination: 'Tokyo', date: '2023-08-10' },
+    { id: 1, destination: "Paris", date: "2023-06-15" },
+    { id: 2, destination: "New York", date: "2023-07-20" },
+    { id: 3, destination: "Tokyo", date: "2023-08-10" },
   ];
 
   useEffect(() => {
     const fetchUserData = async () => {
       if (!userId) {
-        setError('No user ID provided');
+        setError("No user ID provided");
         setLoading(false);
         return;
       }
@@ -34,21 +42,21 @@ console.log(userId);
         const response = await axios.get(`${apiUrl}/user/${userId}`, {
           timeout: 10000, // 10 second timeout
           headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
         });
 
         if (response.data) {
-          setUserData({ ...response.data, trips: dummyTrips }); 
-          setBio(response.data.bio || '');
+          setUserData({ ...response.data, trips: dummyTrips });
+          setBio(response.data.bio || "");
         } else {
-          throw new Error('No data received');
+          throw new Error("No data received");
         }
       } catch (err) {
-        console.error('Error fetching user data:', err);
-        setError(err.message || 'Failed to fetch user data');
-        Alert.alert('Error', err.message || 'Failed to fetch user data');
+        console.error("Error fetching user data:", err);
+        setError(err.message || "Failed to fetch user data");
+        Alert.alert("Error", err.message || "Failed to fetch user data");
       } finally {
         setLoading(false);
       }
@@ -61,13 +69,13 @@ console.log(userId);
     try {
       const response = await axios.put(`${apiUrl}/user/${userId}`, {
         ...userData,
-        bio: bio
+        bio: bio,
       });
       setUserData(response.data);
-      Alert.alert('Success', 'Bio updated successfully!');
+      Alert.alert("Success", "Bio updated successfully!");
     } catch (error) {
-      console.error('Error updating bio:', error);
-      Alert.alert('Error', 'Failed to update bio');
+      console.error("Error updating bio:", error);
+      Alert.alert("Error", "Failed to update bio");
     }
   };
 
@@ -93,11 +101,11 @@ console.log(userId);
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.editButton} 
-          onPress={() => navigation.navigate('personal', { userId: userId })}
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => navigation.navigate("personal", { userId: userId })}
         >
-          <Text style={{ color: '#ffffff' }}>Edit</Text>
+          <Text style={{ color: "#ffffff" }}>Edit</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.profileSection}>
@@ -110,11 +118,13 @@ console.log(userId);
             </View>
           ) : (
             <Image
-              source={{ 
-                uri:  'https://www.shutterstock.com/image-vector/user-icon-vector-trendy-flat-600nw-1720665448.jpg' 
+              source={{
+                uri: "https://www.shutterstock.com/image-vector/user-icon-vector-trendy-flat-600nw-1720665448.jpg",
               }}
               style={styles.profileImage}
-              onError={(e) => console.log('Image load error', e.nativeEvent.error)}
+              onError={(e) =>
+                console.log("Image load error", e.nativeEvent.error)
+              }
             />
           )}
         </View>
@@ -146,9 +156,11 @@ console.log(userId);
       <View style={styles.tripsSection}>
         <Text style={styles.tripTitle}>Trips</Text>
         {userData?.trips && userData.trips.length > 0 ? (
-          userData.trips.map(trip => (
+          userData.trips.map((trip) => (
             <View key={trip.id} style={styles.tripCard}>
-              <Text>{trip.destination} - {trip.date}</Text>
+              <Text>
+                {trip.destination} - {trip.date}
+              </Text>
             </View>
           ))
         ) : (
@@ -165,83 +177,83 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   centeredContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f4f4f4',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f4f4f4",
   },
   errorText: {
-    color: 'red',
+    color: "red",
     marginBottom: 20,
     fontSize: 16,
   },
   retryText: {
-    color: 'blue',
+    color: "blue",
     fontSize: 16,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
     marginBottom: 20,
   },
   editButton: {
     padding: 10,
-    backgroundColor: '#808080',
+    backgroundColor: "#808080",
     borderRadius: 5,
   },
   profileSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
     paddingBottom: 20,
   },
   profileImageContainer: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 10,
   },
   profileImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   name: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginVertical: 10,
-    color: '#333',
+    color: "#333",
   },
   info: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     marginVertical: 2,
   },
   confirmationSection: {
     marginVertical: 20,
     padding: 10,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     borderRadius: 5,
   },
   confirmationTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 10,
   },
   emailLabel: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     marginTop: 5,
   },
   email: {
     fontSize: 16,
-    color: '#333',
+    color: "#333",
     marginBottom: 5,
   },
   tripsSection: {
@@ -249,15 +261,15 @@ const styles = StyleSheet.create({
   },
   tripTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   tripCard: {
     padding: 15,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 10,
     marginTop: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -267,18 +279,18 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#808080',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#808080",
+    justifyContent: "center",
+    alignItems: "center",
   },
   initialsText: {
     fontSize: 40,
-    color: '#ffffff',
-    fontWeight: 'bold',
+    color: "#ffffff",
+    fontWeight: "bold",
   },
   bioContainer: {
-    backgroundColor: '#ffffff',
-    borderColor: '#000000',
+    backgroundColor: "#ffffff",
+    borderColor: "#000000",
     borderWidth: 1,
     borderRadius: 10,
     padding: 12,
@@ -286,7 +298,7 @@ const styles = StyleSheet.create({
   },
   bioText: {
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
 });
 

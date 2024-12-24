@@ -10,13 +10,10 @@ import {
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import SweetAlert from '../../components/SweetAlert';
+import SweetAlert from "../../components/SweetAlert";
 
 export default function SignUpScreen({ navigation }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
-;
-
-
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,9 +21,9 @@ export default function SignUpScreen({ navigation }) {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const [showAlert, setShowAlert] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
-    title: '',
-    message: '',
-    type: '',
+    title: "",
+    message: "",
+    type: "",
   });
 
   const validatePassword = (password) => {
@@ -51,9 +48,9 @@ export default function SignUpScreen({ navigation }) {
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
       setAlertConfig({
-        title: 'Weak Password',
-        message: passwordValidation.errors.join(' '),
-        type: 'error'
+        title: "Weak Password",
+        message: passwordValidation.errors.join(" "),
+        type: "error",
       });
       setShowAlert(true);
       return;
@@ -79,25 +76,25 @@ export default function SignUpScreen({ navigation }) {
 
       if (response.ok) {
         setAlertConfig({
-          title: 'Success',
-          message: 'Account created successfully',
-          type: 'success'
+          title: "Success",
+          message: "Account created successfully",
+          type: "success",
         });
         setShowAlert(true);
       } else {
         setAlertConfig({
-          title: 'Error',
-          message: data.message || 'Something went wrong',
-          type: 'error'
+          title: "Error",
+          message: data.message || "Something went wrong",
+          type: "error",
         });
         setShowAlert(true);
       }
     } catch (error) {
       console.error("Error:", error);
       setAlertConfig({
-        title: 'Error',
-        message: 'Failed to create account',
-        type: 'error'
+        title: "Error",
+        message: "Failed to create account",
+        type: "error",
       });
       setShowAlert(true);
     }
@@ -229,8 +226,8 @@ export default function SignUpScreen({ navigation }) {
         type={alertConfig.type}
         onConfirm={() => {
           setShowAlert(false);
-          if (alertConfig.type === 'success') {
-            navigation.navigate('login');
+          if (alertConfig.type === "success") {
+            navigation.navigate("login");
           }
         }}
       />

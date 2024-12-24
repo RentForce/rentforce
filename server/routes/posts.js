@@ -3,7 +3,6 @@ const {
   getPostsByCategory,
   getImagesByPostId,
   createBooking,
-  
   getPostBookings,
   getBookedDates,
   checkDateAvailability,
@@ -11,7 +10,8 @@ const {
 const router = express.Router();
 
 router.get("/all", getPostsByCategory);
-router.get("/:category", getPostsByCategory);
+router.get("/posts/:category", getPostsByCategory);
+// router.get("/:category", getPostsByCategory);
 router.get("/images/:postId", getImagesByPostId);
 router.post("/booking", createBooking);
 

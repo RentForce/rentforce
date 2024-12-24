@@ -17,7 +17,7 @@ import { Picker } from "@react-native-picker/picker";
 import * as Animatable from "react-native-animatable";
 import Navbar from "./Navbar";
 import axios from "axios";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Define getDatesInRange helper function OUTSIDE the component
 const getDatesInRange = (startDate, endDate) => {
@@ -56,7 +56,8 @@ const getDatesInRange = (startDate, endDate) => {
 };
 
 const BookingPage = ({ navigation, route }) => {
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   const { post } = route.params || {};
   const initialPaymentAmount = post && post.price ? post.price.toString() : "0";
@@ -143,6 +144,21 @@ const BookingPage = ({ navigation, route }) => {
     }
   }, [post?.id]);
 
+  useEffect(() => {
+    const getUserId = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        setCurrentUserId(userId);
+      } catch (error) {
+        console.error("Error getting userId:", error);
+        Alert.alert("Error", "Please login again");
+        navigation.navigate("Login");
+      }
+    };
+
+    getUserId();
+  }, []);
+
   const calculateTotalCost = useCallback(() => {
     const paymentAmount = parseFloat(formData.paymentAmount);
     const guests = parseInt(formData.numberOfGuests) || 0;
@@ -203,12 +219,18 @@ const BookingPage = ({ navigation, route }) => {
 
   const submitBooking = async () => {
     try {
+      if (!currentUserId) {
+        Alert.alert("Error", "Please login to make a booking");
+        navigation.navigate("Login");
+        return;
+      }
+
       setIsLoading(true);
       const totalCost = calculateTotalCost();
 
       // First create the booking
       const bookingData = {
-        userId: 1, // Replace with actual user ID
+        userId: parseInt(currentUserId),
         postId: post.id,
         startDate: formData.dateRange.startDate,
         endDate: formData.dateRange.endDate,
@@ -224,16 +246,16 @@ const BookingPage = ({ navigation, route }) => {
       if (bookingResponse.status === 201) {
         // Send email notification
         const emailData = {
-          guestEmail: "yassine2904@gmail.com", // Replace with actual guest email
+          guestEmail: "safouenemahfoudhi12@gmail.com", // Replace with actual guest email
           hostEmail: "mejrisaif2020@gmail.com", // Replace with actual host email
           houseDetails: {
             title: post.title,
             location: post.location,
             checkIn: formData.dateRange.startDate,
             checkOut: formData.dateRange.endDate,
-            guests: formData.numberOfGuests
+            guests: formData.numberOfGuests,
           },
-          price: totalCost
+          price: totalCost,
         };
 
         await axios.post(`${apiUrl}/confirm-booking`, emailData);
@@ -270,7 +292,8 @@ const BookingPage = ({ navigation, route }) => {
 
           <Text style={styles.confirmationTitle}>Booking Confirmed!</Text>
           <Text style={styles.confirmationText}>
-            Your booking has been successfully confirmed. Your request to book has been send successfully, we will send you an update soon.
+            Your booking has been successfully confirmed. Your request to book
+            has been send successfully, we will send you an update soon.
           </Text>
 
           <View style={styles.bookingSummary}>
@@ -952,6 +975,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingLeft: 40,
   },
+
   pickerPlaceholder: {
     alignItems: "center",
     fontSize: 16,
