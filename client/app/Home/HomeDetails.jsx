@@ -19,6 +19,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import Navbar from "./Navbar";
 import ImageZoom from "react-native-image-pan-zoom";
 import MapView, { Marker } from "react-native-maps";
+import { WebView } from "react-native-webview";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -31,7 +32,7 @@ const HomeDetails = ({ route, navigation }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showMoreRules, setShowMoreRules] = useState(false);
-
+  const [tourModalVisible, setTourModalVisible] = useState(false);
 
   const imageSizes = [
     { width: "100%", height: 180 }, // Full width
@@ -67,6 +68,16 @@ const HomeDetails = ({ route, navigation }) => {
   // Confirm Booking Button
   const handleConfirmBooking = () => {
     navigation.navigate("Booking", { post }); // Pass the entire post object
+  };
+
+  // Function to open the 3D tour modal
+  const handle3DTour = () => {
+    setTourModalVisible(true); // Open the modal
+  };
+
+  // Function to close the 3D tour modal
+  const close3DTourModal = () => {
+    setTourModalVisible(false); // Close the modal
   };
 
   // Image Modal Component
@@ -240,6 +251,14 @@ const HomeDetails = ({ route, navigation }) => {
             Price: <Text style={styles.priceValue}>${post.price}</Text>
           </Text>
         </View>
+        <TouchableOpacity
+          style={styles.virtualTourButton}
+          onPress={handle3DTour}
+        >
+          <Text style={styles.virtualTourButtonText}>
+            Take a 3D Virtual Tour
+          </Text>
+        </TouchableOpacity>
         <View style={styles.detailsContainer}>
           <View style={styles.detailRow}></View>
           <View style={styles.section}>
@@ -333,6 +352,26 @@ const HomeDetails = ({ route, navigation }) => {
       </ScrollView>
       <Navbar navigation={navigation} style={styles.navbar} />
       <ImageModal />
+      {/* 3D Tour Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={tourModalVisible}
+        onRequestClose={close3DTourModal}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={close3DTourModal}
+          >
+            <Icon name="close" size={30} color="#fff" />
+          </TouchableOpacity>
+          <WebView
+            source={{ uri: "https://your-3d-tour-url.com" }} // Replace with your 3D tour URL
+            style={{ flex: 1 }}
+          />
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -382,6 +421,8 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.95)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   slideContainer: {
     width: SCREEN_WIDTH,
@@ -642,6 +683,18 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 150,
     marginBottom: 8,
+  },
+  virtualTourButton: {
+    backgroundColor: "#3498db",
+    paddingVertical: 12,
+    borderRadius: 25,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  virtualTourButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
