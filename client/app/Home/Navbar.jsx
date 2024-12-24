@@ -1,12 +1,26 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Navbar = ({ navigation, userId }) => {
   const handleConfirmExplore = () => {
     console.log("Navigating to Home");
     navigation.navigate("Home");
 
+  };
+
+  const handleProfileNavigation = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("userData");
+      const parsedUserData = JSON.parse(userData);
+      navigation.navigate('profile', { 
+        userId: parsedUserData.id,
+        updatedUser: parsedUserData
+      });
+    } catch (error) {
+      console.error("Error navigating to profile:", error);
+    }
   };
 
   return (
@@ -27,7 +41,7 @@ const Navbar = ({ navigation, userId }) => {
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.iconContainer} 
-        onPress={() => navigation.navigate('profile', { userId })}
+        onPress={handleProfileNavigation}
       >
         <Ionicons name="person-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Profile</Text>

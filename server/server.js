@@ -8,6 +8,10 @@ const nodemailer = require('nodemailer');
 const http = require('http');
 const { Server } = require('socket.io');
 const chatRoutes = require('./routes/chat');
+const stripe = require('stripe')('sk_test_51QWZjFIMfjBRRWpm6iHBv9hhM8aJjzg436fkGQIat8OLzaV4U5524lynVZp7OhkDYZ1Bne5RxWzl3fOu0LIsmWsa00GEIswlHy');
+const bodyParser = require('body-parser');
+const { sendBookingRequestEmail } = require('./services/emailService');
+
 const prisma = new PrismaClient();
 const app = express();
 
@@ -44,10 +48,10 @@ const corsOptions = {
       'http://localhost:19002',
      
       'http://localhost:8081',
-      'exp://localhost:19000',  // Add this
-      'exp://localhost:19001',  // Add this
-      'exp://localhost:19002',  // Add this
-      'http://192.168.11.118:19000', // Add your actual IP address variations
+      'exp://localhost:19000',  
+      'exp://localhost:19001',  
+      'exp://localhost:19002',  
+      'http://192.168.11.118:19000', 
       'http://192.168.11.118:19001',
       'http://192.168.11.118:19002'
   ],
@@ -58,46 +62,45 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 const server = http.createServer(app);
 
 app.use("/user", userRoutes);
 app.use("/posts", postsRouter);
 
-const sendBookingEmails = async (guestEmail, hostEmail, houseDetails, price) => {
-    const guestMailOptions = {
-        from: 'mejrisaif2020@gmail.com',
-        to: "yassine2904@gmail.com",
-        subject: 'Booking Confirmation',
-        text: `Your booking for the house is confirmed. Details: ${houseDetails}, Price: ${price}`,
-    };
+// Stripe Payment Intent Route
+app.post('/create-payment-intent', async (req, res) => {
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: req.body.amount, 
+      currency: 'usd', 
+    });
 
-    const hostMailOptions = {
-        from: 'mejrisaif2020@gmail.com',
-        to: "yassine2904@gmail.com",
-        subject: 'New Booking Request',
-        text: `A guest has requested to book your house. Details: ${houseDetails}, Price: ${price}. Please accept or reject the booking.`,
-    };
-
-    try {
-        await transporter.sendMail(guestMailOptions);
-        await transporter.sendMail(hostMailOptions);
-        console.log('Booking confirmation emails sent successfully.');
-    } catch (error) {
-        console.error('Error sending emails:', error);
-    }
-};
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).send(error.message);
+  }
+});
 
 app.post('/confirm-booking', async (req, res) => {
-    const { guestEmail, hostEmail, houseDetails, price } = req.body; 
+  const { guestEmail, hostEmail, houseDetails, price } = req.body;
 
-    try {
-        await sendBookingEmails(guestEmail, hostEmail, houseDetails, price);
-        res.status(200).json({ message: 'Booking confirmed and emails sent.' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error confirming booking and sending emails.' });
-    }
-  })
+  try {
+    await sendBookingRequestEmail(guestEmail, hostEmail, houseDetails, price);
+    res.status(200).json({ message: 'Booking request sent and emails delivered successfully.' });
+  } catch (error) {
+    console.error('Error processing booking confirmation:', error);
+    res.status(500).json({ 
+      message: 'Error sending booking confirmation emails',
+      error: error.message 
+    });
+  }
+});
+
 const io = new Server(server, {
   cors: {
       origin: corsOptions.origin,
@@ -105,7 +108,7 @@ const io = new Server(server, {
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true
   },
-  transports: ['websocket', 'polling'] // Explicitly set transports
+  transports: ['websocket', 'polling']
 });
 
 app.use((req, res, next) => {

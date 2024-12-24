@@ -152,7 +152,6 @@ const CreatePost = () => {
   );
 };
 
-// Styles for the component
 const styles = StyleSheet.create({
   container: {
     flex: 1,

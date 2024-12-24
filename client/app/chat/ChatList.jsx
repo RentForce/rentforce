@@ -27,7 +27,7 @@ const ChatListScreen = () => {
           setCurrentUserId(storedUserId);
 
           const response = await axios.get(
-            `${apiUrl}/api/chats/user/${storedUserId}`,
+            `${apiUrl}api/chats/user/${storedUserId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -55,7 +55,7 @@ const ChatListScreen = () => {
       }
 
       const response = await axios.post(
-        `${apiUrl}/api/chats/create`,
+        `${apiUrl}api/chats/create`,
         {
           userId: currentUserId,
           receiverId: otherUserId,
