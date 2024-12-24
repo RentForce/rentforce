@@ -227,7 +227,7 @@ const Home = ({ navigation }) => {
       const baseUrl = `${apiUrl}`;
       const endpoint = searchQuery
         ? `${baseUrl}/posts/all`
-        : `${baseUrl}/posts/${category}`;
+        : `${baseUrl}/posts/posts/${category}`;
 
       console.log("Fetching from:", endpoint);
 
@@ -282,12 +282,13 @@ const Home = ({ navigation }) => {
   const handleScroll = (event) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
     const tabWidth = 100; // Adjust this value based on your tab width
-    const index = Math.floor((contentOffsetX + tabWidth / 1.2) / tabWidth);
+    const index = Math.round(contentOffsetX / tabWidth);
     const newCategory = categories[index];
 
-    if (newCategory && newCategory !== selectedCategory) {
+    if (newCategory !== selectedCategory) {
       setSelectedCategory(newCategory);
-      fetchPostsByCategory(newCategory); // Fetch posts for the new category
+      // Optionally, you can trigger a fetch for posts here
+      fetchPostsByCategory(newCategory);
     }
   };
 
@@ -324,7 +325,7 @@ const Home = ({ navigation }) => {
           <Ionicons
             name={favorites.has(post.id) ? "heart" : "heart-outline"}
             size={24}
-            color={favorites.has(post.id) ? "red" : "white"}
+            color={favorites.has(post.id) ? "red" : "black"}
             style={styles.favoriteIcon}
             onPress={() => toggleFavorite(post.id)}
           />
@@ -728,7 +729,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 16,
     right: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     padding: 8,
+    borderRadius: 50,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
     zIndex: 1,
   },
   noImageContainer: {

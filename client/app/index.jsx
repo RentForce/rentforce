@@ -39,6 +39,7 @@ function App() {
           headerShown: false,
         }}
       />
+
       <Stack.Screen
         name="favourites"
         component={Favourites}
@@ -97,11 +98,18 @@ function App() {
           title: "Notifications",
         }}
       />
-
-      {/* <Stack.Screen name="ChatSelectionScreen" component={ChatSelectionScreen} options={{ title: 'Select User' }}/>
-        <Stack.Screen name="Chat" component={Chat} options={({ route }) => ({  title: `Chat with ${route.params?.receiverName || 'User'}`,
-          })}
-        /> */}
+      <Stack.Screen
+        name="ChatSelectionScreen"
+        component={ChatSelectionScreen}
+        options={{ title: "Select User" }}
+      />
+      <Stack.Screen
+        name="Chat"
+        component={Chat}
+        options={({ route }) => ({
+          title: `Chat with ${route.params?.receiverName || "User"}`,
+        })}
+      />
     </Stack.Navigator>
   );
 }

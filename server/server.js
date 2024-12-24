@@ -3,10 +3,15 @@ const express = require("express");
 const cors = require("cors");
 const userRoutes = require("./routes/user");
 const postsRouter = require("./routes/posts");
-const { PrismaClient } = require("@prisma/client");
 const nodemailer = require("nodemailer");
 const http = require("http");
 const { Server } = require("socket.io");
+const dotenv = require("dotenv");
+const { PrismaClient } = require("@prisma/client");
+const path = require("path");
+
+dotenv.config();
+
 const chatRoutes = require("./routes/chat");
 const stripe = require("stripe")(
   "sk_test_51QWZjFIMfjBRRWpm6iHBv9hhM8aJjzg436fkGQIat8OLzaV4U5524lynVZp7OhkDYZ1Bne5RxWzl3fOu0LIsmWsa00GEIswlHy"
@@ -14,6 +19,12 @@ const stripe = require("stripe")(
 const bodyParser = require("body-parser");
 const { sendBookingRequestEmail } = require("./services/emailService");
 const notificationRoutes = require("./routes/notification");
+
+// Add this to debug imports
+console.log("Loaded routes:", {
+  chat: Object.keys(chatRoutes),
+  user: Object.keys(userRoutes),
+});
 
 const prisma = new PrismaClient();
 const app = express();
@@ -36,6 +47,10 @@ app.use(
 );
 const corsOptions = {
   origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
@@ -43,23 +58,35 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+const fs = require("fs");
+if (!fs.existsSync("./uploads")) {
+  fs.mkdirSync("./uploads");
+}
+if (!fs.existsSync("./uploads/audio")) {
+  fs.mkdirSync("./uploads/audio");
+}
+if (!fs.existsSync("./uploads/images")) {
+  fs.mkdirSync("./uploads/images");
+}
 app.use(bodyParser.json());
 
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
-  },
-});
+// const io = new Server(server, {
+//   cors: {
+//     origin: "*",
+//     methods: ["GET", "POST", "PUT", "DELETE"],
+//     credentials: true,
+//   },
+// });
 
-app.use((req, res, next) => {
-  req.io = io;
-  next();
-});
+// app.use((req, res, next) => {
+//   req.io = io;
+//   next();
+// });
 
-app.use("/user", userRoutes);
+// app.use("/user", userRoutes);
 app.use("/posts", postsRouter);
 
 // Stripe Payment Intent Route
@@ -96,6 +123,28 @@ app.post("/confirm-booking", async (req, res) => {
   }
 });
 
+const io = new Server(server, {
+  cors: corsOptions,
+  pingTimeout: 60000,
+  cors: {
+    origin: corsOptions.origin,
+    methods: corsOptions.methods,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  },
+  transports: ["websocket", "polling"],
+});
+
+app.use((req, res, next) => {
+  req.io = io;
+  console.log(`${req.method} ${req.path}`, {
+    body: req.body,
+    query: req.query,
+    headers: req.headers,
+  });
+  next();
+});
+
 app.use("/api/chat", chatRoutes);
 app.use("/user", userRoutes);
 app.use("/notification", notificationRoutes);
@@ -107,15 +156,26 @@ io.on("connection", (socket) => {
     socket.join(`chat:${chatId}`);
     console.log(`User joined chat: ${chatId}`);
   });
-
-  socket.on("send message", (messageData) => {
-    // Emit the 'new message' event to all clients in the chat room
-    io.to(`chat:${messageData.chatId}`).emit("new message", messageData);
-    console.log("Message sent to chat:", messageData.chatId, messageData);
+  socket.on("voice-call", (callData) => {
+    // Broadcast incoming call to the receiver
+    socket
+      .to(callData.receiver.id.toString())
+      .emit("incoming-voice-call", callData);
+    console.log("Voice call initiated:", callData);
   });
-
   socket.on("disconnect", () => {
     console.log("User disconnected");
+  });
+
+  socket.on("error", (error) => {
+    console.error("Socket error:", error);
+  });
+
+  socket.on("video call invite", (data) => {
+    socket.to(data.to).emit("incoming call", {
+      from: data.from,
+      channelName: data.channelName,
+    });
   });
 
   socket.on("error", (error) => {
@@ -150,10 +210,10 @@ io.on("connection", (socket) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error("Unhandled Error:", err);
+  console.error("Server error:", err);
   res.status(500).json({
-    message: "Internal server error",
-    error: process.env.NODE_ENV !== "production" ? err.message : {},
+    error: "Server error",
+    details: err.message,
   });
 });
 

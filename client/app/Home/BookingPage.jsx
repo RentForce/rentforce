@@ -245,20 +245,20 @@ const BookingPage = ({ navigation, route }) => {
 
       if (bookingResponse.status === 201) {
         // Send email notification
-        // const emailData = {
-        //   guestEmail: "Ihebiheb@gmail.com", // Replace with actual guest email
-        //   hostEmail: "safsaf12@gmail.com", // Replace with actual host email
-        //   houseDetails: {
-        //     title: post.title,
-        //     location: post.location,
-        //     checkIn: formData.dateRange.startDate,
-        //     checkOut: formData.dateRange.endDate,
-        //     guests: formData.numberOfGuests,
-        //   },
-        //   price: totalCost,
-        // };
+        const emailData = {
+          guestEmail: "safouenemahfoudhi12@gmail.com", // Replace with actual guest email
+          hostEmail: "mejrisaif2020@gmail.com", // Replace with actual host email
+          houseDetails: {
+            title: post.title,
+            location: post.location,
+            checkIn: formData.dateRange.startDate,
+            checkOut: formData.dateRange.endDate,
+            guests: formData.numberOfGuests,
+          },
+          price: totalCost,
+        };
 
-        // await axios.post(`${apiUrl}/confirm-booking`, emailData);
+        await axios.post(`${apiUrl}/confirm-booking`, emailData);
 
         setShowConfirmModal(false);
         setShowSuccessModal(true);

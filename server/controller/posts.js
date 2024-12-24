@@ -263,9 +263,7 @@ module.exports = {
   getPostsByCategory,
   getImagesByPostId,
   createBooking,
-
   getPostBookings,
-
   getBookedDates,
   checkDateAvailability,
 };
