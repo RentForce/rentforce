@@ -14,6 +14,9 @@ import SweetAlert from '../../components/SweetAlert';
 
 export default function SignUpScreen({ navigation }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
+;
+
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");

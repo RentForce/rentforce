@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
+import { initSocket } from "../chat/Socket.js";
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SweetAlert from '../../components/SweetAlert';
 
@@ -39,6 +41,12 @@ const Login = ({ navigation }) => {
         // Optional: Â²Store user info if needed
         await AsyncStorage.setItem("userData", JSON.stringify(user));
 
+await AsyncStorage.setItem('userId', response.data.user.id.toString(),
+);
+await AsyncStorage.setItem("token", token);
+await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
+      Alert.alert("Login Successful", "Welcome");
+      initSocket(process.env.EXPO_PUBLIC_API_URL);
         console.log("Token successfully stored:", user);
         setAlertConfig({
           title: 'Login Successful',

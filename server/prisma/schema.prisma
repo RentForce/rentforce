@@ -8,6 +8,28 @@ datasource db {
 }
 
 model User {
+<<<<<<< HEAD
+  id            Int        @id @default(autoincrement())
+  firstName     String?    
+  lastName      String?    
+  email         String?    @unique
+  password      String?    
+  phoneNumber   String?    
+  image         String?    
+  bio           String?    
+  type          UserType?  
+  address       String?    
+  posts         Post[]     
+  cart          Cart?      
+  favourites    Favourite[] 
+  history       History[]  
+  notifications Notification[]
+  chatsInitiated Chat[]     @relation("UserChats")       
+  chatsReceived  Chat[]     @relation("ReceiverChats")   
+  outgoingCalls CallLog[] @relation("CallerCalls")
+  incomingCalls CallLog[] @relation("ReceiverCalls")
+  messages       Message[]  
+=======
   id             Int            @id @default(autoincrement())
   firstName      String?
   lastName       String?
@@ -27,6 +49,7 @@ model User {
   chatsReceived  Chat[]         @relation("ReceiverChats")
   messages       Message[]
   Booking        Booking[]
+>>>>>>> 2582a3e2069a9eeadda41a8c109c54c2cc32cacf
 }
 
 model Post {
@@ -156,20 +179,36 @@ model Message {
   duration         Int?
   type             MessageType? @default(TEXT)
   voiceMessagePath String?
+<<<<<<< HEAD
+  
+  user     User     @relation(fields: [userId], references: [id])
+  chat     Chat     @relation(fields: [chatId], references: [id])
+  translations MessageTranslation[] // Add this line
+=======
   user             User         @relation(fields: [userId], references: [id])
   chat             Chat         @relation(fields: [chatId], references: [id])
+>>>>>>> 2582a3e2069a9eeadda41a8c109c54c2cc32cacf
 }
 
+model MessageTranslation {
+  id          Int      @id @default(autoincrement())
+  messageId   Int
+  language    String
+  translation String
+  message     Message  @relation(fields: [messageId], references: [id])
+  @@unique([messageId, language])
+}
 model CallLog {
   id         Int       @id @default(autoincrement())
   callerId   Int
   receiverId Int
-  startTime  DateTime
+  startTime  DateTime @default(now())
   endTime    DateTime?
   duration   Int?
-  status     String
+  status     CallStatus @default(MISSED)
+  caller     User     @relation("CallerCalls", fields: [callerId], references: [id])
+  receiver   User     @relation("ReceiverCalls", fields: [receiverId], references: [id])
 }
-
 model Map {
   id        Int      @id @default(autoincrement())
   latitude  Decimal?
@@ -216,4 +255,16 @@ enum MessageType {
   NOTIFICATION
   VOICE
   VIDEO_CALL
+<<<<<<< HEAD
+  AUDIO
 }
+enum CallStatus {
+  ONGOING
+  COMPLETED
+  MISSED
+  REJECTED
+  FAILED
+}
+=======
+}
+>>>>>>> 2582a3e2069a9eeadda41a8c109c54c2cc32cacf
