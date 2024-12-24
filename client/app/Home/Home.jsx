@@ -425,7 +425,18 @@ const Home = ({ navigation }) => {
 
       <Modal visible={modalVisible} animationType="slide">
         <View style={styles.modalContainer}>
-          <Text style={styles.filterLabel}>Category</Text>
+          <View style={styles.modalHeader}>
+            <Text style={styles.filterLabel}>Category</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setModalVisible(false);
+                navigation.navigate("Home");
+              }}
+              style={styles.closeIcon}
+            >
+              <Ionicons name="home" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
           <FlatList
             data={categories}
             keyExtractor={(item) => item}
@@ -496,7 +507,7 @@ const Home = ({ navigation }) => {
                 shadowColor: "#000",
                 shadowOffset: {
                   width: 0,
-                  height: 1,
+                  height: 10,
                 },
                 shadowOpacity: 0.2,
                 shadowRadius: 1,
@@ -539,13 +550,6 @@ const Home = ({ navigation }) => {
             style={styles.submitButton}
           >
             <Text style={styles.submitButtonText}>Apply Filters</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setModalVisible(false)}
-            style={styles.closeButton}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
 
           {loading && (
@@ -902,30 +906,30 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: "#DDDDDD",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 15,
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 10,
     backgroundColor: "#F9F9F9",
-    fontSize: 16,
+    fontSize: 14,
   },
   categoryItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 15,
+    padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#E0E0E0",
   },
   categoryText: {
-    fontSize: 18,
-    marginLeft: 10,
+    fontSize: 16,
+    marginLeft: 8,
     color: "#333",
   },
   submitButton: {
     backgroundColor: "#2C3E50",
-    padding: 15,
-    borderRadius: 10,
+    padding: 12,
+    borderRadius: 8,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 15,
     elevation: 2,
   },
   submitButtonText: {
@@ -934,10 +938,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   closeButton: {
-    marginTop: 10,
-    padding: 15,
+    marginTop: 8,
+    padding: 12,
     backgroundColor: "#2C3E50",
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: "center",
     elevation: 2,
   },
@@ -946,18 +950,18 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   priceContainer: {
-    padding: 20,
+    padding: 10,
     backgroundColor: "#fff",
-    borderRadius: 15,
-    marginBottom: 20,
+    borderRadius: 10,
+    marginBottom: 10,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
     alignItems: "center",
   },
   priceText: {
@@ -997,6 +1001,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 999,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+    paddingRight: 10,
+  },
+  closeIcon: {
+    padding: 8,
+    marginRight: -19,
   },
 });
 
