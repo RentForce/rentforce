@@ -325,61 +325,7 @@ const translationLimiter = rateLimit({
   max: 1000, // limit each IP to 1000 requests per windowMs
   message: 'Daily translation limit reached'
 });
-// cloudinary.config({
-//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-//   api_key: process.env.CLOUDINARY_API_KEY,
-//   api_secret: process.env.CLOUDINARY_API_SECRET
-// });
 
-// const uploadImage = async (req, res) => {
-//   const uploadMiddleware = multer({
-//     storage: storage,
-//     limits: {
-//       fileSize: 5 * 1024 * 1024, // 5MB limit
-//     },
-//     fileFilter: (req, file, cb) => {
-//       if (!file.mimetype.startsWith('image/')) {
-//         return cb(new Error('Only image files are allowed'));
-//       }
-//       cb(null, true);
-//     }
-//   }).single('file');
-
-//   try {
-//     // Handle upload with Promise wrapper
-//     await new Promise((resolve, reject) => {
-//       uploadMiddleware(req, res, (err) => {
-//         if (err) {
-//           console.error('Multer error:', err);
-//           reject(err);
-//         } else {
-//           resolve();
-//         }
-//       });
-//     });
-
-//     // Check if file exists after upload
-//     if (!req.file) {
-//       return res.status(400).json({
-//         error: 'No file uploaded',
-//         details: 'Please provide an image file'
-//       });
-//     }
-
-//     // Return upload result
-//     res.status(200).json({
-//       url: req.file.path,
-//       public_id: req.file.filename
-//     });
-
-//   } catch (error) {
-//     console.error('Upload error:', error);
-//     res.status(500).json({
-//       error: 'Upload failed',
-//       details: error.message
-//     });
-//   }
-// };
 
 
 cloudinary.config({
@@ -521,7 +467,29 @@ const handleFileUpload = async (req, res) => {
     });
   }
 };
+const sendPushNotification = async (expoPushToken, messageData) => {
+  const message = {
+    to: expoPushToken,
+    sound: 'default',
+    title: `New message from ${messageData.senderName}`,
+    body: messageData.type === 'IMAGE' ? '📷 Image' : 
+          messageData.type === 'AUDIO' ? '🎵 Voice message' : 
+          messageData.content,
+    data: { messageData },
+  };
 
+  try {
+    await axios.post('https://exp.host/--/api/v2/push/send', message, {
+      headers: {
+        'Accept': 'application/json',
+        'Accept-encoding': 'gzip, deflate',
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (error) {
+    console.error('Error sending push notification:', error);
+  }
+};
 
 module.exports = {
   handleFileUpload,

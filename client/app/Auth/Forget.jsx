@@ -32,7 +32,10 @@ export default function ForgetPassword({ navigation }) {
         const response = await fetch(`${apiUrl}/user/send-code`, {
           method: "POST",
           headers: {
+            "User-Agent":"Thunder Client (https://www.thunderclient.com)",
             "Content-Type": "application/json",
+            "Authorization":"App daa6aec38feddaf03cb3b0f318706f0d-5770c954-04d6-46cd-a3f7-9fd4abdd4e29",
+
           },
           body: JSON.stringify({
             [selectedOption]: inputValue,

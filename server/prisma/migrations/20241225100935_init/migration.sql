@@ -40,14 +40,14 @@ CREATE TABLE `Booking` (
     `postId` INTEGER NOT NULL,
     `startDate` DATETIME(3) NOT NULL,
     `endDate` DATETIME(3) NOT NULL,
-    `numberOfGuests` INTEGER NOT NULL,
-    `totalPrice` DOUBLE NOT NULL,
-    `status` VARCHAR(191) NOT NULL DEFAULT 'PENDING',
     `guestName` VARCHAR(191) NULL,
     `guestCountry` VARCHAR(191) NULL,
     `propertyDetails` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
+    `totalPrice` DOUBLE NOT NULL,
+    `numberOfGuests` INTEGER NOT NULL,
+    `status` VARCHAR(191) NOT NULL DEFAULT 'PENDING',
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -111,6 +111,7 @@ CREATE TABLE `History` (
     `totalPrice` DECIMAL(65, 30) NULL,
     `userId` INTEGER NOT NULL,
     `postId` INTEGER NOT NULL,
+    `numberOfGuests` INTEGER NULL,
 
     UNIQUE INDEX `History_id_key`(`id`),
     PRIMARY KEY (`id`)
@@ -119,12 +120,13 @@ CREATE TABLE `History` (
 -- CreateTable
 CREATE TABLE `Notification` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `message` VARCHAR(191) NULL,
-    `status` VARCHAR(191) NULL,
-    `createdAt` DATETIME(3) NULL,
+    `type` VARCHAR(191) NOT NULL,
+    `message` VARCHAR(191) NOT NULL,
+    `isRead` BOOLEAN NOT NULL DEFAULT false,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `userId` INTEGER NOT NULL,
+    `bookingId` INTEGER NULL,
 
-    UNIQUE INDEX `Notification_id_key`(`id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -173,7 +175,7 @@ CREATE TABLE `CallLog` (
     `startTime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `endTime` DATETIME(3) NULL,
     `duration` INTEGER NULL,
-    `status` ENUM('ONGOING', 'COMPLETED', 'MISSED', 'REJECTED', 'FAILED') NOT NULL DEFAULT 'MISSED',
+    `status` ENUM('MISSED', 'REJECTED', 'FAILED') NOT NULL DEFAULT 'MISSED',
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -228,6 +230,9 @@ ALTER TABLE `History` ADD CONSTRAINT `History_postId_fkey` FOREIGN KEY (`postId`
 
 -- AddForeignKey
 ALTER TABLE `Notification` ADD CONSTRAINT `Notification_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Notification` ADD CONSTRAINT `Notification_bookingId_fkey` FOREIGN KEY (`bookingId`) REFERENCES `Booking`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Chat` ADD CONSTRAINT `Chat_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

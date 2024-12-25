@@ -19,7 +19,6 @@ import Navbar from "./Navbar";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
 // Define getDatesInRange helper function OUTSIDE the component
 const getDatesInRange = (startDate, endDate) => {
   const dates = {};
@@ -57,7 +56,8 @@ const getDatesInRange = (startDate, endDate) => {
 };
 
 const BookingPage = ({ navigation, route }) => {
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   const { post } = route.params || {};
   const initialPaymentAmount = post && post.price ? post.price.toString() : "0";
@@ -144,6 +144,21 @@ const BookingPage = ({ navigation, route }) => {
     }
   }, [post?.id]);
 
+  useEffect(() => {
+    const getUserId = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        setCurrentUserId(userId);
+      } catch (error) {
+        console.error("Error getting userId:", error);
+        Alert.alert("Error", "Please login again");
+        navigation.navigate("Login");
+      }
+    };
+
+    getUserId();
+  }, []);
+
   const calculateTotalCost = useCallback(() => {
     const paymentAmount = parseFloat(formData.paymentAmount);
     const guests = parseInt(formData.numberOfGuests) || 0;
@@ -204,6 +219,12 @@ const BookingPage = ({ navigation, route }) => {
 
   const submitBooking = async () => {
     try {
+      if (!currentUserId) {
+        Alert.alert("Error", "Please login to make a booking");
+        navigation.navigate("Login");
+        return;
+      }
+
       setIsLoading(true);
       const totalCost = calculateTotalCost();
 
@@ -324,7 +345,8 @@ const BookingPage = ({ navigation, route }) => {
 
           <Text style={styles.confirmationTitle}>Booking Confirmed!</Text>
           <Text style={styles.confirmationText}>
-            Your booking has been successfully confirmed. Your request to book has been send successfully, we will send you an update soon.
+            Your booking has been successfully confirmed. Your request to book
+            has been send successfully, we will send you an update soon.
           </Text>
 
           <View style={styles.bookingSummary}>
@@ -1006,6 +1028,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingLeft: 40,
   },
+
   pickerPlaceholder: {
     alignItems: "center",
     fontSize: 16,
