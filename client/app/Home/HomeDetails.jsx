@@ -19,7 +19,11 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import Navbar from "./Navbar";
 import ImageZoom from "react-native-image-pan-zoom";
 import MapView, { Marker } from "react-native-maps";
+<<<<<<< HEAD
 import AsyncStorage from "@react-native-async-storage/async-storage";
+=======
+import { WebView } from "react-native-webview";
+>>>>>>> 83f84943608a2b8742260dab221170613edb078f
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -33,12 +37,24 @@ const HomeDetails = ({ route, navigation }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showMoreRules, setShowMoreRules] = useState(false);
+<<<<<<< HEAD
   const [comments, setComments] = useState([]);
   const [showAllComments, setShowAllComments] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [rating, setRating] = useState(0);
   const [userCanComment, setUserCanComment] = useState(false);
+=======
+  const [tourModalVisible, setTourModalVisible] = useState(false);
+
+  const imageSizes = [
+    { width: "100%", height: 180 }, // Full width
+    { width: "48%", height: 130 }, // Half width
+    { width: "48%", height: 150 }, // Half width
+    { width: "98%", height: 140 }, // Half width, taller
+    { width: "48%", height: 200 }, // Half width, taller
+  ];
+>>>>>>> 83f84943608a2b8742260dab221170613edb078f
 
   useEffect(() => {
     const fetchData = async () => {
@@ -127,6 +143,20 @@ const HomeDetails = ({ route, navigation }) => {
     }
   };
 
+<<<<<<< HEAD
+=======
+  // Function to open the 3D tour modal
+  const handle3DTour = () => {
+    setTourModalVisible(true); // Open the modal
+  };
+
+  // Function to close the 3D tour modal
+  const close3DTourModal = () => {
+    setTourModalVisible(false); // Close the modal
+  };
+
+  // Image Modal Component
+>>>>>>> 83f84943608a2b8742260dab221170613edb078f
   const ImageModal = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const scrollX = new Animated.Value(0);
@@ -297,7 +327,18 @@ const HomeDetails = ({ route, navigation }) => {
             Price: <Text style={styles.priceValue}>${post.price}</Text>
           </Text>
         </View>
+<<<<<<< HEAD
 
+=======
+        <TouchableOpacity
+          style={styles.virtualTourButton}
+          onPress={handle3DTour}
+        >
+          <Text style={styles.virtualTourButtonText}>
+            Take a 3D Virtual Tour
+          </Text>
+        </TouchableOpacity>
+>>>>>>> 83f84943608a2b8742260dab221170613edb078f
         <View style={styles.detailsContainer}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Rooms and Guests</Text>
@@ -422,6 +463,7 @@ const HomeDetails = ({ route, navigation }) => {
       </ScrollView>
       <Navbar navigation={navigation} style={styles.navbar} />
       <ImageModal />
+<<<<<<< HEAD
       
       <Modal
         animationType="slide"
@@ -554,6 +596,26 @@ const HomeDetails = ({ route, navigation }) => {
               <Text style={styles.submitButtonText}>Submit Review</Text>
             </TouchableOpacity>
           </View>
+=======
+      {/* 3D Tour Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={tourModalVisible}
+        onRequestClose={close3DTourModal}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={close3DTourModal}
+          >
+            <Icon name="close" size={30} color="#fff" />
+          </TouchableOpacity>
+          <WebView
+            source={{ uri: "https://your-3d-tour-url.com" }} // Replace with your 3D tour URL
+            style={{ flex: 1 }}
+          />
+>>>>>>> 83f84943608a2b8742260dab221170613edb078f
         </View>
       </Modal>
     </View>
@@ -607,8 +669,13 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.95)",
+<<<<<<< HEAD
     justifyContent: 'center',
     alignItems: 'center',
+=======
+    justifyContent: "center",
+    alignItems: "center",
+>>>>>>> 83f84943608a2b8742260dab221170613edb078f
   },
   slideContainer: {
     width: SCREEN_WIDTH,
@@ -1068,6 +1135,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  virtualTourButton: {
+    backgroundColor: "#3498db",
+    paddingVertical: 12,
+    borderRadius: 25,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  virtualTourButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

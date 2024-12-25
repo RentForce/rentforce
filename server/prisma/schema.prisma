@@ -25,11 +25,10 @@ model User {
   notifications Notification[]
   chatsInitiated Chat[]     @relation("UserChats")       
   chatsReceived  Chat[]     @relation("ReceiverChats")   
-  outgoingCalls CallLog[] @relation("CallerCalls")
-  incomingCalls CallLog[] @relation("ReceiverCalls")
   messages       Message[]
   Booking        Booking[]
   comments       Comment[]
+
 }
 
 model Post {
@@ -64,7 +63,8 @@ model Booking {
   endDate        DateTime
   totalPrice     Float
   numberOfGuests Int
-  status         BookingStatus
+  status         String     @default("PENDING") // "PENDING", "CONFIRMED", "REJECTED"
+  notifications Notification[]
 
   user User @relation(fields: [userId], references: [id])
   post Post @relation(fields: [postId], references: [id])
@@ -129,14 +129,15 @@ model History {
 }
 
 model Notification {
-  id        Int       @id @default(autoincrement())
-  message   String?
-  status    String?
-  createdAt DateTime?
+  id        Int      @id @default(autoincrement())
+  type      String   // "BOOKING_REQUEST", "BOOKING_ACCEPTED", "BOOKING_REJECTED"
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
   userId    Int
-  user      User      @relation(fields: [userId], references: [id])
-
-  @@unique([id])
+  bookingId Int?
+  user      User     @relation(fields: [userId], references: [id])
+  booking   Booking? @relation(fields: [bookingId], references: [id])
 }
 
 model Chat {
@@ -173,17 +174,6 @@ model MessageTranslation {
   translation String
   message     Message  @relation(fields: [messageId], references: [id])
   @@unique([messageId, language])
-}
-model CallLog {
-  id         Int       @id @default(autoincrement())
-  callerId   Int
-  receiverId Int
-  startTime  DateTime @default(now())
-  endTime    DateTime?
-  duration   Int?
-  status     CallStatus @default(MISSED)
-  caller     User     @relation("CallerCalls", fields: [callerId], references: [id])
-  receiver   User     @relation("ReceiverCalls", fields: [receiverId], references: [id])
 }
 model Map {
   id        Int      @id @default(autoincrement())
@@ -246,9 +236,8 @@ enum MessageType {
   VIDEO_CALL
   AUDIO
 }
+
 enum CallStatus {
-  ONGOING
-  COMPLETED
   MISSED
   REJECTED
   FAILED

@@ -14,7 +14,8 @@ const {
 const router = express.Router();
 // Add this new route
 router.get("/all", getPostsByCategory);
-router.get("/:category", getPostsByCategory);
+router.get("/posts/:category", getPostsByCategory);
+// router.get("/:category", getPostsByCategory);
 router.get("/images/:postId", getImagesByPostId);
 router.get('/:postId/check-booking/:userId', authenticateToken, checkUserBooking);
 router.post("/booking", createBooking);

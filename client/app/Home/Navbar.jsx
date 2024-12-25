@@ -2,21 +2,21 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import NotificationIcon from "../../components/NotificationIcon";
 
 const Navbar = ({ navigation, userId }) => {
   const handleConfirmExplore = () => {
     console.log("Navigating to Home");
     navigation.navigate("Home");
-
   };
 
   const handleProfileNavigation = async () => {
     try {
       const userData = await AsyncStorage.getItem("userData");
       const parsedUserData = JSON.parse(userData);
-      navigation.navigate('profile', { 
+      navigation.navigate("profile", {
         userId: parsedUserData.id,
-        updatedUser: parsedUserData
+        updatedUser: parsedUserData,
       });
     } catch (error) {
       console.error("Error navigating to profile:", error);
@@ -29,6 +29,7 @@ const Navbar = ({ navigation, userId }) => {
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
+<<<<<<< HEAD
       <TouchableOpacity 
         style={styles.iconContainer} 
         onPress={() => navigation.navigate('favourites')}
@@ -42,10 +43,31 @@ const Navbar = ({ navigation, userId }) => {
       >
         <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
         <View style={styles.notificationDot} />
+=======
+      <TouchableOpacity
+        style={styles.iconContainer}
+        onPress={() => navigation.navigate("favourites")}
+      >
+        <Ionicons name="heart-outline" size={24} style={styles.icon} />
+        <Text style={styles.text}>Favourites</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.iconContainer}
+        onPress={() => navigation.navigate("ChatSelectionScreen")}
+      >
+        <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
+>>>>>>> 83f84943608a2b8742260dab221170613edb078f
         <Text style={styles.text}>Inbox</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.iconContainer} 
+      <TouchableOpacity
+        style={styles.iconContainer}
+        onPress={() => navigation.navigate("notifications")}
+      >
+        <NotificationIcon size={24} color="#fff" />
+        <Text style={styles.text}>Notifications</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.iconContainer}
         onPress={handleProfileNavigation}
       >
         <Ionicons name="person-outline" size={24} style={styles.icon} />
@@ -72,14 +94,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 12,
     color: "#888",
-  },
-  notificationDot: {
-    position: "absolute",
-    top: -2,
-    right: -10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
   },
 });
 

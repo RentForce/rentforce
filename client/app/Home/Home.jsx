@@ -19,10 +19,13 @@ import {
   MaterialIcons,
   MaterialCommunityIcons,
   Fontisto,
+  FontAwesome,
 } from "@expo/vector-icons";
 import Navbar from "./Navbar";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import Slider from "@react-native-community/slider";
+import MultiSlider from "@ptomasroos/react-native-multi-slider";
 
 const categories = [
   "house",
@@ -42,15 +45,21 @@ const categories = [
 ];
 
 const categoryIcons = {
-  house: "home-outline",
-  apartment: "business-outline",
+  house: (props) => (
+    <FontAwesome name="home" size={24} color="black" {...props} />
+  ),
+  apartment: (props) => (
+    <MaterialIcons name="apartment" size={24} color="black" {...props} />
+  ),
   villa: (props) => (
     <MaterialIcons name="villa" size={24} color="black" {...props} />
   ),
   hotel: (props) => (
     <FontAwesome5 name="hotel" size={24} color="black" {...props} />
   ),
-  historical: "time-outline",
+  historical: (props) => (
+    <MaterialIcons name="temple-buddhist" size={24} color="black" {...props} />
+  ),
   lake: "water-outline",
   beachfront: (props) => <FontAwesome5 name="umbrella-beach" {...props} />,
   countryside: "leaf-outline",
@@ -71,10 +80,10 @@ const Home = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [price, setPrice] = useState("");
   const [location, setLocation] = useState("");
   const [title, setTitle] = useState("");
   const [favorites, setFavorites] = useState(new Set());
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 1200 });
 
   const searchInputRef = useRef(null);
   const scrollViewRef = useRef(null);
@@ -218,7 +227,7 @@ const Home = ({ navigation }) => {
       const baseUrl = `${apiUrl}`;
       const endpoint = searchQuery
         ? `${baseUrl}/posts/all`
-        : `${baseUrl}/posts/${category}`;
+        : `${baseUrl}/posts/posts/${category}`;
 
       console.log("Fetching from:", endpoint);
 
@@ -259,15 +268,42 @@ const Home = ({ navigation }) => {
     // Optionally, trigger a search or fetch posts based on the selected category
   };
 
-  const handleFilterSubmit = () => {
-    // Here you would typically make an API call to fetch filtered posts
-    console.log("Filters applied:", {
-      selectedCategory,
-      price,
-      location,
-      title,
-    });
-    setModalVisible(false);
+  const handleFilterSubmit = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch all posts first
+      const response = await axios.get(`${apiUrl}/posts/all`);
+
+      // Filter posts based on price range
+      const filteredPosts = response.data.filter(
+        (post) => post.price >= priceRange.min && post.price <= priceRange.max
+      );
+
+      // Update posts state with filtered results
+      setPosts(filteredPosts);
+
+      // Close the modal
+      setModalVisible(false);
+
+      // Show feedback to user
+      if (filteredPosts.length === 0) {
+        Alert.alert(
+          "No Results",
+          `No properties found between $${priceRange.min} and $${priceRange.max}`
+        );
+      } else {
+        Alert.alert(
+          "Filters Applied",
+          `Showing ${filteredPosts.length} properties between $${priceRange.min} and $${priceRange.max}`
+        );
+      }
+    } catch (error) {
+      console.error("Error applying filters:", error);
+      Alert.alert("Error", "Failed to apply filters. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleScroll = (event) => {
@@ -383,8 +419,6 @@ const Home = ({ navigation }) => {
 
       <Modal visible={modalVisible} animationType="slide">
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Advanced Filters</Text>
-
           <Text style={styles.filterLabel}>Category</Text>
           <FlatList
             data={categories}
@@ -411,14 +445,72 @@ const Home = ({ navigation }) => {
             )}
           />
 
-          <Text style={styles.filterLabel}>Price</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Max Price"
-            value={price}
-            onChangeText={setPrice}
-            keyboardType="numeric"
-          />
+          <Text style={styles.filterLabel}>Price Range</Text>
+          <View style={styles.priceContainer}>
+            <Text style={styles.priceText}>
+              Price: ${priceRange.min} - ${priceRange.max}
+            </Text>
+            <MultiSlider
+              values={[priceRange.min, priceRange.max]}
+              min={0}
+              max={1200}
+              step={10}
+              sliderLength={280}
+              onValuesChange={(values) =>
+                setPriceRange({ min: values[0], max: values[1] })
+              }
+              enabledOne={true}
+              enabledTwo={true}
+              smoothSnapped={true}
+              snapped={false}
+              allowOverlap={false}
+              minMarkerOverlapDistance={10}
+              selectedStyle={{
+                backgroundColor: "#007BFF",
+                height: 3,
+              }}
+              unselectedStyle={{
+                backgroundColor: "#DDDDDD",
+                height: 3,
+              }}
+              containerStyle={{
+                height: 40,
+              }}
+              trackStyle={{
+                height: 3,
+                borderRadius: 2,
+              }}
+              markerStyle={{
+                height: 20,
+                width: 20,
+                borderRadius: 10,
+                backgroundColor: "#007BFF",
+                borderWidth: 2,
+                borderColor: "#FFFFFF",
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 1,
+                },
+                shadowOpacity: 0.2,
+                shadowRadius: 1,
+                elevation: 2,
+              }}
+              pressedMarkerStyle={{
+                height: 24,
+                width: 24,
+                borderRadius: 12,
+              }}
+            />
+            <View style={styles.markersContainer}>
+              {[0, 300, 600, 900, 1200].map((value) => (
+                <View key={value} style={styles.markerContainer}>
+                  <View style={styles.marker} />
+                  <Text style={styles.markerText}>${value}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
 
           <Text style={styles.filterLabel}>Location</Text>
           <TextInput
@@ -449,6 +541,12 @@ const Home = ({ navigation }) => {
           >
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
+
+          {loading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#007BFF" />
+            </View>
+          )}
         </View>
       </Modal>
 
@@ -518,7 +616,8 @@ const Home = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#EAEAEA",
+    // backgroundColor: "#F1EFEF",
+    backgroundColor: "#E0E0E0",
   },
   scrollView: {
     flex: 1,
@@ -607,7 +706,7 @@ const styles = StyleSheet.create({
   tabIcon: {
     color: "#717171",
     marginBottom: 8,
-    opacity: 0.7,
+    // opacity: 0.7,
     height: 24,
     width: 24,
   },
@@ -748,7 +847,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   activeTab: {
-    backgroundColor: "#007BFF",
+    // backgroundColor: "grey",
     transform: [{ scale: 1.05 }],
   },
   imageGrid: {
@@ -772,19 +871,21 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F1EFEF",
     borderRadius: 15,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
+    justifyContent: "center",
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
     marginBottom: 20,
     color: "#333",
+    textAlign: "center",
   },
   filterLabel: {
     fontSize: 18,
@@ -796,9 +897,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DDDDDD",
     borderRadius: 10,
-    padding: 10,
+    padding: 12,
     marginBottom: 15,
     backgroundColor: "#F9F9F9",
+    fontSize: 16,
   },
   categoryItem: {
     flexDirection: "row",
@@ -813,11 +915,12 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   submitButton: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#2C3E50",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
     marginTop: 20,
+    elevation: 2,
   },
   submitButtonText: {
     color: "#FFFFFF",
@@ -827,13 +930,67 @@ const styles = StyleSheet.create({
   closeButton: {
     marginTop: 10,
     padding: 15,
-    backgroundColor: "#FF4D4D",
+    backgroundColor: "#2C3E50",
     borderRadius: 10,
     alignItems: "center",
+    elevation: 2,
   },
   closeButtonText: {
     color: "#FFFFFF",
     fontWeight: "bold",
+  },
+  priceContainer: {
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    alignItems: "center",
+  },
+  priceText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#007BFF",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  markersContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 10,
+    marginTop: 10,
+  },
+  markerContainer: {
+    alignItems: "center",
+  },
+  marker: {
+    width: 2,
+    height: 10,
+    backgroundColor: "#DDDDDD",
+  },
+  markerText: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 5,
+  },
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
   },
 });
 
