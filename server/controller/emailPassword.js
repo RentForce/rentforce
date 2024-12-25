@@ -113,7 +113,17 @@ const sendCode = async (req, res) => {
 const verifyCode = async (req, res) => {
   try {
     const { email, phoneNumber, code, method } = req.body;
+    
+    // Determine the key based on the method
     const key = method === "sms" ? phoneNumber : email;
+    
+    console.log("Verifying code:", {
+      method,
+      key,
+      receivedCode: code,
+      storedCode: recoveryCodes[key],
+      allCodes: recoveryCodes
+    });
 
     if (recoveryCodes[key] === parseInt(code)) {
       // Code is valid
@@ -121,7 +131,15 @@ const verifyCode = async (req, res) => {
       res.status(200).json({ message: "Code verified successfully" });
     } else {
       // Code is invalid
-      res.status(400).json({ message: "Invalid recovery code" });
+      res.status(400).json({ 
+        message: "Invalid recovery code",
+        debug: {
+          receivedCode: code,
+          storedCode: recoveryCodes[key],
+          method: method,
+          key: key
+        }
+      });
     }
   } catch (error) {
     console.error("Error verifying code:", error);
@@ -134,17 +152,28 @@ const updatePassword = async (req, res) => {
   try {
     const { email, phoneNumber, newPassword, method } = req.body;
 
+    console.log("Received update password request:", req.body);
+
+    // First find the user
+    const user = await prisma.user.findFirst({
+      where: method === "sms" ? { phoneNumber } : { email },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update the password in the database using Prisma
+    // Update the password using the user's id
     const updatedUser = await prisma.user.update({
-      where: method === "sms" ? { phoneNumber } : { email },
+      where: { id: user.id },
       data: { password: hashedPassword },
     });
 
     if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "Failed to update password" });
     }
 
     res.status(200).json({ message: "Password updated successfully" });
