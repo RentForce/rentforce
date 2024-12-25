@@ -56,16 +56,20 @@ model Post {
 }
 
 model Booking {
-  id             Int           @id @default(autoincrement())
-  userId         Int
-  postId         Int
-  startDate      DateTime
-  endDate        DateTime
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  postId          Int
+  startDate       DateTime
+  endDate         DateTime
+  guestName       String?
+  guestCountry    String?
+  propertyDetails String?  // JSON string
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   totalPrice     Float
   numberOfGuests Int
   status         String     @default("PENDING") // "PENDING", "CONFIRMED", "REJECTED"
   notifications Notification[]
-
   user User @relation(fields: [userId], references: [id])
   post Post @relation(fields: [postId], references: [id])
 }
@@ -122,6 +126,7 @@ model History {
   totalPrice   Decimal?
   userId       Int
   postId       Int
+  numberOfGuests Int?
   user         User      @relation(fields: [userId], references: [id])
   post         Post      @relation(fields: [postId], references: [id])
 
