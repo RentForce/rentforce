@@ -29,7 +29,6 @@ const Navbar = ({ navigation, userId }) => {
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
-<<<<<<< HEAD
       <TouchableOpacity 
         style={styles.iconContainer} 
         onPress={() => navigation.navigate('favourites')}
@@ -43,20 +42,6 @@ const Navbar = ({ navigation, userId }) => {
       >
         <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
         <View style={styles.notificationDot} />
-=======
-      <TouchableOpacity
-        style={styles.iconContainer}
-        onPress={() => navigation.navigate("favourites")}
-      >
-        <Ionicons name="heart-outline" size={24} style={styles.icon} />
-        <Text style={styles.text}>Favourites</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.iconContainer}
-        onPress={() => navigation.navigate("ChatSelectionScreen")}
-      >
-        <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
->>>>>>> 83f84943608a2b8742260dab221170613edb078f
         <Text style={styles.text}>Inbox</Text>
       </TouchableOpacity>
       <TouchableOpacity
