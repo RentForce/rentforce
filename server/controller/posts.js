@@ -1,5 +1,34 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key";
+
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    console.log('Received Authorization Header:', authHeader);
+    console.log('Extracted Token:', token);
+
+    if (token == null) {
+        return res.status(401).json({ 
+            message: 'No token provided', 
+            details: 'Authorization header is missing or incorrectly formatted' 
+        });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            console.error('Token Verification Error:', err);
+            return res.status(403).json({ 
+                message: 'Invalid or expired token', 
+                error: err.message 
+            });
+        }
+        req.user = user; 
+        next();
+    });
+};
 const { createNotification } = require("./notification");
 require('dotenv').config();
 const createBooking = async (req, res) => {
@@ -335,6 +364,98 @@ const saveLocation = async (req, res) => {
   } catch (error) {
     console.error("Error saving location:", error);
     res.status(500).json({ message: "Error saving location" });
+  }}
+const getPostComments = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    
+    const comments = await prisma.comment.findMany({
+      where: {
+        postId: parseInt(postId),
+      },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            image: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    res.json(comments);
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ message: 'Error fetching comments' });
+  }
+};
+
+const addComment = async (req, res) => {
+  try {
+    const { content, rating } = req.body;
+    const { postId } = req.params;
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    const comment = await prisma.comment.create({
+      data: {
+        content,
+        rating,
+        userId: parseInt(userId),
+        postId: parseInt(postId),
+      },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            image: true,
+          },
+        },
+      },
+    });
+
+    res.status(201).json(comment);
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ 
+      message: 'Failed to add comment', 
+      error: error.message 
+    });
+  }
+};
+const checkUserBooking = async (req, res) => {
+  try {
+    const { postId, userId } = req.params;
+
+    const booking = await prisma.booking.findFirst({
+      where: {
+        postId: parseInt(postId),
+        userId: parseInt(userId),
+        status: 'CONFIRMED', // Only consider confirmed bookings
+
+      }
+    });
+
+    res.json({
+      hasBooked: !!booking
+    });
+  } catch (error) {
+    console.error('Error checking user booking:', error);
+    res.status(500).json({ 
+      message: 'Failed to check booking status', 
+      error: error.message 
+    });
   }
 };
 
@@ -344,9 +465,13 @@ module.exports = {
   createBooking,
 
   getPostBookings,
-
-  getBookedDates,
-  checkDateAvailability,
+  
   saveImage,
   saveLocation,
-};
+  checkUserBooking,
+  getBookedDates,
+  checkDateAvailability,
+  getPostComments,
+  addComment,
+  authenticateToken
+}

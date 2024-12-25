@@ -128,7 +128,7 @@ const Favourites = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color="#082631" />
         </TouchableOpacity>
         <Text style={styles.welcomeText}>Explore your favorites here!</Text>
       </View>
@@ -160,7 +160,7 @@ const Favourites = ({ navigation }) => {
                   style={styles.iconButton}
                   onPress={() => handleRemoveFavourite(item.id)}
                 >
-                  <Ionicons name="heart-dislike" size={24} color="#ff4d4d" />
+                  <MaterialIcons name="bookmark-remove" size={24} color="#082631" />
                 </TouchableOpacity>
                 <View style={styles.separator} />
                 <TouchableOpacity
@@ -169,7 +169,7 @@ const Favourites = ({ navigation }) => {
                     navigation.navigate("HomeDetails", { post: item })
                   }
                 >
-                  <MaterialIcons name="visibility" size={24} color="#007BFF" />
+                  <MaterialIcons name="visibility" size={24} color="#082631" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   postPrice: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#007BFF",
+    color: "#082631",
     marginTop: 4,
   },
   buttonContainer: {

@@ -6,65 +6,39 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  Platform,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
+import { initSocket } from "../chat/Socket.js";
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import SweetAlert from '../../components/SweetAlert';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertConfig, setAlertConfig] = useState({
-    title: '',
-    message: '',
-    type: '',
-  });
 
   const handleLogin = async () => {
     try {
-      console.log(apiUrl , "url");
       const response = await axios.post(`${apiUrl}/user/login`, {
         email,
         password,
       });
       const { token, user } = response.data;
       if (token) {
-        // Securely store the token
         await AsyncStorage.setItem("userToken", token);
-
-        // Optional: Â²Store user info if needed
         await AsyncStorage.setItem("userData", JSON.stringify(user));
+        await AsyncStorage.setItem('userId', response.data.user.id.toString());
+        await AsyncStorage.setItem("token", token);
+        await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
 
+        initSocket(process.env.EXPO_PUBLIC_API_URL);
         console.log("Token successfully stored:", user);
-        setAlertConfig({
-          title: 'Login Successful',
-          message: 'Welcome',
-          type: 'success'
-        });
-        setShowAlert(true);
         
         navigation.navigate("Home", { updatedUser: user });
       }
-
-      await AsyncStorage.setItem("userId", response.data.user.id.toString());
-      await AsyncStorage.setItem("token", token);
-      await AsyncStorage.setItem(
-        "currentUser",
-        JSON.stringify(response.data.user)
-      );
     } catch (error) {
       console.error("Error:", error);
-      setAlertConfig({
-        title: 'Login Failed',
-        message: 'Please check your credentials and try again.',
-        type: 'error'
-      });
-      setShowAlert(true);
     }
   };
 
@@ -161,14 +135,6 @@ const Login = ({ navigation }) => {
           </View>
         </View>
       </View>
-      
-      <SweetAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onConfirm={() => setShowAlert(false)}
-      />
     </View>
   );
 };
@@ -177,22 +143,44 @@ const styles = StyleSheet.create({
   signin: {
     flex: 1,
     backgroundColor: "#818287",
+    position: "relative",
+  },
+  button: {
+    backgroundColor: "#1A3C40",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+    alignSelf: "center",
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   backgroundImage: {
     position: "absolute",
     top: 0,
     left: 0,
     width: "100%",
-    height: "45%",
+    height: "49%",
   },
-  welcome: {
-    fontSize: Platform.OS === 'ios' ? 48 : 42,
-    fontWeight: "bold",
-    color: "white",
-    marginTop: "65%",
-    textAlign: "center",
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
+    borderRadius: 8,
     width: "100%",
-    includeFontPadding: false,
+    padding: 10,
+    marginVertical: 10,
+  },
+  icon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: "black",
   },
   formContainer: {
     position: "absolute",
@@ -201,84 +189,56 @@ const styles = StyleSheet.create({
     backgroundColor: "#909296",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    paddingHorizontal: "5%",
-    paddingVertical: "6%",
+    padding: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
-    minHeight: "55%",
   },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "white",
-    borderRadius: 8,
-    width: "100%",
-    padding: Platform.OS === 'ios' ? 12 : 10,
-    marginVertical: "2%",
-  },
-  icon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: Platform.OS === 'ios' ? 16 : 14,
-    color: "black",
-    paddingVertical: 8,
-  },
-  button: {
-    backgroundColor: "#1A3C40",
-    padding: Platform.OS === 'ios' ? 15 : 12,
-    borderRadius: 8,
-    alignItems: "center",
-    width: "100%",
-    alignSelf: "center",
-    marginVertical: "3%",
-  },
-  buttonText: {
-    color: "white",
-    fontSize: Platform.OS === 'ios' ? 16 : 14,
+  welcome: {
+    fontSize: 60,
     fontWeight: "bold",
+    color: "white",
+    marginTop: 250,
+    marginLeft: 25,
   },
   inputLabel: {
-    fontSize: Platform.OS === 'ios' ? 14 : 12,
+    fontSize: 14,
     fontWeight: "500",
     color: "#cbcbcb",
     fontFamily: "Poppins-Medium",
-    marginBottom: "2%",
+    marginBottom: 8,
   },
   forgotPassword: {
-    fontSize: Platform.OS === 'ios' ? 12 : 11,
+    fontSize: 12,
     fontWeight: "500",
     color: "#0d2d3a",
     textAlign: "right",
-    marginBottom: "5%",
+    marginBottom: 20,
   },
   socialLoginContainer: {
     alignItems: "center",
-    marginTop: "4%",
+    marginTop: 10,
   },
   socialLoginText: {
-    fontSize: Platform.OS === 'ios' ? 14 : 12,
+    fontSize: 14,
     color: "#b6b6b6",
-    marginBottom: "3%",
+    marginBottom: 10,
   },
   socialIcons: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "60%",
-    marginHorizontal: "3%",
+    marginHorizontal: 10,
   },
   iconBox: {
     backgroundColor: "#909296",
-    padding: Platform.OS === 'ios' ? 12 : 10,
+    padding: 10,
     borderRadius: 8,
     alignItems: "center",
     borderWidth: 0.5,
     borderColor: "white",
-    marginHorizontal: "2%",
   },
   socialIcon: {
     color: "#fff",

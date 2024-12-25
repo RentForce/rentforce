@@ -10,7 +10,6 @@ import {
   TextInput,
   Modal,
   FlatList,
-  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -149,7 +148,6 @@ const Home = ({ navigation }) => {
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.id;
 
-      // Add to favorites on the server
       await axios.post(
         `${apiUrl}/user/favourites`,
         {
@@ -164,12 +162,9 @@ const Home = ({ navigation }) => {
         }
       );
 
-      // Update local state
       setFavorites((prevFavorites) => new Set(prevFavorites).add(postId));
-      Alert.alert("Success", "Post added to favourites");
     } catch (err) {
       console.error("Error adding favourite:", err);
-      Alert.alert("Error", "Failed to add post to favourites");
     }
   };
 
@@ -183,7 +178,6 @@ const Home = ({ navigation }) => {
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.id;
 
-      // Remove from favorites on the server
       await axios.delete(`${apiUrl}/user/favourites`, {
         data: { userId, postId },
         headers: {
@@ -192,16 +186,13 @@ const Home = ({ navigation }) => {
         },
       });
 
-      // Update local state
       setFavorites((prevFavorites) => {
         const updatedFavorites = new Set(prevFavorites);
         updatedFavorites.delete(postId);
         return updatedFavorites;
       });
-      Alert.alert("Success", "Post removed from favourites");
     } catch (err) {
       console.error("Error removing favourite:", err);
-      Alert.alert("Error", "Failed to remove post from favourites");
     }
   };
 
@@ -358,13 +349,16 @@ const Home = ({ navigation }) => {
             />
             <View style={styles.imageOverlay} />
           </View>
-          <Ionicons
-            name={favorites.has(post.id) ? "heart" : "heart-outline"}
-            size={24}
-            color={favorites.has(post.id) ? "red" : "black"}
+          <TouchableOpacity
             style={styles.favoriteIcon}
             onPress={() => toggleFavorite(post.id)}
-          />
+          >
+            <MaterialIcons
+              name={favorites.has(post.id) ? "bookmark" : "bookmark-outline"}
+              size={24}
+              color={favorites.has(post.id) ? "#2C3E50" : "#000"}
+            />
+          </TouchableOpacity>
         </TouchableOpacity>
         <View style={styles.postDetails}>
           <View style={styles.postHeader}>

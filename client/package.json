@@ -72,6 +72,7 @@
     "react-native-screens": "~4.1.0",
     "react-native-sweet-alert": "^3.5.0",
     "react-native-swiper": "^1.6.0",
+    "react-native-toast-message": "^2.1.6",
     "react-native-web": "~0.19.13",
     "react-native-webview": "^13.12.5",
     "setprototypeof": "^1.2.0",
