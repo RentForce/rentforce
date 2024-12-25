@@ -26,8 +26,6 @@ console.log('Loaded routes:', {
 const prisma = new PrismaClient();
 const app = express();
 
-console.log('JWT Secret:', process.env.JWT_SECRET); // Check if the secret is loaded
-
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,

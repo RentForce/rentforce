@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Navbar = ({ navigation, userId }) => {
@@ -25,19 +25,24 @@ const Navbar = ({ navigation, userId }) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={  ()=>  navigation.navigate("Home")}>
+      <TouchableOpacity onPress={() => navigation.navigate("Home")}>
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.iconContainer} onPress={() => navigation.navigate('favourites')}>
-        <Ionicons name="heart-outline" size={24} style={styles.icon} />
-        <Text style={styles.text}>Favourites</Text>
-        
+      <TouchableOpacity 
+        style={styles.iconContainer} 
+        onPress={() => navigation.navigate('favourites')}
+      >
+        <MaterialIcons name="bookmark-outline" size={24} style={styles.icon} />
+        <Text style={styles.text}>Saved</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.iconContainer} onPress={  ()=>  navigation.navigate("ChatSelectionScreen")}>
+      <TouchableOpacity 
+        style={styles.iconContainer} 
+        onPress={() => navigation.navigate("ChatSelectionScreen")}
+      >
         <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
         <View style={styles.notificationDot} />
-        <Text style={styles.text}  >Inbox</Text>
+        <Text style={styles.text}>Inbox</Text>
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.iconContainer} 
