@@ -34,10 +34,10 @@ function App() {
         <Stack.Screen name="Booking" component={BookingPage} options={{ headerShown: false }}/>
         <Stack.Screen name="payment" component={pay} options={{ headerShown: false }}/>
 
-        {/* <Stack.Screen name="ChatSelectionScreen" component={ChatSelectionScreen} options={{ title: 'Select User' }}/>
+        <Stack.Screen name="ChatSelectionScreen" component={ChatSelectionScreen} options={{ title: 'Select User' }}/>
         <Stack.Screen name="Chat" component={Chat} options={({ route }) => ({  title: `Chat with ${route.params?.receiverName || 'User'}`,
           })}
-        /> */}
+        />
 </Stack.Navigator>
    
   );

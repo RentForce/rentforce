@@ -7,6 +7,8 @@ const {
   getPostBookings,
   getBookedDates,
   checkDateAvailability,
+  saveImage,
+  saveLocation,
 } = require("../controller/posts");
 const router = express.Router();
 
@@ -19,4 +21,8 @@ router.get("/bookings/:postId", getPostBookings);
 
 router.get("/:postId/booked-dates", getBookedDates);
 router.get("/check-availability", checkDateAvailability);
+
+router.post("/posts/images", saveImage);
+router.post("/posts/location", saveLocation);
+
 module.exports = router;

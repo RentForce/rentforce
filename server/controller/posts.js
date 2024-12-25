@@ -1,10 +1,47 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+require('dotenv').config();
 const createBooking = async (req, res) => {
   try {
-    const { userId, postId, startDate, endDate, numberOfGuests, totalPrice } =
-      req.body;
+    const { 
+      userId, 
+      postId, 
+      startDate, 
+      endDate, 
+      numberOfGuests, 
+      totalPrice,
+      guestName,
+      guestCountry,
+      propertyDetails 
+    } = req.body;
 
+    console.log('Received booking request:', {
+      userId,
+      postId,
+      startDate,
+      endDate,
+      numberOfGuests,
+      totalPrice
+    });
+
+    // Validate required fields
+    if (!userId || !postId || !startDate || !endDate || !numberOfGuests || !totalPrice) {
+      return res.status(400).json({
+        message: "Missing required fields",
+        received: { userId, postId, startDate, endDate, numberOfGuests, totalPrice }
+      });
+    }
+
+    // Check if post exists
+    const post = await prisma.post.findUnique({
+      where: { id: Number(postId) }
+    });
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Check for existing bookings
     const existingBookings = await prisma.booking.findMany({
       where: {
         postId: Number(postId),
@@ -45,13 +82,21 @@ const createBooking = async (req, res) => {
         numberOfGuests: Number(numberOfGuests),
         totalPrice: Number(totalPrice),
         status: "PENDING",
+        guestName,
+        guestCountry,
+        propertyDetails: propertyDetails ? JSON.stringify(propertyDetails) : null
       },
     });
 
+    console.log('Booking created successfully:', booking);
     res.status(201).json(booking);
   } catch (error) {
-    console.error("Error creating booking:", error);
-    res.status(500).json({ message: "Error creating booking" });
+    console.error("Detailed booking error:", error);
+    res.status(500).json({ 
+      message: "Error creating booking",
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
@@ -224,6 +269,41 @@ const checkDateAvailability = async (req, res) => {
   }
 };
 
+// Save images for a post
+const saveImage = async (req, res) => {
+  const { postId, url } = req.body;
+  try {
+    const image = await prisma.image.create({
+      data: {
+        url,
+        postId: Number(postId),
+      },
+    });
+    res.status(201).json(image);
+  } catch (error) {
+    console.error("Error saving image:", error);
+    res.status(500).json({ message: "Error saving image" });
+  }
+};
+
+// Save location for a post
+const saveLocation = async (req, res) => {
+  const { postId, latitude, longitude } = req.body;
+  try {
+    const map = await prisma.map.create({
+      data: {
+        postId: Number(postId),
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
+      },
+    });
+    res.status(201).json(map);
+  } catch (error) {
+    console.error("Error saving location:", error);
+    res.status(500).json({ message: "Error saving location" });
+  }
+};
+
 module.exports = {
   getPostsByCategory,
   getImagesByPostId,
@@ -233,4 +313,6 @@ module.exports = {
 
   getBookedDates,
   checkDateAvailability,
+  saveImage,
+  saveLocation,
 };

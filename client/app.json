@@ -1,8 +1,5 @@
 {
   "expo": {
-    "extra": {
-      "JWT_SECRET": "ascefbth,plnihcdxuwy"
-    },
     "name": "client",
     "slug": "client",
     "version": "1.0.0",
@@ -25,7 +22,18 @@
       "bundler": "metro",
       "output": "static"
     },
+    "extra": {
+      "JWT_SECRET": "ascefbth,plnihcdxuwy"
+    },
     "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends.",
+          "microphonePermission": "The app needs access to your microphone to record voice messages."
+
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",

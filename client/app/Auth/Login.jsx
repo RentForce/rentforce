@@ -6,7 +6,6 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  Alert,
   Platform,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
@@ -16,9 +15,9 @@ import SweetAlert from '../../components/SweetAlert';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const [showAlert, setShowAlert] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     title: '',
@@ -28,6 +27,7 @@ const Login = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
+      console.log(apiUrl , "url");
       const response = await axios.post(`${apiUrl}/user/login`, {
         email,
         password,

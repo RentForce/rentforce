@@ -239,28 +239,36 @@ const updateUserData = async (req, res) => {
 };
 
 const createPost = async (req, res) => {
-    const { title, images, description, location, price, category } = req.body;
+    const { title, description, location, price, category, images } = req.body;
 
     try {
+        // Validate required fields
         if (!title || !description || !price || !category) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
+        // Check user authentication
         if (!req.user || !req.user.id) {
             return res.status(401).json({ message: 'User not authenticated' });
         }
 
-
-
+        // Create post with images
         const post = await prisma.post.create({
             data: {
                 title,
-                images: uploadedImages, 
                 description,
                 location: location || '',
                 price: parseFloat(price),
                 category,
-                userId: req.user.id
+                userId: req.user.id,
+                images: {
+                    create: images.map(url => ({
+                        url
+                    }))
+                }
+            },
+            include: {
+                images: true // Include images in the response
             }
         });
 
@@ -375,6 +383,67 @@ const getFavouritePosts = async (req, res) => {
     }
 };
 
+const getUserHistory = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const history = await prisma.history.findMany({
+            where: { userId: Number(userId) },
+            include: {
+                post: true
+            },
+            orderBy: { bookingDate: 'desc' }
+        });
+
+        res.status(200).json(history);
+    } catch (error) {
+        console.error('Error fetching user history:', error);
+        res.status(500).json({ 
+            message: 'Error retrieving user history', 
+            error: error.message 
+        });
+    }
+};
+
+const createHistory = async (req, res) => {
+    try {
+        const {
+            userId,
+            postId,
+            bookingDate,
+            checkInDate,
+            checkOutDate,
+            totalPrice,
+            status,
+            numberOfGuests
+        } = req.body;
+
+        // Log the incoming request body for debugging
+        console.log("Request Body for Creating History:", req.body);
+
+        const history = await prisma.history.create({
+            data: {
+                userId: parseInt(userId),
+                postId: parseInt(postId),
+                bookingDate: new Date(bookingDate),
+                checkInDate: new Date(checkInDate),
+                checkOutDate: new Date(checkOutDate),
+                totalPrice: parseFloat(totalPrice),
+                status,
+                numberOfGuests: parseInt(numberOfGuests)
+            }
+        });
+
+        res.status(201).json(history);
+    } catch (error) {
+        console.error('Error creating history record:', error);
+        res.status(500).json({ 
+            message: 'Error creating history record', 
+            error: error.message 
+        });
+    }
+};
+
 module.exports = {
     getUserData,
     updateUserData,
@@ -385,6 +454,7 @@ module.exports = {
     login,
     getFavouritePosts,
     removeFromFavourites,
-    addToFavourites
-
+    addToFavourites,
+    getUserHistory,
+    createHistory,
 };

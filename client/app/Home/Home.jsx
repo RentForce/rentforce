@@ -24,6 +24,7 @@ import {
 import Navbar from "./Navbar";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import SweetAlert from '../../components/SweetAlert';
 
 const categories = [
   "house",
@@ -81,6 +82,13 @@ const Home = ({ navigation }) => {
   const scrollViewRef = useRef(null);
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   console.log(apiUrl, "saleeemm");
+
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: '',
+  });
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -140,7 +148,6 @@ const Home = ({ navigation }) => {
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.id;
 
-      // Add to favorites on the server
       await axios.post(
         `${apiUrl}/user/favourites`,
         {
@@ -155,12 +162,21 @@ const Home = ({ navigation }) => {
         }
       );
 
-      // Update local state
       setFavorites((prevFavorites) => new Set(prevFavorites).add(postId));
-      Alert.alert("Success", "Post added to favourites");
+      setAlertConfig({
+        visible: true,
+        title: 'Success',
+        message: 'Post added to favourites',
+        type: 'success'
+      });
     } catch (err) {
       console.error("Error adding favourite:", err);
-      Alert.alert("Error", "Failed to add post to favourites");
+      setAlertConfig({
+        visible: true,
+        title: 'Error',
+        message: 'Failed to add post to favourites',
+        type: 'error'
+      });
     }
   };
 
@@ -174,7 +190,6 @@ const Home = ({ navigation }) => {
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.id;
 
-      // Remove from favorites on the server
       await axios.delete(`${apiUrl}/user/favourites`, {
         data: { userId, postId },
         headers: {
@@ -183,16 +198,25 @@ const Home = ({ navigation }) => {
         },
       });
 
-      // Update local state
       setFavorites((prevFavorites) => {
         const updatedFavorites = new Set(prevFavorites);
         updatedFavorites.delete(postId);
         return updatedFavorites;
       });
-      Alert.alert("Success", "Post removed from favourites");
+      setAlertConfig({
+        visible: true,
+        title: 'Success',
+        message: 'Post removed from favourites',
+        type: 'success'
+      });
     } catch (err) {
       console.error("Error removing favourite:", err);
-      Alert.alert("Error", "Failed to remove post from favourites");
+      setAlertConfig({
+        visible: true,
+        title: 'Error',
+        message: 'Failed to remove post from favourites',
+        type: 'error'
+      });
     }
   };
 
@@ -224,26 +248,10 @@ const Home = ({ navigation }) => {
   const fetchPostsByCategory = async (category) => {
     setLoading(true);
     try {
-      const baseUrl = `${apiUrl}`;
-      const endpoint = searchQuery
-        ? `${baseUrl}/posts/all`
-        : `${baseUrl}/posts/${category}`;
-
-      console.log("Fetching from:", endpoint);
-
-      const response = await axios.get(endpoint, {
-        params: {
-          search: searchQuery,
-        },
-      });
-
-      console.log("Response data:", response.data);
+      const response = await axios.get(`${apiUrl}/posts/${category}`);
       setPosts(response.data);
     } catch (error) {
-      console.error(
-        "Failed to fetch posts:",
-        error.response?.data || error.message
-      );
+      console.error("Failed to fetch posts:", error);
     } finally {
       setLoading(false);
     }
@@ -353,6 +361,10 @@ const Home = ({ navigation }) => {
   const handleSearchIconPress = () => {
     // Navigate to Home when the search icon is pressed
     navigation.navigate("Home");
+  };
+
+  const handleCloseAlert = () => {
+    setAlertConfig(prev => ({ ...prev, visible: false }));
   };
 
   return (
@@ -517,6 +529,15 @@ const Home = ({ navigation }) => {
         </View>
       </ScrollView>
       <Navbar navigation={navigation} />
+
+      <SweetAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onConfirm={handleCloseAlert}
+        onCancel={handleCloseAlert}
+      />
     </View>
   );
 };
