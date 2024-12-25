@@ -11,14 +11,18 @@ import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome } from "@expo/vector-icons"; // Import if you want to use icons
 
 function ResetPassword({ route, navigation }) {
-    const { email } = route.params;
-    const [recoveryCode, setRecoveryCode] = useState('');
-    const [isCodeVerified, setIsCodeVerified] = useState(false);
-    const [newPassword, setNewPassword] = useState('');
-    const [passwordVisible, setPasswordVisible] = useState(false);
-    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const { email, phoneNumber } = route.params;
+  const [recoveryCode, setRecoveryCode] = useState("");
+  const [isCodeVerified, setIsCodeVerified] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+  console.log("Email:", email);
+  console.log("Phone Number:", phoneNumber);
 
   const handleCodeSubmit = async () => {
+    console.log(phoneNumber)
     if (!recoveryCode.trim()) {
       Alert.alert("Error", "Please enter the recovery code");
       return;
@@ -32,18 +36,21 @@ function ResetPassword({ route, navigation }) {
         },
         body: JSON.stringify({
           email: email,
+          phoneNumber: phoneNumber,
           code: recoveryCode,
+          method: email ? "email" : "sms",
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
+        console.log("Verification failed:", data);
         throw new Error(data.message || "Invalid code");
       }
 
       Alert.alert("Success", "Code verified successfully");
-      setIsCodeVerified(true); // Show password input field
+      setIsCodeVerified(true);
     } catch (error) {
       console.error("Error:", error);
       Alert.alert("Error", error.message || "Failed to verify code");
@@ -56,16 +63,22 @@ function ResetPassword({ route, navigation }) {
       return;
     }
 
+    const payload = {
+      email: email,
+      phoneNumber: phoneNumber,
+      newPassword: newPassword,
+      method: phoneNumber ? "sms" : "email",
+    };
+
+    console.log("Payload being sent:", payload);
+
     try {
       const response = await fetch(`${apiUrl}/user/update-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email: email,
-          newPassword: newPassword,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();

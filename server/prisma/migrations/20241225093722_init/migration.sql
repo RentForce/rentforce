@@ -162,19 +162,6 @@ CREATE TABLE `MessageTranslation` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `CallLog` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `callerId` INTEGER NOT NULL,
-    `receiverId` INTEGER NOT NULL,
-    `startTime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `endTime` DATETIME(3) NULL,
-    `duration` INTEGER NULL,
-    `status` ENUM('MISSED', 'REJECTED', 'FAILED') NOT NULL DEFAULT 'MISSED',
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `Map` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `latitude` DECIMAL(65, 30) NULL,
@@ -183,6 +170,18 @@ CREATE TABLE `Map` (
 
     UNIQUE INDEX `Map_postId_key`(`postId`),
     UNIQUE INDEX `Map_id_key`(`id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Comment` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `content` VARCHAR(191) NOT NULL,
+    `rating` INTEGER NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `userId` INTEGER NOT NULL,
+    `postId` INTEGER NOT NULL,
+
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -244,10 +243,10 @@ ALTER TABLE `Message` ADD CONSTRAINT `Message_chatId_fkey` FOREIGN KEY (`chatId`
 ALTER TABLE `MessageTranslation` ADD CONSTRAINT `MessageTranslation_messageId_fkey` FOREIGN KEY (`messageId`) REFERENCES `Message`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CallLog` ADD CONSTRAINT `CallLog_callerId_fkey` FOREIGN KEY (`callerId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `CallLog` ADD CONSTRAINT `CallLog_receiverId_fkey` FOREIGN KEY (`receiverId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE `Map` ADD CONSTRAINT `Map_postId_fkey` FOREIGN KEY (`postId`) REFERENCES `Post`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Comment` ADD CONSTRAINT `Comment_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Comment` ADD CONSTRAINT `Comment_postId_fkey` FOREIGN KEY (`postId`) REFERENCES `Post`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -6,26 +6,17 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  Alert,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
 import { initSocket } from "../chat/Socket.js";
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import SweetAlert from '../../components/SweetAlert';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertConfig, setAlertConfig] = useState({
-    title: '',
-    message: '',
-    type: '',
-  });
 
   const handleLogin = async () => {
     try {
@@ -35,43 +26,19 @@ const Login = ({ navigation }) => {
       });
       const { token, user } = response.data;
       if (token) {
-        // Securely store the token
         await AsyncStorage.setItem("userToken", token);
-
-        // Optional: Â²Store user info if needed
         await AsyncStorage.setItem("userData", JSON.stringify(user));
+        await AsyncStorage.setItem('userId', response.data.user.id.toString());
+        await AsyncStorage.setItem("token", token);
+        await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
 
-await AsyncStorage.setItem('userId', response.data.user.id.toString(),
-);
-await AsyncStorage.setItem("token", token);
-await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
-      Alert.alert("Login Successful", "Welcome");
-      initSocket(process.env.EXPO_PUBLIC_API_URL);
+        initSocket(process.env.EXPO_PUBLIC_API_URL);
         console.log("Token successfully stored:", user);
-        setAlertConfig({
-          title: 'Login Successful',
-          message: 'Welcome',
-          type: 'success'
-        });
-        setShowAlert(true);
         
         navigation.navigate("Home", { updatedUser: user });
       }
-
-      await AsyncStorage.setItem("userId", response.data.user.id.toString());
-      await AsyncStorage.setItem("token", token);
-      await AsyncStorage.setItem(
-        "currentUser",
-        JSON.stringify(response.data.user)
-      );
     } catch (error) {
       console.error("Error:", error);
-      setAlertConfig({
-        title: 'Login Failed',
-        message: 'Please check your credentials and try again.',
-        type: 'error'
-      });
-      setShowAlert(true);
     }
   };
 
@@ -168,14 +135,6 @@ await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
           </View>
         </View>
       </View>
-      
-      <SweetAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onConfirm={() => setShowAlert(false)}
-      />
     </View>
   );
 };
