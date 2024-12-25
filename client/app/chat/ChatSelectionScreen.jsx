@@ -12,6 +12,10 @@ import {
     Image,
     Modal
 } from 'react-native';
+//import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+import { useNotifications } from './Notifications.jsx';
+
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import AudioMessage from './AudioMessagePlayer.jsx';
 import * as FileSystem from 'expo-file-system';
@@ -26,55 +30,61 @@ import ChatInput from './ChatInput.jsx';
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 // Create axios instance with default config
-const api = axios.create({
-    baseURL: process.env.EXPO_PUBLIC_API_URL,
-    timeout: 10000,
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    }
+
+
+// Replace with your actual IP address and port
+const BASE_URL = 'http://192.168.103.4:5000';
+
+export const api = axios.create({
+  baseURL: BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
 });
 
-// Add request interceptor to add token
+// Add request interceptor
 api.interceptors.request.use(
-    async (config) => {
-        try {
-            const token = await AsyncStorage.getItem('token');
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
-            console.log('API Request:', {
-                url: config.url,
-                method: config.method,
-                headers: config.headers
-            });
-            return config;
-        } catch (error) {
-            console.error('API Request Error:', error);
-            return Promise.reject(error);
-        }
-    },
-    (error) => {
-        console.error('API Request Error:', error);
-        return Promise.reject(error);
+  async (config) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    } catch (error) {
+      console.error('Error in axios interceptor:', error);
+      return config;
     }
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
 // Add response interceptor for error handling
 api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        console.error('API Response Error:', {
-            message: error.message,
-            code: error.code,
-            config: error.config
-        });
-        return Promise.reject(error);
+  (response) => response,
+  async (error) => {
+    console.error('API Error:', error);
+    if (error.code === 'ECONNABORTED') {
+      // Handle timeout
+      console.error('Request timed out');
     }
+    if (!error.response) {
+      // Network error
+      console.error('Network error - make sure your API is running and reachable');
+    }
+    return Promise.reject(error);
+  }
 );
 
+    
 const UserSelectionScreen = ({ navigation ,onSendMessage, onLanguageChange }) => {
     // Make sure these state declarations are at the top of the component
+    //const { unreadCount, markChatAsRead } = useNotifications();
+    const [unreadCount,setUnreadCount]=useState(0)
     const [showImagePreview, setShowImagePreview] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
     const [users, setUsers] = useState([]);
@@ -93,6 +103,64 @@ const UserSelectionScreen = ({ navigation ,onSendMessage, onLanguageChange }) =>
     const isMountedRef = useRef(true);
     const uploadUrl = `${apiUrl}/api/chat/upload`;
 
+    
+    // const handleSendImage = async () => {
+    //     if (!selectedImage) return;
+    
+    //     try {
+    //         setIsUploading(true);
+    //         const token = await AsyncStorage.getItem('token');
+    //         const userId = await AsyncStorage.getItem('userId');
+            
+    //         const formData = new FormData();
+            
+    //         formData.append('file', {
+    //             uri: selectedImage.uri,
+    //             type: 'image/jpeg',
+    //             name: 'image.jpg'
+    //         });
+            
+    //         formData.append('userId', userId);
+    //         formData.append('chatId', selectedUser.chatId);
+    //         formData.append('senderId', userId);
+    //         formData.append('receiverId', selectedUser.id);
+    //         formData.append('messageType', 'IMAGE');
+
+    //         const response = await axios.post(
+    //             uploadUrl,
+    //             formData,
+    //             {
+    //                 headers: {
+    //                     'Authorization': `Bearer ${token}`,
+    //                     'Content-Type': 'multipart/form-data',
+    //                 },
+    //                 timeout: 30000,
+    //             }
+    //         );
+
+    //         if (response.data && response.data.url) {
+    //             await sendMessage({
+    //                 content: response.data.url,
+    //                 type: 'IMAGE',
+    //                 userId: userId
+    //             });
+                
+    //             setSelectedImage(null);
+    //             setShowImagePreview(false);
+    //         }
+    //     } catch (error) {
+    //         console.error('Image upload error:', error);
+    //         Alert.alert(
+    //             'Upload Failed',
+    //             'Failed to upload image. Please try again.'
+    //         );
+    //     } finally {
+    //         setIsUploading(false);
+    //     }
+    // };
+
+   
+      
     const handleSendImage = async () => {
         if (!selectedImage) return;
     
@@ -113,8 +181,7 @@ const UserSelectionScreen = ({ navigation ,onSendMessage, onLanguageChange }) =>
             formData.append('chatId', selectedUser.chatId);
             formData.append('senderId', userId);
             formData.append('receiverId', selectedUser.id);
-            formData.append('messageType', 'IMAGE');
-
+    
             const response = await axios.post(
                 uploadUrl,
                 formData,
@@ -126,17 +193,31 @@ const UserSelectionScreen = ({ navigation ,onSendMessage, onLanguageChange }) =>
                     timeout: 30000,
                 }
             );
-
-            if (response.data && response.data.url) {
-                await sendMessage({
+    
+            if (response.data?.url) {
+                // Update local state with the message from the server response
+                // No need to call sendMessage() again
+                const messageData = {
+                    id: response.data.messageId,
                     content: response.data.url,
                     type: 'IMAGE',
-                    userId: userId
-                });
-                
-                setSelectedImage(null);
-                setShowImagePreview(false);
+                    chatId: selectedUser.chatId,
+                    userId: userId,
+                    sentAt: response.data.timestamp
+                };
+    
+                // Update local state
+                setMessages(prev => [...prev, messageData]);
+    
+                // Emit socket event if needed
+                const socket = getSocket();
+                if (socket?.connected) {
+                    socket.emit('new message', messageData);
+                }
             }
+    
+            setSelectedImage(null);
+            setShowImagePreview(false);
         } catch (error) {
             console.error('Image upload error:', error);
             Alert.alert(
@@ -447,7 +528,6 @@ const handleVoiceMessage = async (audioUri) => {
                 }
             }
         };
-
         fetchUsersAndCurrentUser();
     }, []);
 
@@ -504,7 +584,29 @@ const handleVoiceMessage = async (audioUri) => {
             );
         }
     };
-
+    const fetchUnreadCount = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            const userId = await AsyncStorage.getItem('userId');
+            
+            const response = await axios.get(
+                `${apiUrl}/api/chat/user/${userId}`,
+                {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }
+            );
+            
+            const totalUnread = response.data.reduce((sum, chat) => 
+                sum + (chat.unreadCount || 0), 0);
+                
+            setUnreadCount(totalUnread);
+        } catch (error) {
+            console.error('Error fetching unread count:', error);
+        }
+    };
+useEffect(() => {
+    fetchUnreadCount();
+}, []);
     // Send message
     const sendMessage = async (messageData) => {
         if (!messageData.content.trim() || !selectedUser) return;
@@ -554,6 +656,7 @@ const handleVoiceMessage = async (audioUri) => {
         }
     };
 
+    
     // Render message item
     const renderMessageItem = ({ item }) => {
         const isCurrentUserMessage = item.userId === currentUser?.id;

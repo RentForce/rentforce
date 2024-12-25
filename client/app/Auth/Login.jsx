@@ -13,7 +13,7 @@ import axios from "axios";
 import { initSocket } from "../chat/Socket.js";
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import SweetAlert from '../../components/SweetAlert';
+import SweetAlert from '../../components/SweetAlert.jsx';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");

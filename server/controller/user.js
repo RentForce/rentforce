@@ -119,7 +119,7 @@ const login = async (req, res) => {
                 email: user.email 
             },
             JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '7d' }
         );
 
         console.log('Generated Token:', token);

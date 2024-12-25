@@ -1,9 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNotifications } from '../chat/Notifications.jsx';
+import { NotificationBadge } from "../chat/NotificationBadge.jsx";
 
-const Navbar = ({ navigation, userId }) => {
+const Navbar = ({ navigation }) => {
+  const { unreadCount } = useNotifications();
+  console.log('Navbar rendering with unread count:', unreadCount);
+
   const handleConfirmExplore = () => {
     console.log("Navigating to Home");
     navigation.navigate("Home");
@@ -23,6 +28,11 @@ const Navbar = ({ navigation, userId }) => {
     }
   };
 
+  // Debug log
+  useEffect(() => {
+    console.log('Navbar unread count:', unreadCount);
+  }, [unreadCount]);
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -37,10 +47,19 @@ const Navbar = ({ navigation, userId }) => {
         <Text style={styles.text}>Favourites</Text>
         
       </TouchableOpacity>
-      <TouchableOpacity style={styles.iconContainer} onPress={  ()=>  navigation.navigate("ChatSelectionScreen")}>
-        <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
-        <View style={styles.notificationDot} />
-        <Text style={styles.text}  >Inbox</Text>
+      <TouchableOpacity 
+        style={styles.iconContainer} 
+        onPress={() => navigation.navigate("ChatSelectionScreen")}
+      >
+        <View style={styles.iconWrapper}>
+          <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unreadCount}</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.text}>Inbox</Text>
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.iconContainer} 
@@ -49,6 +68,13 @@ const Navbar = ({ navigation, userId }) => {
         <Ionicons name="person-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Profile</Text>
       </TouchableOpacity>
+      
+      {/* Debug View - Remove in production */}
+      <View style={styles.debug}>
+        <Text style={styles.debugText}>
+          Unread: {unreadCount}
+        </Text>
+      </View>
     </View>
   );
 };
@@ -71,14 +97,42 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#888",
   },
-  notificationDot: {
-    position: "absolute",
-    top: -2,
-    right: -10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  iconWrapper: {
+    position: 'relative',
+    width: 24,
+    height: 24,
   },
+  badge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    paddingHorizontal: 4,
+  },
+  debug: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 5,
+    borderRadius: 5,
+    margin: 10,
+  },
+  debugText: {
+    color: '#fff',
+    fontSize: 12,
+  }
 });
 
 export default Navbar;

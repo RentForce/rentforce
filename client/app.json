@@ -1,5 +1,6 @@
 {
-  "expo": {
+  "expo": {"owner": "FatmaC",
+    "projectId": "4b0cc796-ee0a-47fb-b6bb-4741caf7d8fa",
     "name": "client",
     "slug": "client",
     "version": "1.0.0",
@@ -11,6 +12,8 @@
     "ios": {
       "supportsTablet": true
     },
+    "splash": {
+      "image": "./assets/splash.png"},
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
@@ -26,6 +29,15 @@
       "JWT_SECRET": "ascefbth,plnihcdxuwy"
     },
     "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": null,
+          "color": "#ffffff",
+          "sounds": ["./assets/notification-sound.wav"]
+
+        }
+      ],
       [
         "expo-image-picker",
         {

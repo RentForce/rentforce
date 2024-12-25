@@ -5,10 +5,11 @@ const userRoutes = require("./routes/user");
 const postsRouter = require("./routes/posts");
 const nodemailer = require('nodemailer');
 const http = require('http');
-const { Server } = require('socket.io');
+const socketIO = require('socket.io');
 const dotenv = require('dotenv');
 const { PrismaClient } = require('@prisma/client');
 const path = require('path');
+const socketHandler = require('./socket');
 
 dotenv.config();
 
@@ -26,6 +27,9 @@ console.log('Loaded routes:', {
 const prisma = new PrismaClient();
 const app = express();
 
+// Create HTTP server
+const server = http.createServer(app);
+
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,
@@ -36,32 +40,30 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:19000",
-      "http://localhost:19001",
-      "http://localhost:19002",
-      "exp://192.168.11.118:19000", 
-      "exp://192.168.11.118:19001",
-      "exp://192.168.11.118:19002",
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// Configure CORS for both Express and Socket.IO
 const corsOptions = {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
- 
- ,
+  origin: '*', // In production, replace with your actual domain
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  credentials: true
 };
 
 app.use(cors(corsOptions));
+
+// Initialize Socket.IO with CORS options
+const io = socketIO(server, {
+  cors: corsOptions,
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  transports: ['websocket'],
+  allowEIO3: true
+});
+
+// Make io accessible to routes
+app.set('io', io);
+
+// Initialize socket handler
+socketHandler(io);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -77,8 +79,6 @@ if (!fs.existsSync('./uploads/images')) {
     fs.mkdirSync('./uploads/images');
 }
 app.use(bodyParser.json());
-
-const server = http.createServer(app);
 
 app.use("/user", userRoutes);
 app.use("/posts", postsRouter);
@@ -115,18 +115,6 @@ app.post('/confirm-booking', async (req, res) => {
   }
 });
 
-const io = new Server(server, {
-  cors: corsOptions,
-  pingTimeout: 60000,
-  cors: {
-      origin: corsOptions.origin,
-      methods: corsOptions.methods,
-      allowedHeaders: ['Content-Type', 'Authorization'],
-      credentials: true
-  },
-  transports: ['websocket', 'polling']
-});
-
 app.use((req, res, next) => {
     req.io = io;
     console.log(`${req.method} ${req.path}`, {
@@ -141,62 +129,60 @@ app.use('/api/chat', chatRoutes);
 app.use("/user", userRoutes);
 
 io.on('connection', (socket) => {
-    console.log('A user connected');
+  console.log('User connected:', socket.handshake.query.userId);
 
-    socket.on('join chat', (chatId) => {
-  
-      
-        socket.join(`chat:${chatId}`);
-        console.log(`User joined chat: ${chatId}`);
-    });
-
-    socket.on('send message', (messageData) => {
-      // Emit the 'new message' event to all clients in the chat room
-      io.to(`chat:${messageData.chatId}`).emit('new message', messageData);
-      console.log('Message sent to chat:', messageData.chatId, messageData);
+  socket.on('join chat', (chatId) => {
+    socket.join(`chat:${chatId}`);
+    console.log(`User joined chat: ${chatId}`);
   });
+
+  socket.on('send message', (messageData) => {
+    io.to(`chat:${messageData.chatId}`).emit('new message', messageData);
+    console.log('Message sent to chat:', messageData.chatId, messageData);
+  });
+
   socket.on('voice-call', (callData) => {
-    // Broadcast incoming call to the receiver
     socket.to(callData.receiver.id.toString()).emit('incoming-voice-call', callData);
     console.log('Voice call initiated:', callData);
-})
-    socket.on('disconnect', () => {
-        console.log('User disconnected');
-    });
+  });
 
-    socket.on('error', (error) => {
-        console.error('Socket error:', error);
-    });
- 
-    socket.on('video call invite', (data) => {
-        socket.to(data.to).emit('incoming call', {
-            from: data.from,
-            channelName: data.channelName
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
 
-        });
+  socket.on('error', (error) => {
+    console.error('Socket error:', error);
+  });
+
+  socket.on('video call invite', (data) => {
+    socket.to(data.to).emit('incoming call', {
+      from: data.from,
+      channelName: data.channelName
     });
+  });
 });
 
 app.use((err, req, res, next) => {
-    console.error('Server error:', err);
+    console.error('Global error:', err);
     res.status(500).json({
-        error: 'Server error',
-        details: err.message
+        error: 'Internal server error',
+        message: err.message
     });
 });
 
 const PORT = process.env.PORT || 5000;
-const serverInstance = server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 process.on('SIGTERM', () => {
     console.log('SIGTERM signal received: closing HTTP server');
-    serverInstance.close(() => {
+    server.close(() => {
         console.log('HTTP server closed');
         prisma.$disconnect();
         process.exit(0);
     });
 });
 
-module.exports = { app, server: serverInstance, io };
+module.exports = { app, server, io };

@@ -10,8 +10,14 @@ const {
 //   handleVoiceMessage,
   //translateMessage,
 //   translationLimiter,
+sendPushNotification,
+updatePushToken,
+markChatAsRead,
   authMiddleware,
-  handleFileUpload
+  handleFileUpload,
+  getUnreadCount,
+  getUnreadMessages,
+  markMessagesAsRead
 } = require('../controller/chat');
 
 // Remove local upload directories since we're using Cloudinary
@@ -28,8 +34,21 @@ router.get('/users', authMiddleware, getAllUsers);
 // router.post('/upload/image', authMiddleware, handleImageUpload);
 // router.post('/upload/voice', authMiddleware, handleVoiceMessage);
 router.post('/upload', authMiddleware, handleFileUpload);
+router.post('/push-token', authMiddleware, updatePushToken);
+//router.put('/chat/:chatId/read/:userId', authMiddleware, markChatAsRead);
+//router.get('/unread/:userId', authMiddleware, getUnreadCount);
 
 // Translation route with rate limiting
 //router.post('/translate', authMiddleware, translationLimiter, translateMessage);
+
+// Add this new route for unread messages
+//router.get('/unread/:userId', authMiddleware, getUnreadMessages);
+
+// Mark messages as read
+//router.put('/:chatId/read/:userId', markMessagesAsRead);
+router.get('/unread/:userId', getUnreadMessages);
+router.put('/messages/read/:chatId/:userId', markMessagesAsRead);
+
+
 
 module.exports = router;

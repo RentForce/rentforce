@@ -8,7 +8,6 @@ datasource db {
 }
 
 model User {
-<<<<<<< HEAD
   id            Int        @id @default(autoincrement())
   firstName     String?    
   lastName      String?    
@@ -28,28 +27,9 @@ model User {
   chatsReceived  Chat[]     @relation("ReceiverChats")   
   outgoingCalls CallLog[] @relation("CallerCalls")
   incomingCalls CallLog[] @relation("ReceiverCalls")
-  messages       Message[]  
-=======
-  id             Int            @id @default(autoincrement())
-  firstName      String?
-  lastName       String?
-  email          String?        @unique
-  password       String?
-  phoneNumber    String? // Changed from Int to String for better compatibility
-  image          String?
-  bio            String?
-  type           UserType?
-  address        String?
-  posts          Post[]
-  cart           Cart?
-  favourites     Favourite[]
-  history        History[]
-  notifications  Notification[]
-  chatsInitiated Chat[]         @relation("UserChats")
-  chatsReceived  Chat[]         @relation("ReceiverChats")
   messages       Message[]
   Booking        Booking[]
->>>>>>> 2582a3e2069a9eeadda41a8c109c54c2cc32cacf
+  expoPushToken String?
 }
 
 model Post {
@@ -166,6 +146,8 @@ model Chat {
   receiver   User      @relation("ReceiverChats", fields: [receiverId], references: [id])
   messages   Message[]
   createdAt  DateTime  @default(now())
+    unreadCount Int @default(0)
+
 }
 
 model Message {
@@ -179,15 +161,12 @@ model Message {
   duration         Int?
   type             MessageType? @default(TEXT)
   voiceMessagePath String?
-<<<<<<< HEAD
   
   user     User     @relation(fields: [userId], references: [id])
   chat     Chat     @relation(fields: [chatId], references: [id])
   translations MessageTranslation[] // Add this line
-=======
-  user             User         @relation(fields: [userId], references: [id])
-  chat             Chat         @relation(fields: [chatId], references: [id])
->>>>>>> 2582a3e2069a9eeadda41a8c109c54c2cc32cacf
+    read Boolean @default(false)
+
 }
 
 model MessageTranslation {
@@ -255,7 +234,6 @@ enum MessageType {
   NOTIFICATION
   VOICE
   VIDEO_CALL
-<<<<<<< HEAD
   AUDIO
 }
 enum CallStatus {
@@ -265,6 +243,3 @@ enum CallStatus {
   REJECTED
   FAILED
 }
-=======
-}
->>>>>>> 2582a3e2069a9eeadda41a8c109c54c2cc32cacf
