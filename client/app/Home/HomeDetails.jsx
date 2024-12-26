@@ -13,6 +13,7 @@ import {
   PanResponder,
   TouchableWithoutFeedback,
   TextInput,
+  Alert,
 } from "react-native";
 import axios from "axios";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -20,8 +21,8 @@ import Navbar from "./Navbar";
 import ImageZoom from "react-native-image-pan-zoom";
 import MapView, { Marker } from "react-native-maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { WebView } from "react-native-webview";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Checkbox } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -38,54 +39,52 @@ const HomeDetails = ({ route, navigation }) => {
   const [comments, setComments] = useState([]);
   const [showAllComments, setShowAllComments] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
-  const [newComment, setNewComment] = useState("");
+  const [newComment, setNewComment] = useState('');
   const [rating, setRating] = useState(0);
   const [userCanComment, setUserCanComment] = useState(false);
-  const [tourModalVisible, setTourModalVisible] = useState(false);
-
-  const imageSizes = [
-    { width: "100%", height: 180 }, // Full width
-    { width: "48%", height: 130 }, // Half width
-    { width: "48%", height: 150 }, // Half width
-    { width: "98%", height: 140 }, // Half width, taller
-    { width: "48%", height: 200 }, // Half width, taller
-  ];
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportText, setReportText] = useState('');
+  const [reportReasons, setReportReasons] = useState({
+    inappropriate: false,
+    spam: false,
+    offensive: false,
+    scam: false,
+    incorrect: false,
+  });
+  const [userCanReport, setUserCanReport] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch comments
-        const commentsResponse = await axios.get(
-          `${apiUrl}/posts/${post.id}/comments`
-        );
-        console.log("Comments data:", commentsResponse.data); // Debug log
+        const commentsResponse = await axios.get(`${apiUrl}/posts/${post.id}/comments`);
+        console.log('Comments data:', commentsResponse.data); // Debug log
         setComments(commentsResponse.data);
 
         // Fetch images
-        const imagesResponse = await axios.get(
-          `${apiUrl}/posts/images/${post.id}`
-        );
+        const imagesResponse = await axios.get(`${apiUrl}/posts/images/${post.id}`);
         setImages(imagesResponse.data);
 
         // Add new check for user booking status
         const token = await AsyncStorage.getItem("userToken");
         if (token) {
-          const decodedToken = JSON.parse(atob(token.split(".")[1]));
+          const decodedToken = JSON.parse(atob(token.split('.')[1]));
           const userId = decodedToken.id;
-
+          
           const bookingResponse = await axios.get(
             `${apiUrl}/posts/${post.id}/check-booking/${userId}`,
             {
-              headers: { Authorization: `Bearer ${token}` },
+              headers: { Authorization: `Bearer ${token}` }
             }
           );
-
+          
           setUserCanComment(bookingResponse.data.hasBooked);
+          setUserCanReport(bookingResponse.data.hasBooked);
         }
 
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching comments:", err);
+        console.error("Error fetching data:", err);
         setError("Failed to load data");
         setLoading(false);
       }
@@ -95,8 +94,8 @@ const HomeDetails = ({ route, navigation }) => {
   }, [post.id]);
 
   useEffect(() => {
-    console.log("showAllComments state:", showAllComments);
-    console.log("Current comments:", comments);
+    console.log('showAllComments state:', showAllComments);
+    console.log('Current comments:', comments);
   }, [showAllComments, comments]);
 
   const handleImagePress = (image) => {
@@ -109,7 +108,7 @@ const HomeDetails = ({ route, navigation }) => {
   };
 
   const handleSeeMorePress = () => {
-    console.log("See more button pressed");
+    console.log('See more button pressed');
     setShowAllComments(true);
   };
 
@@ -127,32 +126,90 @@ const HomeDetails = ({ route, navigation }) => {
           rating: rating,
         },
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
 
       if (response.data) {
-        setComments((prevComments) => [response.data, ...prevComments]);
-        setNewComment("");
+        setComments(prevComments => [response.data, ...prevComments]);
+        setNewComment('');
         setRating(0);
         setShowCommentModal(false);
+        setShowAllComments(true);
       }
     } catch (error) {
       console.error("Error adding comment:", error);
     }
   };
 
-  // Function to open the 3D tour modal
-  const handle3DTour = () => {
-    setTourModalVisible(true); // Open the modal
+  const handleReport = async () => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        navigation.navigate('Login');
+        return;
+      }
+
+      // Check if user has booked before reporting
+      if (!userCanReport) {
+        Alert.alert(
+          'Cannot Report',
+          'You can only report properties you have previously booked.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Check if at least one reason is selected
+      const hasSelectedReason = Object.values(reportReasons).some(value => value);
+      if (!hasSelectedReason) {
+        Alert.alert('Error', 'Please select at least one reason for reporting');
+        return;
+      }
+
+      const response = await axios.post(
+        `${apiUrl}/reports`,
+        {
+          postId: post.id,
+          reasons: reportReasons,
+          details: reportText
+        },
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        Alert.alert(
+          'Report Submitted',
+          'Thank you for your report. We will review it shortly.',
+          [{ text: 'OK', onPress: () => {
+            setShowReportModal(false);
+            setReportText('');
+            setReportReasons({
+              inappropriate: false,
+              spam: false,
+              offensive: false,
+              scam: false,
+              incorrect: false,
+            });
+          }}]
+        );
+      } else {
+        throw new Error(response.data.message || 'Failed to submit report');
+      }
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to submit report. Please try again later.'
+      );
+    }
   };
 
-  // Function to close the 3D tour modal
-  const close3DTourModal = () => {
-    setTourModalVisible(false); // Close the modal
-  };
-
-  // Image Modal Component
   const ImageModal = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const scrollX = new Animated.Value(0);
@@ -163,9 +220,7 @@ const HomeDetails = ({ route, navigation }) => {
         useNativeDriver: false,
         listener: (event) => {
           const slideSize = SCREEN_WIDTH;
-          const index = Math.round(
-            event.nativeEvent.contentOffset.x / slideSize
-          );
+          const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
           setCurrentIndex(index);
         },
       }
@@ -325,14 +380,7 @@ const HomeDetails = ({ route, navigation }) => {
             Price: <Text style={styles.priceValue}>${post.price}</Text>
           </Text>
         </View>
-        <TouchableOpacity
-          style={styles.virtualTourButton}
-          onPress={handle3DTour}
-        >
-          <Text style={styles.virtualTourButtonText}>
-            Take a 3D Virtual Tour
-          </Text>
-        </TouchableOpacity>
+
         <View style={styles.detailsContainer}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Rooms and Guests</Text>
@@ -405,56 +453,51 @@ const HomeDetails = ({ route, navigation }) => {
             </TouchableOpacity>
           </View>
 
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Guest Reviews</Text>
             {Array.isArray(comments) && comments.length > 0 ? (
               <>
-                {comments
-                  .slice(0, COMMENTS_PREVIEW_COUNT)
-                  .map((comment, index) => (
-                    <View key={index} style={styles.review}>
-                      <View style={styles.reviewHeader}>
-                        <Image
-                          source={{
-                            uri:
-                              comment.user?.image ||
-                              "https://www.pngkey.com/png/full/72-729716_user-avatar-png-graphic-free-download-icon.png",
-                          }}
-                          style={styles.reviewerImage}
-                        />
-                        <View style={styles.reviewerInfo}>
-                          <Text style={styles.reviewerName}>
-                            {comment.user?.firstName} {comment.user?.lastName}
-                          </Text>
-                          <Text style={styles.reviewDate}>
-                            {new Date(comment.createdAt).toLocaleDateString()}
-                          </Text>
-                        </View>
-                        {comment.rating && (
-                          <View style={styles.ratingContainer}>
-                            {[...Array(5)].map((_, i) => (
-                              <Icon
-                                key={i}
-                                name="star"
-                                size={16}
-                                color={
-                                  i < comment.rating ? "#FFD700" : "#D3D3D3"
-                                }
-                              />
-                            ))}
-                          </View>
-                        )}
+                {comments.slice(0, COMMENTS_PREVIEW_COUNT).map((comment, index) => (
+                  <View key={index} style={styles.review}>
+                    <View style={styles.reviewHeader}>
+                      <Image
+                        source={{
+                          uri: comment.user?.image || 'https://www.pngkey.com/png/full/72-729716_user-avatar-png-graphic-free-download-icon.png'
+                        }}
+                        style={styles.reviewerImage}
+                      />
+                      <View style={styles.reviewerInfo}>
+                        <Text style={styles.reviewerName}>
+                          {comment.user?.firstName} {comment.user?.lastName}
+                        </Text>
+                        <Text style={styles.reviewDate}>
+                          {new Date(comment.createdAt).toLocaleDateString()}
+                        </Text>
                       </View>
-                      <Text style={styles.reviewText}>{comment.content}</Text>
-                      {comments.length > COMMENTS_PREVIEW_COUNT && (
-                        <TouchableOpacity onPress={handleSeeMorePress}>
-                          <Text style={styles.seeAllReviews}>
-                            See all {comments.length} reviews
-                          </Text>
-                        </TouchableOpacity>
+                      {comment.rating && (
+                        <View style={styles.ratingContainer}>
+                          {[...Array(5)].map((_, i) => (
+                            <Icon
+                              key={i}
+                              name="star"
+                              size={16}
+                              color={i < comment.rating ? "#FFD700" : "#D3D3D3"}
+                            />
+                          ))}
+                        </View>
                       )}
                     </View>
-                  ))}
+                    <Text style={styles.reviewText}>{comment.content}</Text>
+                    {comments.length > COMMENTS_PREVIEW_COUNT && (
+                      <TouchableOpacity onPress={handleSeeMorePress}>
+                        <Text style={styles.seeAllReviews}>
+                          See all {comments.length} reviews
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
               </>
             ) : (
               <Text style={styles.noReviews}>No reviews yet</Text>
@@ -473,7 +516,7 @@ const HomeDetails = ({ route, navigation }) => {
       </ScrollView>
       <Navbar navigation={navigation} style={styles.navbar} />
       <ImageModal />
-
+      
       <Modal
         animationType="slide"
         transparent={true}
@@ -483,18 +526,16 @@ const HomeDetails = ({ route, navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.commentsModalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                All Reviews ({comments.length})
-              </Text>
-              <TouchableOpacity
+              <Text style={styles.modalTitle}>All Reviews ({comments.length})</Text>
+              <TouchableOpacity 
                 style={styles.closeModalButton}
                 onPress={() => setShowAllComments(false)}
               >
                 <Icon name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-
-            <ScrollView
+            
+            <ScrollView 
               style={styles.modalCommentsList}
               contentContainerStyle={styles.modalCommentsContent}
               showsVerticalScrollIndicator={false}
@@ -505,10 +546,8 @@ const HomeDetails = ({ route, navigation }) => {
                     <View style={styles.reviewHeader}>
                       <View style={styles.reviewerImageContainer}>
                         <Image
-                          source={{
-                            uri:
-                              comment.user?.image ||
-                              "https://www.pngkey.com/png/full/72-729716_user-avatar-png-graphic-free-download-icon.png",
+                          source={{ 
+                            uri: comment.user?.image || 'https://www.pngkey.com/png/full/72-729716_user-avatar-png-graphic-free-download-icon.png' 
                           }}
                           style={styles.reviewerImage}
                         />
@@ -565,7 +604,7 @@ const HomeDetails = ({ route, navigation }) => {
           <View style={styles.commentModalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add Review</Text>
-              <TouchableOpacity
+              <TouchableOpacity 
                 style={styles.closeModalButton}
                 onPress={() => setShowCommentModal(false)}
               >
@@ -577,7 +616,10 @@ const HomeDetails = ({ route, navigation }) => {
               <Text style={styles.ratingLabel}>Your Rating:</Text>
               <View style={styles.starsContainer}>
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                  <TouchableOpacity
+                    key={star}
+                    onPress={() => setRating(star)}
+                  >
                     <Icon
                       name="star"
                       size={32}
@@ -608,9 +650,113 @@ const HomeDetails = ({ route, navigation }) => {
           </View>
         </View>
       </Modal>
+
+      {userCanReport && (
+        <TouchableOpacity 
+          style={styles.reportButton} 
+          onPress={() => setShowReportModal(true)}
+        >
+          <Icon name="report-problem" size={24} color="#FF4444" />
+        </TouchableOpacity>
+      )}
+
+      <Modal
+        visible={showReportModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowReportModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.reportModalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Report Listing</Text>
+              <TouchableOpacity 
+                style={styles.closeModalButton}
+                onPress={() => setShowReportModal(false)}
+              >
+                <Icon name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.reportSubtitle}>Select all that apply:</Text>
+            
+            <View style={styles.checkboxContainer}>
+              <Checkbox.Item
+                label="Inappropriate Content"
+                status={reportReasons.inappropriate ? 'checked' : 'unchecked'}
+                onPress={() => setReportReasons(prev => ({
+                  ...prev,
+                  inappropriate: !prev.inappropriate
+                }))}
+                style={styles.checkbox}
+                labelStyle={styles.checkboxLabel}
+              />
+              <Checkbox.Item
+                label="Spam"
+                status={reportReasons.spam ? 'checked' : 'unchecked'}
+                onPress={() => setReportReasons(prev => ({
+                  ...prev,
+                  spam: !prev.spam
+                }))}
+                style={styles.checkbox}
+                labelStyle={styles.checkboxLabel}
+              />
+              <Checkbox.Item
+                label="Offensive Behavior"
+                status={reportReasons.offensive ? 'checked' : 'unchecked'}
+                onPress={() => setReportReasons(prev => ({
+                  ...prev,
+                  offensive: !prev.offensive
+                }))}
+                style={styles.checkbox}
+                labelStyle={styles.checkboxLabel}
+              />
+              <Checkbox.Item
+                label="Potential Scam"
+                status={reportReasons.scam ? 'checked' : 'unchecked'}
+                onPress={() => setReportReasons(prev => ({
+                  ...prev,
+                  scam: !prev.scam
+                }))}
+                style={styles.checkbox}
+                labelStyle={styles.checkboxLabel}
+              />
+              <Checkbox.Item
+                label="Incorrect Information"
+                status={reportReasons.incorrect ? 'checked' : 'unchecked'}
+                onPress={() => setReportReasons(prev => ({
+                  ...prev,
+                  incorrect: !prev.incorrect
+                }))}
+                style={styles.checkbox}
+                labelStyle={styles.checkboxLabel}
+              />
+            </View>
+
+            <Text style={styles.reportSubtitle}>Additional Details:</Text>
+            <TextInput
+              style={styles.reportInput}
+              multiline
+              numberOfLines={3}
+              placeholder="Please provide any additional information..."
+              value={reportText}
+              onChangeText={setReportText}
+            />
+
+            <TouchableOpacity 
+              style={styles.submitReportButton}
+              onPress={handleReport}
+            >
+              <Text style={styles.submitReportText}>Submit Report</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   pageContainer: {
@@ -657,8 +803,8 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.95)",
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   slideContainer: {
     width: SCREEN_WIDTH,
@@ -837,11 +983,11 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   review: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     borderRadius: 15,
     padding: 16,
     marginBottom: 12,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -850,15 +996,15 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 2,
     borderWidth: 1,
-    borderColor: "#F0F2F5",
+    borderColor: '#F0F2F5',
   },
   reviewHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
   },
   reviewerImageContainer: {
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -872,7 +1018,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     borderWidth: 2,
-    borderColor: "#fff",
+    borderColor: '#fff',
   },
   reviewerInfo: {
     flex: 1,
@@ -880,37 +1026,37 @@ const styles = StyleSheet.create({
   },
   reviewerName: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#2C3E50",
+    fontWeight: '600',
+    color: '#2C3E50',
     marginBottom: 2,
   },
   reviewDate: {
     fontSize: 13,
-    color: "#95A5A6",
+    color: '#95A5A6',
   },
   ratingContainer: {
-    flexDirection: "row",
-    backgroundColor: "#F8F9FA",
+    flexDirection: 'row',
+    backgroundColor: '#F8F9FA',
     padding: 6,
     borderRadius: 8,
-    alignItems: "center",
+    alignItems: 'center',
   },
   starIcon: {
     marginHorizontal: 1,
   },
   reviewText: {
     fontSize: 15,
-    color: "#34495E",
+    color: '#34495E',
     lineHeight: 22,
     letterSpacing: 0.3,
   },
   noReviews: {
-    textAlign: "center",
+    textAlign: 'center',
     fontSize: 16,
-    color: "#95A5A6",
-    fontStyle: "italic",
+    color: '#95A5A6',
+    fontStyle: 'italic',
     marginTop: 20,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: '#F8F9FA',
     padding: 20,
     borderRadius: 12,
   },
@@ -996,16 +1142,16 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    justifyContent: "flex-end",
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'flex-end',
   },
   commentsModalContainer: {
-    backgroundColor: "#fff",
-    height: "85%",
+    backgroundColor: '#fff',
+    height: '85%',
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     padding: 20,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: -4,
@@ -1015,24 +1161,24 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingBottom: 15,
     marginBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E5E5",
+    borderBottomColor: '#E5E5E5',
   },
   modalTitle: {
     fontSize: 22,
-    fontWeight: "700",
-    color: "#2C3E50",
+    fontWeight: '700',
+    color: '#2C3E50',
     letterSpacing: 0.3,
   },
   closeModalButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: "#F0F2F5",
+    backgroundColor: '#F0F2F5',
   },
   modalCommentsList: {
     flex: 1,
@@ -1041,23 +1187,23 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   seeAllReviews: {
-    color: "#2C3E50",
+    color: '#2C3E50',
     fontSize: 14,
-    textDecorationLine: "underline",
+    textDecorationLine: 'underline',
     marginTop: 10,
   },
   addCommentButton: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 80,
     right: 20,
-    backgroundColor: "#2C3E50",
+    backgroundColor: '#2C3E50',
     width: 56,
     height: 56,
     borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     elevation: 5,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -1066,12 +1212,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   commentModalContainer: {
-    backgroundColor: "#fff",
-    height: "60%",
+    backgroundColor: '#fff',
+    height: '60%',
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     padding: 20,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: -4,
@@ -1085,51 +1231,147 @@ const styles = StyleSheet.create({
   },
   ratingLabel: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
     marginBottom: 10,
-    color: "#2C3E50",
+    color: '#2C3E50',
   },
   starsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   starIcon: {
     marginHorizontal: 4,
   },
   commentInput: {
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: '#E5E5E5',
     borderRadius: 12,
     padding: 15,
     fontSize: 16,
     height: 120,
-    textAlignVertical: "top",
+    textAlignVertical: 'top',
     marginBottom: 20,
   },
   submitButton: {
-    backgroundColor: "#2C3E50",
+    backgroundColor: '#2C3E50',
     padding: 15,
     borderRadius: 12,
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 10,
   },
   submitButtonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
-  virtualTourButton: {
-    backgroundColor: "#3498db",
-    paddingVertical: 12,
-    borderRadius: 25,
-    alignItems: "center",
-    marginTop: 16,
+  reportButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    backgroundColor: 'white',
+    padding: 8,
+    borderRadius: 20,
+    zIndex: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  virtualTourButtonText: {
-    color: "#fff",
+  
+  reportModalContainer: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    height: '65%',
+    width: '100%',
+    position: 'absolute',
+    bottom: 0,
+    paddingHorizontal: 20,
+    paddingTop: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+  },
+
+  reportContent: {
+    flex: 1,
+  },
+
+  reportSubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 5,
+    marginTop: 5,
+  },
+
+  checkboxContainer: {
+    marginBottom: 10,
+  },
+
+  checkbox: {
+    padding: 0,
+    height: 40,
+  },
+
+  checkboxLabel: {
+    fontSize: 14,
+  },
+
+  reportInput: {
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 15,
+    height: 80,
+    textAlignVertical: 'top',
+  },
+
+  submitReportButton: {
+    backgroundColor: '#FF4444',
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+
+  submitReportText: {
+    color: 'white',
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: '600',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
   chatSection: {
     flexDirection: "row",

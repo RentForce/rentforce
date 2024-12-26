@@ -18,6 +18,9 @@ export default function SignUpScreen({ navigation }) {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [countryCode, setCountryCode] = useState("+1");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const [showAlert, setShowAlert] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     title: "",
@@ -61,6 +64,7 @@ console.log(Apiurl , "url");
       lastName,
       email,
       password,
+      phoneNumber: countryCode + phoneNumber,
     };
 
     try {
@@ -116,34 +120,45 @@ console.log(Apiurl , "url");
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Enter your Personal Data</Text>
 
+          <View style={styles.rowContainer}>
+            <View style={[styles.inputContainer, styles.halfWidth]}>
+              <FontAwesome name="user" size={20} color="black" style={styles.icon} />
+              <TextInput
+                placeholder="First Name"
+                style={styles.input}
+                value={firstName}
+                onChangeText={setFirstName}
+              />
+            </View>
+            <View style={[styles.inputContainer, styles.halfWidth]}>
+              <FontAwesome name="user" size={20} color="black" style={styles.icon} />
+              <TextInput
+                placeholder="Last Name"
+                style={styles.input}
+                value={lastName}
+                onChangeText={setLastName}
+              />
+            </View>
+          </View>
+
           <View style={styles.inputContainer}>
-            <FontAwesome
-              name="user"
-              size={20}
-              color="black"
-              style={styles.icon}
+            <FontAwesome name="phone" size={20} color="black" style={styles.icon} />
+            <TextInput
+              placeholder="Country Code"
+              style={styles.countryCode}
+              value={countryCode}
+              onChangeText={setCountryCode}
+              keyboardType="phone-pad"
             />
             <TextInput
-              placeholder="First Name"
-              style={styles.input}
-              value={firstName}
-              onChangeText={setFirstName}
+              placeholder="Phone Number"
+              style={styles.phoneInput}
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              keyboardType="phone-pad"
             />
           </View>
-          <View style={styles.inputContainer}>
-            <FontAwesome
-              name="user"
-              size={20}
-              color="black"
-              style={styles.icon}
-            />
-            <TextInput
-              placeholder="Last Name"
-              style={styles.input}
-              value={lastName}
-              onChangeText={setLastName}
-            />
-          </View>
+
           <View style={styles.inputContainer}>
             <FontAwesome
               name="envelope"
@@ -246,11 +261,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   innerContainer: {
-    width: "90%", // Use percentage for responsiveness
+    width: "90%",
     alignItems: "center",
   },
   title: {
-    fontSize: 30, // Adjusted for better responsiveness
+    fontSize: 30,
     fontWeight: "bold",
     color: "white",
     marginTop: 50,
@@ -261,6 +276,15 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     textAlign: "center",
   },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginVertical: 10,
+  },
+  halfWidth: {
+    flex: 0.48, // Using flex instead of percentage width for better responsiveness
+  },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -268,7 +292,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: "100%",
     padding: 10,
-    marginVertical: 10,
+    marginVertical: 5,
   },
   icon: {
     marginRight: 10,

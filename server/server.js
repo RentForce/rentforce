@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const userRoutes = require("./routes/user");
 const postsRouter = require("./routes/posts");
+const reportsRouter = require("./routes/report");
+
 const nodemailer = require("nodemailer");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -88,6 +90,7 @@ const server = http.createServer(app);
 
 // app.use("/user", userRoutes);
 app.use("/posts", postsRouter);
+app.use("/reports", reportsRouter);
 
 // Stripe Payment Intent Route
 app.post("/create-payment-intent", async (req, res) => {
