@@ -625,10 +625,10 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    padding: 20,
+    padding:2,
   },
   searchBarContainer: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 3,
     paddingVertical: 10,
     marginTop: 12,
     marginBottom: 15,

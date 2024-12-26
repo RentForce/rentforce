@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NotificationIcon from "../../components/NotificationIcon";
 
 const Navbar = ({ navigation, userId }) => {
+  const [pressedIcon, setPressedIcon] = useState(null);
+
   const handleConfirmExplore = () => {
     console.log("Navigating to Home");
     navigation.navigate("Home");
@@ -39,21 +41,33 @@ const Navbar = ({ navigation, userId }) => {
       <TouchableOpacity 
         style={styles.iconContainer} 
         onPress={() => navigation.navigate("ChatSelectionScreen")}
+        onPressIn={() => setPressedIcon("chat")}
+        onPressOut={() => setPressedIcon(null)}
       >
         <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
         <View style={styles.notificationDot} />
         <Text style={styles.text}>Inbox</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={styles.iconContainer}
+        style={[
+          styles.iconContainer,
+          pressedIcon === "notifications" && styles.pressedIcon,
+        ]}
         onPress={() => navigation.navigate("notifications")}
+        onPressIn={() => setPressedIcon("notifications")}
+        onPressOut={() => setPressedIcon(null)}
       >
         <NotificationIcon size={24} color="#fff" />
         <Text style={styles.text}>Notifications</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={styles.iconContainer}
+        style={[
+          styles.iconContainer,
+          pressedIcon === "profile" && styles.pressedIcon,
+        ]}
         onPress={handleProfileNavigation}
+        onPressIn={() => setPressedIcon("profile")}
+        onPressOut={() => setPressedIcon(null)}
       >
         <Ionicons name="person-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Profile</Text>
@@ -72,6 +86,10 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     alignItems: "center",
+    transform: [{ scale: 1 }],
+  },
+  pressedIcon: {
+    transform: [{ scale: 1.2 }],
   },
   icon: {
     color: "#fff",

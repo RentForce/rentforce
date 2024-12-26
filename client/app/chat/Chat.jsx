@@ -11,6 +11,8 @@ import {
 import axios from "axios";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from 'expo-linear-gradient';
+import { Animated } from 'react-native';
 
 const ChatScreen = () => {
   const route = useRoute();
@@ -25,6 +27,7 @@ const ChatScreen = () => {
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [gradientAnimation] = useState(new Animated.Value(0));
 
   useEffect(() => {
     const fetchChatDetails = async () => {
@@ -64,6 +67,24 @@ const ChatScreen = () => {
 
     fetchChatDetails();
   }, [route.params]);
+
+  useEffect(() => {
+    // Create smooth gradient animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(gradientAnimation, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(gradientAnimation, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
+  }, []);
 
   const createNewChat = async (currentUserId, receiverId) => {
     try {
@@ -135,8 +156,14 @@ const ChatScreen = () => {
   };
 
   const renderMessage = ({ item }) => (
-    <View style={styles.messageContainer}>
-      <Text style={styles.messageContent}>{item.content}</Text>
+    <View style={[
+      styles.messageContainer,
+      item.userId === chatDetails.userId ? styles.sentMessage : styles.receivedMessage
+    ]}>
+      <Text style={[
+        styles.messageContent,
+        item.userId === chatDetails.userId ? styles.sentMessageText : styles.receivedMessageText
+      ]}>{item.content}</Text>
       <Text style={styles.messageTime}>
         {new Date(item.sentAt).toLocaleString()}
       </Text>
@@ -144,22 +171,25 @@ const ChatScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#4c669f', '#3b5998', '#192f6a']}
+      style={styles.container}
+    >
       {chatDetails.chatId ? (
         <>
           <FlatList
             data={messages}
             renderItem={renderMessage}
-            keyExtractor={(item) =>
-              item.id?.toString() || Math.random().toString()
-            }
+            keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
             style={styles.messagesList}
+            contentContainerStyle={styles.messagesListContent}
           />
           <View style={styles.inputContainer}>
             <TextInput
               value={newMessage}
               onChangeText={setNewMessage}
               placeholder="Type a message"
+              placeholderTextColor="#rgba(255,255,255,0.7)"
               style={styles.input}
               multiline
             />
@@ -173,73 +203,98 @@ const ChatScreen = () => {
           <Text style={styles.errorText}>No chat selected</Text>
         </View>
       )}
-    </View>
+    </LinearGradient>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  errorText: {
-    fontSize: 18,
-    color: "#888",
-  },
-
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
   },
   messagesList: {
     flex: 1,
-    padding: 10,
+  },
+  messagesListContent: {
+    padding: 15,
   },
   messageContainer: {
-    backgroundColor: "#f0f0f0",
-    borderRadius: 10,
-    padding: 10,
+    maxWidth: '80%',
+    borderRadius: 20,
+    padding: 12,
     marginVertical: 5,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  sentMessage: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#0084ff',
+    borderTopRightRadius: 4,
+  },
+  receivedMessage: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderTopLeftRadius: 4,
   },
   messageContent: {
     fontSize: 16,
+    lineHeight: 20,
+  },
+  sentMessageText: {
+    color: '#ffffff',
+  },
+  receivedMessageText: {
+    color: '#000000',
   },
   messageTime: {
-    fontSize: 12,
-    color: "#888",
-    marginTop: 5,
-    textAlign: "right",
+    fontSize: 11,
+    marginTop: 4,
+    opacity: 0.7,
+    color: '#fff',
   },
   inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   input: {
     flex: 1,
     minHeight: 40,
     maxHeight: 120,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 20,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 25,
     paddingHorizontal: 15,
+    paddingVertical: 8,
     marginRight: 10,
+    color: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   sendButton: {
-    backgroundColor: "#007bff",
-    borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    backgroundColor: '#00ff9d',
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    elevation: 2,
   },
   sendButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#fff',
   },
 });
 
