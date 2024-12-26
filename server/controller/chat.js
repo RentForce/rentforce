@@ -13,51 +13,84 @@ const fs = require('fs');
 
 require('dotenv').config();
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-    console.log(req.headers)
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No token provided' });
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (!token) {
+      return res.status(401).json({ error: 'No authentication token provided' });
     }
 
-    const token = authHeader.split(' ')[1];
-
-    console.log('Received token:', token);
-    console.log('Secret used for verification:', process.env.JWT_SECRET);
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    req.user = decoded;
-    next();
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded;
+      next();
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({ error: 'Token expired', expired: true });
+      }
+      throw error;
+    }
   } catch (error) {
     console.error('Auth middleware error:', error);
-    return res.status(401).json({ message: 'Invalid token' });
+    res.status(401).json({ error: 'Please authenticate' });
   }
 };
 
-const getAllUsers = async (req, res) => {
+const getAllUsersWithChats = async (req, res) => {
   try {
-    console.log('Request user:', req.user)
+    console.log('Request user:', req.user);
 
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const users = await prisma.user.findMany({
+    // Find all chats where the current user is either sender or receiver
+    const chats = await prisma.chat.findMany({
       where: {
-        id: {
-          not: req.user.id
-        }
+        OR: [
+          { userId: req.user.id },
+          { receiverId: req.user.id }
+        ]
       },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        receiver: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
       }
     });
-    console.log('Fetched Users:', users);
+
+    // Extract unique users from chats
+    const usersMap = new Map();
+
+    chats.forEach(chat => {
+      // If current user is the sender, add receiver to map
+      if (chat.userId === req.user.id && chat.receiver) {
+        usersMap.set(chat.receiver.id, chat.receiver);
+      }
+      // If current user is the receiver, add sender to map
+      if (chat.receiverId === req.user.id && chat.user) {
+        usersMap.set(chat.user.id, chat.user);
+      }
+    });
+
+    // Convert map to array
+    const users = Array.from(usersMap.values());
+    
+    console.log('Fetched Users with chats:', users);
 
     res.json(users);
   } catch (error) {
@@ -65,7 +98,6 @@ const getAllUsers = async (req, res) => {
     res.status(500).json({ message: 'Error fetching users' });
   }
 };
-
 const createChat = async (req, res) => {
   const { userId, receiverId } = req.body
 
@@ -150,56 +182,229 @@ const createChat = async (req, res) => {
     })
   }
 }
+// const sendMessage = async (req, res) => {
+//   const { chatId, userId, content, type = 'TEXT', receiverId } = req.body;
 
+//   try {
+//     // Create message
+//     const message = await prisma.message.create({
+//       data: {
+//         chatId: parseInt(chatId),
+//         userId: parseInt(userId),
+//         content,
+//         type,
+//         read: false
+//       },
+//       include: {
+//         user: true,
+//         chat: true
+//       }
+//     });
+
+//     // Get receiver's push token
+//     const receiver = await prisma.user.findUnique({
+//       where: { id: parseInt(receiverId) },
+//       select: { expoPushToken: true, firstName: true, lastName: true }
+//     });
+
+//     if (receiver?.expoPushToken) {
+//       await sendPushNotification(receiver.expoPushToken, {
+//         senderName: `${message.user.firstName} ${message.user.lastName}`,
+//         type: message.type,
+//         content: message.content,
+//         chatId: message.chatId
+//       });
+//     }
+
+//     // Update unread count for the chat
+//     await prisma.chat.update({
+//       where: { id: parseInt(chatId) },
+//       data: {
+//         unreadCount: {
+//           increment: 1
+//         }
+//       }
+//     });
+
+//     res.status(201).json(message);
+//   } catch (error) {
+//     console.error('Error sending message:', error);
+//     res.status(500).json({ error: 'Could not send message' });
+//   }
+// };
 const sendMessage = async (req, res) => {
-  const { chatId, userId, content, type = 'TEXT' } = req.body
-
   try {
+    const { content, chatId, userId } = req.body;
+    console.log('Creating new message:', { content, chatId, userId });
 
-    console.log('Received message data:', {
-      chatId,
-      userId,
-      content,
-      type,
-      rawBody: req.body
-    });
-    if (!chatId || !userId || !content) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-    console.log('Received message data:', {
-      chatId,
-      userId,
-      content,
-      type
-    });
-
-
-
-    const message = await prisma.message.create({
-      data: {
-        chatId: parseInt(chatId),
-        userId: parseInt(userId),
-        content,
-        type
-      },
+    // Get the chat first
+    const chat = await prisma.chat.findUnique({
+      where: { id: parseInt(chatId) },
       include: {
         user: true,
-        chat: true
+        receiver: true
       }
-    })
-
-    res.status(201).json(message)
-  } catch (error) {
-    console.error('Detailed Error sending message:', {
-      error: error.message,
-      stack: error.stack
     });
-    res.status(500).json({
-      error: 'Could not send message',
-      details: error.message
+
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+
+    // Create the message
+    const message = await prisma.message.create({
+      data: {
+        content,
+        chatId: parseInt(chatId),
+        userId: parseInt(userId),
+        isRead: false,
+        type: 'TEXT'
+      },
+      include: {
+        chat: true,
+        user: true
+      }
+    });
+
+    // Get the receiver's ID
+    const receiverId = chat.userId === parseInt(userId) ? chat.receiverId : chat.userId;
+
+    // Emit socket event
+    const io = req.app.get('io');
+    if (io) {
+      console.log('Emitting new message to:', receiverId);
+      io.to(`user_${receiverId}`).emit('new message', {
+        ...message,
+        receiverId
+      });
+    }
+
+    return res.status(201).json(message);
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return res.status(500).json({
+      error: 'Failed to send message',
+      success: false
     });
   }
-}
+};
+
+
+const markChatAsRead = async (req, res) => {
+  const { chatId, userId } = req.params;
+
+  try {
+    await prisma.message.updateMany({
+      where: {
+        chatId: parseInt(chatId),
+        userId: {
+          not: parseInt(userId)
+        },
+        read: false
+      },
+      data: {
+        read: true
+      }
+    });
+
+    await prisma.chat.update({
+      where: { id: parseInt(chatId) },
+      data: { unreadCount: 0 }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not mark messages as read' });
+  }
+};
+const updatePushToken = async (req, res) => {
+  try {
+    const { expoPushToken } = req.body;
+    const userId = req.user.id;
+
+    if (!expoPushToken) {
+      return res.status(400).json({ error: 'Push token is required' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { expoPushToken },
+      select: { id: true, expoPushToken: true }
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Push token update error:', error);
+    res.status(500).json({ 
+      error: 'Failed to update push token',
+      details: error.message 
+    });
+  }
+};
+
+// const sendMessage = async (req, res) => {
+//   const { chatId, userId, content, type = 'TEXT' } = req.body
+
+//   try {
+
+//     console.log('Received message data:', {
+//       chatId,
+//       userId,
+//       content,
+//       type,
+//       rawBody: req.body
+//     });
+//     if (!chatId || !userId || !content) {
+//       return res.status(400).json({ error: 'Missing required fields' });
+//     }
+//     console.log('Received message data:', {
+//       chatId,
+//       userId,
+//       content,
+//       type
+//     });
+
+
+
+//     const message = await prisma.message.create({
+//       data: {
+//         chatId: parseInt(chatId),
+//         userId: parseInt(userId),
+//         content,
+//         type
+//       },
+//       include: {
+//         user: true,
+//         chat: true
+//       }
+//     })
+
+//     res.status(201).json(message)
+//   } catch (error) {
+//     console.error('Detailed Error sending message:', {
+//       error: error.message,
+//       stack: error.stack
+//     });
+//     res.status(500).json({
+//       error: 'Could not send message',
+//       details: error.message
+//     });
+//   }
+// }
+const getUnreadCount = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const count = await Message.count({
+      where: {
+        receiverId: userId,
+        read: false
+      }
+    });
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const getUserChats = async (req, res) => {
   const userId = parseInt(req.params.userId)
 
@@ -326,6 +531,60 @@ const translationLimiter = rateLimit({
   message: 'Daily translation limit reached'
 });
 
+//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+//   api_key: process.env.CLOUDINARY_API_KEY,
+//   api_secret: process.env.CLOUDINARY_API_SECRET
+// });
+
+// const uploadImage = async (req, res) => {
+//   const uploadMiddleware = multer({
+//     storage: storage,
+//     limits: {
+//       fileSize: 5 * 1024 * 1024, // 5MB limit
+//     },
+//     fileFilter: (req, file, cb) => {
+//       if (!file.mimetype.startsWith('image/')) {
+//         return cb(new Error('Only image files are allowed'));
+//       }
+//       cb(null, true);
+//     }
+//   }).single('file');
+
+//   try {
+//     // Handle upload with Promise wrapper
+//     await new Promise((resolve, reject) => {
+//       uploadMiddleware(req, res, (err) => {
+//         if (err) {
+//           console.error('Multer error:', err);
+//           reject(err);
+//         } else {
+//           resolve();
+//         }
+//       });
+//     });
+
+//     // Check if file exists after upload
+//     if (!req.file) {
+//       return res.status(400).json({
+//         error: 'No file uploaded',
+//         details: 'Please provide an image file'
+//       });
+//     }
+
+//     // Return upload result
+//     res.status(200).json({
+//       url: req.file.path,
+//       public_id: req.file.filename
+//     });
+
+//   } catch (error) {
+//     console.error('Upload error:', error);
+//     res.status(500).json({
+//       error: 'Upload failed',
+//       details: error.message
+//     });
+//   }
+// };
 
 
 cloudinary.config({
@@ -468,28 +727,150 @@ const handleFileUpload = async (req, res) => {
   }
 };
 const sendPushNotification = async (expoPushToken, messageData) => {
+  if (!expoPushToken) {
+    console.log('No push token found for user');
+    return;
+  }
+
   const message = {
     to: expoPushToken,
     sound: 'default',
     title: `New message from ${messageData.senderName}`,
     body: messageData.type === 'IMAGE' ? '📷 Image' : 
           messageData.type === 'AUDIO' ? '🎵 Voice message' : 
+          messageData.type === 'VIDEO_CALL' ? '📱 Video Call' :
           messageData.content,
-    data: { messageData },
+    data: { 
+      messageData,
+      type: 'CHAT_MESSAGE',
+      chatId: messageData.chatId,
+    },
+    priority: 'high',
   };
 
   try {
-    await axios.post('https://exp.host/--/api/v2/push/send', message, {
+    const response = await axios.post('https://exp.host/--/api/v2/push/send', message, {
       headers: {
         'Accept': 'application/json',
         'Accept-encoding': 'gzip, deflate',
         'Content-Type': 'application/json',
       },
     });
+
+    // Update chat unread count
+    await prisma.chat.update({
+      where: { id: parseInt(messageData.chatId) },
+      data: {
+        unreadCount: {
+          increment: 1
+        }
+      }
+    });
+
+    return response.data;
   } catch (error) {
     console.error('Error sending push notification:', error);
+    throw error;
   }
 };
+
+const getUnreadMessages = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    console.log('Getting unread messages for user:', userId);
+
+    if (!userId || isNaN(userId)) {
+      return res.status(400).json({
+        error: 'Invalid user ID',
+        success: false
+      });
+    }
+
+    // Get all unread messages where the user is the receiver
+    const unreadMessages = await prisma.message.count({
+      where: {
+        chat: {
+          OR: [
+            { receiverId: userId },
+            { userId: userId }
+          ]
+        },
+        isRead: false,
+        userId: { not: userId } // Messages not sent by the current user
+      }
+    });
+
+    console.log(`Found ${unreadMessages} unread messages for user ${userId}`);
+
+    return res.status(200).json({
+      count: unreadMessages,
+      success: true
+    });
+
+  } catch (error) {
+    console.error('Error in getUnreadMessages:', error);
+    return res.status(500).json({
+      error: 'Failed to get unread messages',
+      success: false
+    });
+  }
+};
+
+const markMessagesAsRead = async (req, res) => {
+  try {
+    const { chatId, userId } = req.params;
+    console.log('Marking messages as read:', { chatId, userId });
+
+    // First, count how many messages we're marking as read
+    const messagesToMarkRead = await prisma.message.count({
+      where: {
+        chatId: parseInt(chatId),
+        chat: {
+          receiverId: parseInt(userId)
+        },
+        isRead: false
+      }
+    });
+
+    console.log('Number of messages to mark as read:', messagesToMarkRead);
+
+    // Update the messages
+    const result = await prisma.message.updateMany({
+      where: {
+        chatId: parseInt(chatId),
+        chat: {
+          receiverId: parseInt(userId)
+        },
+        isRead: false
+      },
+      data: {
+        isRead: true
+      }
+    });
+
+    // Get the socket instance
+    const io = req.app.get('io');
+    if (io) {
+      console.log('Emitting message read count:', messagesToMarkRead);
+      io.to(`user_${userId}`).emit('messages_read', {
+        count: messagesToMarkRead
+      });
+    }
+
+    return res.status(200).json({ 
+      message: 'Messages marked as read',
+      readCount: messagesToMarkRead,
+      success: true 
+    });
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+    return res.status(500).json({
+      error: error.message || 'Failed to mark messages as read',
+      success: false
+    });
+  }
+};
+
 
 module.exports = {
   handleFileUpload,
@@ -499,9 +880,13 @@ module.exports = {
   sendMessage,
   getUserChats,
   getChatMessages,
-  getAllUsers,
+  getAllUsersWithChats,
   authMiddleware,
-
+  markChatAsRead
+,updatePushToken,
+getUnreadCount,
+getUnreadMessages,
+markMessagesAsRead
 
   //uploadImage
 

@@ -13,6 +13,7 @@ import {
   PanResponder,
   TouchableWithoutFeedback,
   TextInput,
+  Alert,
 } from "react-native";
 import axios from "axios";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -20,7 +21,8 @@ import Navbar from "./Navbar";
 import ImageZoom from "react-native-image-pan-zoom";
 import MapView, { Marker } from "react-native-maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { WebView } from "react-native-webview";
+import { Checkbox } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -40,15 +42,16 @@ const HomeDetails = ({ route, navigation }) => {
   const [newComment, setNewComment] = useState('');
   const [rating, setRating] = useState(0);
   const [userCanComment, setUserCanComment] = useState(false);
-  const [tourModalVisible, setTourModalVisible] = useState(false);
-
-  const imageSizes = [
-    { width: "100%", height: 180 }, // Full width
-    { width: "48%", height: 130 }, // Half width
-    { width: "48%", height: 150 }, // Half width
-    { width: "98%", height: 140 }, // Half width, taller
-    { width: "48%", height: 200 }, // Half width, taller
-  ];
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportText, setReportText] = useState('');
+  const [reportReasons, setReportReasons] = useState({
+    inappropriate: false,
+    spam: false,
+    offensive: false,
+    scam: false,
+    incorrect: false,
+  });
+  const [userCanReport, setUserCanReport] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,11 +79,12 @@ const HomeDetails = ({ route, navigation }) => {
           );
           
           setUserCanComment(bookingResponse.data.hasBooked);
+          setUserCanReport(bookingResponse.data.hasBooked);
         }
 
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching comments:", err);
+        console.error("Error fetching data:", err);
         setError("Failed to load data");
         setLoading(false);
       }
@@ -131,23 +135,81 @@ const HomeDetails = ({ route, navigation }) => {
         setNewComment('');
         setRating(0);
         setShowCommentModal(false);
+        setShowAllComments(true);
       }
     } catch (error) {
       console.error("Error adding comment:", error);
     }
   };
 
-  // Function to open the 3D tour modal
-  const handle3DTour = () => {
-    setTourModalVisible(true); // Open the modal
+  const handleReport = async () => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        navigation.navigate('Login');
+        return;
+      }
+
+      // Check if user has booked before reporting
+      if (!userCanReport) {
+        Alert.alert(
+          'Cannot Report',
+          'You can only report properties you have previously booked.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Check if at least one reason is selected
+      const hasSelectedReason = Object.values(reportReasons).some(value => value);
+      if (!hasSelectedReason) {
+        Alert.alert('Error', 'Please select at least one reason for reporting');
+        return;
+      }
+
+      const response = await axios.post(
+        `${apiUrl}/reports`,
+        {
+          postId: post.id,
+          reasons: reportReasons,
+          details: reportText
+        },
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        Alert.alert(
+          'Report Submitted',
+          'Thank you for your report. We will review it shortly.',
+          [{ text: 'OK', onPress: () => {
+            setShowReportModal(false);
+            setReportText('');
+            setReportReasons({
+              inappropriate: false,
+              spam: false,
+              offensive: false,
+              scam: false,
+              incorrect: false,
+            });
+          }}]
+        );
+      } else {
+        throw new Error(response.data.message || 'Failed to submit report');
+      }
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to submit report. Please try again later.'
+      );
+    }
   };
 
-  // Function to close the 3D tour modal
-  const close3DTourModal = () => {
-    setTourModalVisible(false); // Close the modal
-  };
-
-  // Image Modal Component
   const ImageModal = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const scrollX = new Animated.Value(0);
@@ -318,14 +380,7 @@ const HomeDetails = ({ route, navigation }) => {
             Price: <Text style={styles.priceValue}>${post.price}</Text>
           </Text>
         </View>
-        <TouchableOpacity
-          style={styles.virtualTourButton}
-          onPress={handle3DTour}
-        >
-          <Text style={styles.virtualTourButtonText}>
-            Take a 3D Virtual Tour
-          </Text>
-        </TouchableOpacity>
+
         <View style={styles.detailsContainer}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Rooms and Guests</Text>
@@ -387,6 +442,17 @@ const HomeDetails = ({ route, navigation }) => {
             <Text style={styles.sectionTitle}>Safety & property</Text>
             <Text style={styles.detailText}>{post.safetyProperty}</Text>
           </View>
+
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.chatSection}
+              onPress={() => navigation.navigate("ChatSelectionScreen")}
+            >
+              <MaterialCommunityIcons name="chat" size={24} color="#666666" />
+              <Text style={styles.chatText}>Chat with the Owner</Text>
+            </TouchableOpacity>
+          </View>
+
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Guest Reviews</Text>
@@ -580,6 +646,108 @@ const HomeDetails = ({ route, navigation }) => {
               disabled={!newComment.trim() || rating === 0}
             >
               <Text style={styles.submitButtonText}>Submit Review</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {userCanReport && (
+        <TouchableOpacity 
+          style={styles.reportButton} 
+          onPress={() => setShowReportModal(true)}
+        >
+          <Icon name="report-problem" size={24} color="#FF4444" />
+        </TouchableOpacity>
+      )}
+
+      <Modal
+        visible={showReportModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowReportModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.reportModalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Report Listing</Text>
+              <TouchableOpacity 
+                style={styles.closeModalButton}
+                onPress={() => setShowReportModal(false)}
+              >
+                <Icon name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.reportSubtitle}>Select all that apply:</Text>
+            
+            <View style={styles.checkboxContainer}>
+              <Checkbox.Item
+                label="Inappropriate Content"
+                status={reportReasons.inappropriate ? 'checked' : 'unchecked'}
+                onPress={() => setReportReasons(prev => ({
+                  ...prev,
+                  inappropriate: !prev.inappropriate
+                }))}
+                style={styles.checkbox}
+                labelStyle={styles.checkboxLabel}
+              />
+              <Checkbox.Item
+                label="Spam"
+                status={reportReasons.spam ? 'checked' : 'unchecked'}
+                onPress={() => setReportReasons(prev => ({
+                  ...prev,
+                  spam: !prev.spam
+                }))}
+                style={styles.checkbox}
+                labelStyle={styles.checkboxLabel}
+              />
+              <Checkbox.Item
+                label="Offensive Behavior"
+                status={reportReasons.offensive ? 'checked' : 'unchecked'}
+                onPress={() => setReportReasons(prev => ({
+                  ...prev,
+                  offensive: !prev.offensive
+                }))}
+                style={styles.checkbox}
+                labelStyle={styles.checkboxLabel}
+              />
+              <Checkbox.Item
+                label="Potential Scam"
+                status={reportReasons.scam ? 'checked' : 'unchecked'}
+                onPress={() => setReportReasons(prev => ({
+                  ...prev,
+                  scam: !prev.scam
+                }))}
+                style={styles.checkbox}
+                labelStyle={styles.checkboxLabel}
+              />
+              <Checkbox.Item
+                label="Incorrect Information"
+                status={reportReasons.incorrect ? 'checked' : 'unchecked'}
+                onPress={() => setReportReasons(prev => ({
+                  ...prev,
+                  incorrect: !prev.incorrect
+                }))}
+                style={styles.checkbox}
+                labelStyle={styles.checkboxLabel}
+              />
+            </View>
+
+            <Text style={styles.reportSubtitle}>Additional Details:</Text>
+            <TextInput
+              style={styles.reportInput}
+              multiline
+              numberOfLines={3}
+              placeholder="Please provide any additional information..."
+              value={reportText}
+              onChangeText={setReportText}
+            />
+
+            <TouchableOpacity 
+              style={styles.submitReportButton}
+              onPress={handleReport}
+            >
+              <Text style={styles.submitReportText}>Submit Report</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1097,17 +1265,126 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  virtualTourButton: {
-    backgroundColor: "#3498db",
-    paddingVertical: 12,
-    borderRadius: 25,
-    alignItems: "center",
-    marginTop: 16,
+  reportButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    backgroundColor: 'white',
+    padding: 8,
+    borderRadius: 20,
+    zIndex: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  virtualTourButtonText: {
-    color: "#fff",
+  
+  reportModalContainer: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    height: '65%',
+    width: '100%',
+    position: 'absolute',
+    bottom: 0,
+    paddingHorizontal: 20,
+    paddingTop: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+  },
+
+  reportContent: {
+    flex: 1,
+  },
+
+  reportSubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 5,
+    marginTop: 5,
+  },
+
+  checkboxContainer: {
+    marginBottom: 10,
+  },
+
+  checkbox: {
+    padding: 0,
+    height: 40,
+  },
+
+  checkboxLabel: {
+    fontSize: 14,
+  },
+
+  reportInput: {
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 15,
+    height: 80,
+    textAlignVertical: 'top',
+  },
+
+  submitReportButton: {
+    backgroundColor: '#FF4444',
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+
+  submitReportText: {
+    color: 'white',
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: '600',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  chatSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 5,
+    marginVertical: 10,
+  },
+  chatText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: "#333",
   },
 });
 

@@ -147,6 +147,9 @@ const ShowProfile = ({ navigation, route }) => {
         {history.length > 0 ? (
           history.map(item => (
             <View key={item.id} style={styles.historyCard}>
+              <Text style={styles.detailText}>
+                Total Price: ${Number(item.totalPrice).toFixed(2)}
+              </Text>
               <Text style={styles.detailLabel}>
                 Booking Date: {new Date(item.bookingDate).toLocaleDateString()}
               </Text>
@@ -155,10 +158,6 @@ const ShowProfile = ({ navigation, route }) => {
               </Text>
               <Text style={styles.detailLabel}>
                 Check-out: {new Date(item.checkOutDate).toLocaleDateString()}
-              </Text>
-              <Text style={styles.detailText}>Status: {item.status}</Text>
-              <Text style={styles.detailText}>
-                Total Price: ${Number(item.totalPrice).toFixed(2)}
               </Text>
             </View>
           ))

@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   paymentButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#082631',
     padding: 12,
     borderRadius: 8,
     marginTop: 10,

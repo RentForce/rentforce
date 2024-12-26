@@ -625,10 +625,10 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    padding: 20,
+    padding:2,
   },
   searchBarContainer: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 3,
     paddingVertical: 10,
     marginTop: 12,
     marginBottom: 15,
@@ -826,9 +826,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 16,
     right: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
     padding: 8,
     borderRadius: 50,
+     backgroundColor: "rgba(255, 255, 255, 0.9)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
