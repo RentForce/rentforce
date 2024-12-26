@@ -58,7 +58,7 @@ const Navbar = ({ navigation, userId }) => {
         onPressOut={() => setPressedIcon(null)}
       >
         <NotificationIcon size={24} color="#fff" />
-        <Text style={styles.text}>Notifications</Text>
+        <Text style={[styles.text, styles.textSpacing]}>Ping</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    padding: 10,
+    padding: 12,
     backgroundColor: "#082631",
   },
   iconContainer: {
@@ -93,10 +93,14 @@ const styles = StyleSheet.create({
   },
   icon: {
     color: "#fff",
+    margin: 5,
   },
   text: {
     fontSize: 12,
     color: "#888",
+  },
+  textSpacing: {
+    marginTop: 5,
   },
 });
 
