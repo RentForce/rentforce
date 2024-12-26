@@ -40,6 +40,11 @@ CREATE TABLE `Booking` (
     `postId` INTEGER NOT NULL,
     `startDate` DATETIME(3) NOT NULL,
     `endDate` DATETIME(3) NOT NULL,
+    `guestName` VARCHAR(191) NULL,
+    `guestCountry` VARCHAR(191) NULL,
+    `propertyDetails` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
     `totalPrice` DOUBLE NOT NULL,
     `numberOfGuests` INTEGER NOT NULL,
     `status` VARCHAR(191) NOT NULL DEFAULT 'PENDING',
@@ -106,6 +111,7 @@ CREATE TABLE `History` (
     `totalPrice` DECIMAL(65, 30) NULL,
     `userId` INTEGER NOT NULL,
     `postId` INTEGER NOT NULL,
+    `numberOfGuests` INTEGER NULL,
 
     UNIQUE INDEX `History_id_key`(`id`),
     PRIMARY KEY (`id`)

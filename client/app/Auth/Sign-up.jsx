@@ -27,7 +27,8 @@ export default function SignUpScreen({ navigation }) {
     message: "",
     type: "",
   });
-
+const Apiurl = process.env.EXPO_PUBLIC_API_URL
+console.log(Apiurl , "url");
   const validatePassword = (password) => {
     const errors = [];
     const passwordChecking =
@@ -67,7 +68,8 @@ export default function SignUpScreen({ navigation }) {
     };
 
     try {
-      const response = await fetch(`${apiUrl}/user/signup`, {
+      
+      const response = await fetch(`${Apiurl}/user/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

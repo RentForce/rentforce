@@ -228,46 +228,99 @@ const BookingPage = ({ navigation, route }) => {
       setIsLoading(true);
       const totalCost = calculateTotalCost();
 
-      // First create the booking
+      // Get the logged-in user's ID from AsyncStorage
+      const userId = await AsyncStorage.getItem("userId");
+      const userData = await AsyncStorage.getItem("userData");
+      const user = userData ? JSON.parse(userData) : null;
+
+      if (!userId) {
+        throw new Error("User not logged in");
+      }
+
+      console.log('Submitting booking with data:', {
+        userId,
+        postId: post.id,
+        startDate: formData.dateRange.startDate,
+        endDate: formData.dateRange.endDate,
+        totalPrice: totalCost,
+        numberOfGuests: formData.numberOfGuests
+      });
+
+      // Create a more detailed booking record
       const bookingData = {
-        userId: parseInt(currentUserId),
+        userId: parseInt(userId),
         postId: post.id,
         startDate: formData.dateRange.startDate,
         endDate: formData.dateRange.endDate,
         totalPrice: totalCost,
         numberOfGuests: parseInt(formData.numberOfGuests),
+        status: 'pending',
+        bookingDate: new Date().toISOString(),
+        guestName: formData.name,
+        guestCountry: formData.country,
+        propertyDetails: {
+          title: post.title,
+          location: post.location,
+          pricePerNight: parseFloat(formData.paymentAmount)
+        }
       };
 
+      // Create the booking
       const bookingResponse = await axios.post(
         `${apiUrl}/posts/booking`,
         bookingData
       );
 
       if (bookingResponse.status === 201) {
-        // Send email notification
-        const emailData = {
-          guestEmail: "safouenemahfoudhi12@gmail.com", // Replace with actual guest email
-          hostEmail: "mejrisaif2020@gmail.com", // Replace with actual host email
-          houseDetails: {
-            title: post.title,
-            location: post.location,
-            checkIn: formData.dateRange.startDate,
-            checkOut: formData.dateRange.endDate,
-            guests: formData.numberOfGuests,
-          },
-          price: totalCost,
+        // Create history record
+        const historyData = {
+          userId: parseInt(userId),
+          postId: post.id,
+          bookingDate: new Date().toISOString(),
+          checkInDate: formData.dateRange.startDate,
+          checkOutDate: formData.dateRange.endDate,
+          totalPrice: totalCost,
+          status: 'pending',
+          numberOfGuests: parseInt(formData.numberOfGuests)
         };
 
-        await axios.post(`${apiUrl}/confirm-booking`, emailData);
+        console.log('History Data:', historyData);
+
+        // Create the history
+        await axios.post(`${apiUrl}/user/history`, historyData);
+
+        // Send email notification
+        try {
+          const emailData = {
+            guestEmail: user?.email || "",
+            hostEmail: "mejrisaif2020@gmail.com",
+            houseDetails: {
+              title: post.title,
+              location: post.location,
+              checkIn: formData.dateRange.startDate,
+              checkOut: formData.dateRange.endDate,
+              guests: formData.numberOfGuests,
+              guestName: formData.name,
+              guestCountry: formData.country,
+              pricePerNight: parseFloat(formData.paymentAmount),
+              totalPrice: totalCost
+            }
+          };
+
+          await axios.post(`${apiUrl}/confirm-booking`, emailData);
+        } catch (emailError) {
+          console.error("Error sending email:", emailError);
+          // Continue with the booking process even if email sending fails
+        }
 
         setShowConfirmModal(false);
         setShowSuccessModal(true);
       }
     } catch (error) {
-      console.error("Booking Error:", error);
+      console.error("Booking Error:", error.response?.data || error);
       Alert.alert(
         "Booking Error",
-        error.response?.data?.message || "Failed to confirm booking"
+        error.response?.data?.message || error.message || "Failed to confirm booking"
       );
     } finally {
       setIsLoading(false);
