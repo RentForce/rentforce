@@ -373,7 +373,7 @@ const Home = ({ navigation }) => {
           </Text>
           <Text style={styles.price}>
             <Text style={styles.priceValue}>${post.price}</Text>
-            <Text style={styles.priceText}> night</Text>
+            {/* <Text style={styles.priceText}>  night </Text> */}
           </Text>
         </View>
       </View>
@@ -631,7 +631,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 3,
     paddingVertical: 10,
     marginTop: 12,
-    marginBottom: 15,
+    marginBottom: 5,
   },
   searchBar: {
     flexDirection: "row",
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DDDDDD",
     borderRadius: 40,
-    padding: 12,
+    padding: 10,
     marginHorizontal: 4,
     shadowColor: "#000",
     shadowOffset: {
@@ -692,43 +692,43 @@ const styles = StyleSheet.create({
   categoryTabs: {
     flexDirection: "row",
     marginTop: 8,
-    paddingLeft: 4,
+    paddingLeft: 2,
   },
   tabContainer: {
     alignItems: "center",
-    marginRight: 32,
-    opacity: 0.9,
+    marginRight: 8, // hethiiii
+    marginTop: 10,
+    marginLeft : 10,
   },
   tab: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 4,
-    minWidth: 50,
-    backgroundColor: "#E0E0E0",
-    borderRadius: 10,
+    backgroundColor: "#1A3A4F",
+    borderRadius: 30,
+    width: 60,
+    height: 60,
+    marginBottom: 8,
   },
   tabIcon: {
-    color: "#717171",
-    marginBottom: 8,
-    // opacity: 0.7,
-    height: 24,
-    width: 24,
-  },
-  activeTabIcon: {
-    color: "#000000",
-    opacity: 1,
+    color: "#FFFFFF",
   },
   tabText: {
     fontSize: 10,
-    color: "#717171",
+    color: "white",
     textTransform: "capitalize",
     fontWeight: "400",
     textAlign: "center",
-    marginTop: 2,
+    marginTop: 4,
+  },
+  activeTab: {
+    transform: [{ scale: 1.2 }],
+  },
+  activeTabIcon: {
+    color: "#FFFFFF",
   },
   activeTabText: {
     color: "#FFFFFF",
-    fontWeight: "600",
+    fontWeight: "bold",
   },
   contentContainer: {
     flex: 1,
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000000",
     width: "100%",
     marginTop: 8,
-    borderRadius: 1,
+    borderRadius: 31,
   },
   navbar: {
     position: "absolute",
@@ -757,7 +757,7 @@ const styles = StyleSheet.create({
   },
   postContainer: {
     marginBottom: 24,
-    backgroundColor: "#fff",
+    backgroundColor: "#082631",
     borderRadius: 15,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -776,13 +776,13 @@ const styles = StyleSheet.create({
   },
   imageOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.02)",
+    // backgroundColor: "rgba(0, 0, 0, 0.02)",
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
   },
   postDetails: {
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: "#082631",
   },
   postHeader: {
     flexDirection: "row",
@@ -793,7 +793,7 @@ const styles = StyleSheet.create({
   postLocation: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#222222",
+    color: "white",
     flex: 1,
   },
   ratingContainer: {
@@ -803,12 +803,12 @@ const styles = StyleSheet.create({
   rating: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#222222",
+    color: "white",
     marginLeft: 4,
   },
   title: {
     fontSize: 14,
-    color: "#717171",
+    color: "white",
     marginBottom: 8,
   },
   price: {
@@ -817,10 +817,11 @@ const styles = StyleSheet.create({
   },
   priceValue: {
     fontWeight: "600",
-    color: "#222222",
+    color: "white",
   },
   priceText: {
-    color: "#222222",
+    color: "white",
+    
   },
   favoriteIcon: {
     position: "absolute",
@@ -849,28 +850,6 @@ const styles = StyleSheet.create({
     color: "#717171",
     fontSize: 14,
     fontWeight: "500",
-  },
-  activeTab: {
-    // backgroundColor: "grey",
-    transform: [{ scale: 1.05 }],
-  },
-  imageGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    padding: 8,
-  },
-  largeImage: {
-    width: "100%",
-    height: 380,
-  },
-  mediumImage: {
-    width: "48%",
-    height: 280,
-  },
-  smallImage: {
-    width: "48%",
-    height: 240,
   },
   modalContainer: {
     flex: 1,
