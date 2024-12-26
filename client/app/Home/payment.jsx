@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { View, Button, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
 import { StripeProvider, useStripe } from '@stripe/stripe-react-native';
+import axios from 'axios';
 
-export default function App() {
+export default function Payment({ route, navigation }) {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [isPaymentSheetInitialized, setPaymentSheetInitialized] = useState(false);
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  
+  // Get booking details from route params
+  const { amount, bookingId } = route.params || {};
 
   useEffect(() => {
     async function createPaymentIntent() {
@@ -15,7 +19,10 @@ export default function App() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ amount: 5000 }), 
+          body: JSON.stringify({ 
+            amount: amount * 100, // Convert to cents
+            bookingId: bookingId // Pass bookingId to backend
+          }), 
         });
 
         if (!response.ok) {
@@ -41,8 +48,10 @@ export default function App() {
       }
     }
 
-    createPaymentIntent();
-  }, [initPaymentSheet]);
+    if (amount && bookingId) {
+      createPaymentIntent();
+    }
+  }, [amount, bookingId, initPaymentSheet]);
 
   const handlePayment = async () => {
     if (!isPaymentSheetInitialized) {
@@ -54,7 +63,16 @@ export default function App() {
     if (error) {
       Alert.alert('Payment Failed', error.message);
     } else {
-      Alert.alert('Success', 'Payment successful!');
+      Alert.alert(
+        'Success', 
+        'Payment successful!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('notifications')
+          }
+        ]
+      );
     }
   };
 
@@ -63,7 +81,7 @@ export default function App() {
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
           <Text style={styles.title}>Complete Your Payment</Text>
-          <Text style={styles.subtitle}>Total Amount: $50.00</Text>
+          <Text style={styles.subtitle}>Total Amount: ${amount?.toFixed(2)}</Text>
           
           <TouchableOpacity 
             style={[

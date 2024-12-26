@@ -224,6 +224,15 @@ const ProfileScreen = ({ navigation, route }) => {
       />
       
       <ScrollView style={styles.container}>
+        <View style={styles.headerContainer}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#F1EFEF" />
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.profileHeader}>
           <View style={styles.imageContainer}>
             <Image
@@ -323,30 +332,30 @@ const ProfileScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f4f4f4",
+    backgroundColor: '#F1EFEF',
   },
   centeredContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f4f4f4",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F1EFEF',
   },
   errorText: {
-    color: "red",
+    color: '#082631',
     marginBottom: 20,
     fontSize: 16,
   },
   retryText: {
-    color: "blue",
+    color: '#082631',
     fontSize: 16,
   },
   profileHeader: {
-    alignItems: "center",
+    alignItems: 'center',
     padding: 20,
-    backgroundColor: "white",
+    backgroundColor: '#F1EFEF',
   },
   imageContainer: {
-    position: "relative",
+    position: 'relative',
     marginBottom: 15,
   },
   profileImage: {
@@ -354,101 +363,121 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 75,
     borderWidth: 2,
-    borderColor: "#e1e1e1",
+    borderColor: '#082631',
   },
   editImageIcon: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: '#082631',
     borderRadius: 20,
     padding: 8,
   },
   profileName: {
     fontSize: 22,
-    fontWeight: "bold",
+    fontWeight: 'bold',
+    color: '#082631',
     marginTop: 10,
   },
   profileEmail: {
     fontSize: 16,
-    color: "gray",
+    color: '#082631',
   },
   editForm: {
-    width: "100%",
+    width: '100%',
     paddingHorizontal: 20,
   },
   editInput: {
     borderWidth: 1,
-    borderColor: "#e1e1e1",
+    borderColor: '#082631',
     padding: 10,
     marginVertical: 10,
     borderRadius: 5,
+    backgroundColor: '#F1EFEF',
+    color: '#082631',
   },
   actionContainer: {
     paddingHorizontal: 20,
     marginTop: 20,
   },
   editProfileButton: {
-    backgroundColor: "#333333",
+    backgroundColor: '#082631',
     padding: 15,
     borderRadius: 5,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 10,
   },
   editProfileButtonText: {
-    color: "#FFFFFF",
+    color: '#F1EFEF',
     marginLeft: 10,
   },
   logoutButton: {
-    backgroundColor: "#FFFEFE",
+    backgroundColor: '#F1EFEF',
     padding: 15,
     borderRadius: 5,
-    alignItems: "center",
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#082631',
   },
   logoutButtonText: {
-    color: "black",
-    fontWeight: "bold",
+    color: '#082631',
+    fontWeight: 'bold',
   },
   editButtonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 15,
   },
   saveButton: {
-    backgroundColor: "#333333",
+    backgroundColor: '#082631',
     padding: 10,
     borderRadius: 5,
     flex: 1,
     marginRight: 10,
   },
   saveButtonText: {
-    color: "#FFFFFF",
-    textAlign: "center",
+    color: '#F1EFEF',
+    textAlign: 'center',
   },
   cancelButton: {
-    backgroundColor: "#A9A9A9",
+    backgroundColor: '#F1EFEF',
     padding: 10,
     borderRadius: 5,
     flex: 1,
+    borderWidth: 1,
+    borderColor: '#082631',
   },
   cancelButtonText: {
-    color: "#000000",
-    textAlign: "center",
+    color: '#082631',
+    textAlign: 'center',
   },
   bioInput: {
-    borderColor: "#ccc",
+    borderColor: '#082631',
     borderWidth: 1,
     borderRadius: 5,
     padding: 10,
     marginVertical: 10,
     height: 100,
+    backgroundColor: '#F1EFEF',
+    color: '#082631',
   },
   profileBio: {
     fontSize: 16,
-    color: "#666",
+    color: '#082631',
     marginVertical: 5,
+  },
+  headerContainer: {
+    paddingTop: 35,
+    paddingHorizontal: 20,
+    paddingBottom: 0,
+  },
+  backButton: {
+    backgroundColor: '#082631',
+    borderRadius: 20,
+    padding: 8,
+    alignSelf: 'flex-start',
   },
 });
 

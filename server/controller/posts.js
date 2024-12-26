@@ -465,7 +465,9 @@ module.exports = {
   createBooking,
 
   getPostBookings,
-  
+
+  getBookedDates,
+  checkDateAvailability,
   saveImage,
   saveLocation,
   checkUserBooking,
@@ -473,5 +475,5 @@ module.exports = {
   checkDateAvailability,
   getPostComments,
   addComment,
-  authenticateToken
-}
+  authenticateToken,
+};

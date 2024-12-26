@@ -113,41 +113,36 @@ const ProfileScreen = ({ navigation, route }) => {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => navigation.navigate('PaymentHistory')}
+          >
             <View style={styles.settingContent}>
               <Ionicons name="card" size={20} color="#333" />
               <Text style={styles.settingText}>Payments and payouts</Text>
+              <Ionicons name="chevron-forward" size={20} color="#333" />
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => navigation.navigate('AboutUs')}
+          >
             <View style={styles.settingContent}>
-              <Ionicons name="notifications" size={20} color="#333" />
-              <Text style={styles.settingText}>Notifications</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingItem}>
-            <View style={styles.settingContent}>
-              <Ionicons name="lock-closed" size={20} color="#333" />
-              <Text style={styles.settingText}>Privacy and sharing</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingItem}>
-            <View style={styles.settingContent}>
-              <Ionicons name="briefcase" size={20} color="#333" />
-              <Text style={styles.settingText}>Travel for work</Text>
+              <Ionicons name="information-circle" size={20} color="#333" />
+              <Text style={styles.settingText}>About Us</Text>
+              <Ionicons name="chevron-forward" size={20} color="#333" />
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.settingItem}
-            onPress={() => navigation.navigate("CreatePost")} // Navigate to CreatePost
+            onPress={() => navigation.navigate("CreatePost")}
           >
             <View style={styles.settingContent}>
               <Ionicons name="create" size={20} color="#333" />
               <Text style={styles.settingText}>Create Post</Text>
+              <Ionicons name="chevron-forward" size={20} color="#333" />
             </View>
           </TouchableOpacity>
 
