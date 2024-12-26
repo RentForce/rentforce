@@ -28,6 +28,7 @@ model User {
   messages       Message[]
   Booking        Booking[]
   comments       Comment[]
+  reports        Report[]
 
 }
 
@@ -53,6 +54,8 @@ model Post {
   cartPosts          CartPost[]
   map                Map?
   comments           Comment[]
+  reports        Report[]
+
 }
 
 model Booking {
@@ -203,6 +206,20 @@ model Comment {
   post      Post     @relation(fields: [postId], references: [id])
 }
 
+model Report {
+  id        Int      @id @default(autoincrement())
+  reasons   String   // Will store JSON string of selected reasons
+  details   String?  // Additional details text
+  status    ReportStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  
+  // Foreign keys and relations
+  userId    Int      // User who reported
+  postId    Int      // Post being reported
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+}
+
 enum UserType {
   host
   guest
@@ -246,4 +263,11 @@ enum CallStatus {
   MISSED
   REJECTED
   FAILED
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
 }

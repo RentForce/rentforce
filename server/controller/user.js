@@ -54,10 +54,10 @@ const validatePassword = (password) => {
 
 const signup = async (req, res) => {
   try {
-    const { firstName, lastName, email, image, password } = req.body;
+    const { firstName, lastName, email, image, password, phoneNumber } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    if (!email || !password || !firstName || !lastName) {
+    if (!email || !password || !firstName || !lastName || !phoneNumber) {
       return res.status(400).send("Missing required fields");
     }
 
@@ -85,6 +85,7 @@ const signup = async (req, res) => {
         password: hashedPassword,
         firstName: firstName,
         lastName: lastName,
+        phoneNumber: phoneNumber,
         image: defaultAvatarUrl,
       },
     });
@@ -96,6 +97,7 @@ const signup = async (req, res) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        phoneNumber: user.phoneNumber,
         image: user.image,
       },
     });
