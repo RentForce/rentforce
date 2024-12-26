@@ -1162,7 +1162,7 @@ const styles = StyleSheet.create({
     borderColor: "#2D5A27",
   },
   confirmButton: {
-    backgroundColor: "#2D5A27",
+    backgroundColor: "#2C3E50", 
   },
   cancelButtonText: {
     color: "#2D5A27",
@@ -1224,7 +1224,7 @@ const styles = StyleSheet.create({
     color: "#1A3C40",
   },
   doneButton: {
-    backgroundColor: "#2D5A27",
+    backgroundColor: "#2C3E50",
     padding: 15,
     borderRadius: 10,
     width: "100%",
