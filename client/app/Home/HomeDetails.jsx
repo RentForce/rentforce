@@ -21,6 +21,7 @@ import ImageZoom from "react-native-image-pan-zoom";
 import MapView, { Marker } from "react-native-maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { WebView } from "react-native-webview";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -37,7 +38,7 @@ const HomeDetails = ({ route, navigation }) => {
   const [comments, setComments] = useState([]);
   const [showAllComments, setShowAllComments] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   const [rating, setRating] = useState(0);
   const [userCanComment, setUserCanComment] = useState(false);
   const [tourModalVisible, setTourModalVisible] = useState(false);
@@ -54,27 +55,31 @@ const HomeDetails = ({ route, navigation }) => {
     const fetchData = async () => {
       try {
         // Fetch comments
-        const commentsResponse = await axios.get(`${apiUrl}/posts/${post.id}/comments`);
-        console.log('Comments data:', commentsResponse.data); // Debug log
+        const commentsResponse = await axios.get(
+          `${apiUrl}/posts/${post.id}/comments`
+        );
+        console.log("Comments data:", commentsResponse.data); // Debug log
         setComments(commentsResponse.data);
 
         // Fetch images
-        const imagesResponse = await axios.get(`${apiUrl}/posts/images/${post.id}`);
+        const imagesResponse = await axios.get(
+          `${apiUrl}/posts/images/${post.id}`
+        );
         setImages(imagesResponse.data);
 
         // Add new check for user booking status
         const token = await AsyncStorage.getItem("userToken");
         if (token) {
-          const decodedToken = JSON.parse(atob(token.split('.')[1]));
+          const decodedToken = JSON.parse(atob(token.split(".")[1]));
           const userId = decodedToken.id;
-          
+
           const bookingResponse = await axios.get(
             `${apiUrl}/posts/${post.id}/check-booking/${userId}`,
             {
-              headers: { Authorization: `Bearer ${token}` }
+              headers: { Authorization: `Bearer ${token}` },
             }
           );
-          
+
           setUserCanComment(bookingResponse.data.hasBooked);
         }
 
@@ -90,8 +95,8 @@ const HomeDetails = ({ route, navigation }) => {
   }, [post.id]);
 
   useEffect(() => {
-    console.log('showAllComments state:', showAllComments);
-    console.log('Current comments:', comments);
+    console.log("showAllComments state:", showAllComments);
+    console.log("Current comments:", comments);
   }, [showAllComments, comments]);
 
   const handleImagePress = (image) => {
@@ -104,7 +109,7 @@ const HomeDetails = ({ route, navigation }) => {
   };
 
   const handleSeeMorePress = () => {
-    console.log('See more button pressed');
+    console.log("See more button pressed");
     setShowAllComments(true);
   };
 
@@ -122,13 +127,13 @@ const HomeDetails = ({ route, navigation }) => {
           rating: rating,
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       if (response.data) {
-        setComments(prevComments => [response.data, ...prevComments]);
-        setNewComment('');
+        setComments((prevComments) => [response.data, ...prevComments]);
+        setNewComment("");
         setRating(0);
         setShowCommentModal(false);
       }
@@ -158,7 +163,9 @@ const HomeDetails = ({ route, navigation }) => {
         useNativeDriver: false,
         listener: (event) => {
           const slideSize = SCREEN_WIDTH;
-          const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
+          const index = Math.round(
+            event.nativeEvent.contentOffset.x / slideSize
+          );
           setCurrentIndex(index);
         },
       }
@@ -389,49 +396,65 @@ const HomeDetails = ({ route, navigation }) => {
           </View>
 
           <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.chatSection}
+              onPress={() => navigation.navigate("ChatSelectionScreen")}
+            >
+              <MaterialCommunityIcons name="chat" size={24} color="#666666" />
+              <Text style={styles.chatText}>Chat with the Owner</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.section}>
             <Text style={styles.sectionTitle}>Guest Reviews</Text>
             {Array.isArray(comments) && comments.length > 0 ? (
               <>
-                {comments.slice(0, COMMENTS_PREVIEW_COUNT).map((comment, index) => (
-                  <View key={index} style={styles.review}>
-                    <View style={styles.reviewHeader}>
-                      <Image
-                        source={{
-                          uri: comment.user?.image || 'https://www.pngkey.com/png/full/72-729716_user-avatar-png-graphic-free-download-icon.png'
-                        }}
-                        style={styles.reviewerImage}
-                      />
-                      <View style={styles.reviewerInfo}>
-                        <Text style={styles.reviewerName}>
-                          {comment.user?.firstName} {comment.user?.lastName}
-                        </Text>
-                        <Text style={styles.reviewDate}>
-                          {new Date(comment.createdAt).toLocaleDateString()}
-                        </Text>
-                      </View>
-                      {comment.rating && (
-                        <View style={styles.ratingContainer}>
-                          {[...Array(5)].map((_, i) => (
-                            <Icon
-                              key={i}
-                              name="star"
-                              size={16}
-                              color={i < comment.rating ? "#FFD700" : "#D3D3D3"}
-                            />
-                          ))}
+                {comments
+                  .slice(0, COMMENTS_PREVIEW_COUNT)
+                  .map((comment, index) => (
+                    <View key={index} style={styles.review}>
+                      <View style={styles.reviewHeader}>
+                        <Image
+                          source={{
+                            uri:
+                              comment.user?.image ||
+                              "https://www.pngkey.com/png/full/72-729716_user-avatar-png-graphic-free-download-icon.png",
+                          }}
+                          style={styles.reviewerImage}
+                        />
+                        <View style={styles.reviewerInfo}>
+                          <Text style={styles.reviewerName}>
+                            {comment.user?.firstName} {comment.user?.lastName}
+                          </Text>
+                          <Text style={styles.reviewDate}>
+                            {new Date(comment.createdAt).toLocaleDateString()}
+                          </Text>
                         </View>
+                        {comment.rating && (
+                          <View style={styles.ratingContainer}>
+                            {[...Array(5)].map((_, i) => (
+                              <Icon
+                                key={i}
+                                name="star"
+                                size={16}
+                                color={
+                                  i < comment.rating ? "#FFD700" : "#D3D3D3"
+                                }
+                              />
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.reviewText}>{comment.content}</Text>
+                      {comments.length > COMMENTS_PREVIEW_COUNT && (
+                        <TouchableOpacity onPress={handleSeeMorePress}>
+                          <Text style={styles.seeAllReviews}>
+                            See all {comments.length} reviews
+                          </Text>
+                        </TouchableOpacity>
                       )}
                     </View>
-                    <Text style={styles.reviewText}>{comment.content}</Text>
-                    {comments.length > COMMENTS_PREVIEW_COUNT && (
-                      <TouchableOpacity onPress={handleSeeMorePress}>
-                        <Text style={styles.seeAllReviews}>
-                          See all {comments.length} reviews
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                ))}
+                  ))}
               </>
             ) : (
               <Text style={styles.noReviews}>No reviews yet</Text>
@@ -450,7 +473,7 @@ const HomeDetails = ({ route, navigation }) => {
       </ScrollView>
       <Navbar navigation={navigation} style={styles.navbar} />
       <ImageModal />
-      
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -460,16 +483,18 @@ const HomeDetails = ({ route, navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.commentsModalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>All Reviews ({comments.length})</Text>
-              <TouchableOpacity 
+              <Text style={styles.modalTitle}>
+                All Reviews ({comments.length})
+              </Text>
+              <TouchableOpacity
                 style={styles.closeModalButton}
                 onPress={() => setShowAllComments(false)}
               >
                 <Icon name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            
-            <ScrollView 
+
+            <ScrollView
               style={styles.modalCommentsList}
               contentContainerStyle={styles.modalCommentsContent}
               showsVerticalScrollIndicator={false}
@@ -480,8 +505,10 @@ const HomeDetails = ({ route, navigation }) => {
                     <View style={styles.reviewHeader}>
                       <View style={styles.reviewerImageContainer}>
                         <Image
-                          source={{ 
-                            uri: comment.user?.image || 'https://www.pngkey.com/png/full/72-729716_user-avatar-png-graphic-free-download-icon.png' 
+                          source={{
+                            uri:
+                              comment.user?.image ||
+                              "https://www.pngkey.com/png/full/72-729716_user-avatar-png-graphic-free-download-icon.png",
                           }}
                           style={styles.reviewerImage}
                         />
@@ -538,7 +565,7 @@ const HomeDetails = ({ route, navigation }) => {
           <View style={styles.commentModalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add Review</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.closeModalButton}
                 onPress={() => setShowCommentModal(false)}
               >
@@ -550,10 +577,7 @@ const HomeDetails = ({ route, navigation }) => {
               <Text style={styles.ratingLabel}>Your Rating:</Text>
               <View style={styles.starsContainer}>
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <TouchableOpacity
-                    key={star}
-                    onPress={() => setRating(star)}
-                  >
+                  <TouchableOpacity key={star} onPress={() => setRating(star)}>
                     <Icon
                       name="star"
                       size={32}
@@ -587,8 +611,6 @@ const HomeDetails = ({ route, navigation }) => {
     </View>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   pageContainer: {
@@ -635,8 +657,8 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.95)",
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   slideContainer: {
     width: SCREEN_WIDTH,
@@ -815,11 +837,11 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   review: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 15,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -828,15 +850,15 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 2,
     borderWidth: 1,
-    borderColor: '#F0F2F5',
+    borderColor: "#F0F2F5",
   },
   reviewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
   },
   reviewerImageContainer: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -850,7 +872,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: "#fff",
   },
   reviewerInfo: {
     flex: 1,
@@ -858,37 +880,37 @@ const styles = StyleSheet.create({
   },
   reviewerName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2C3E50',
+    fontWeight: "600",
+    color: "#2C3E50",
     marginBottom: 2,
   },
   reviewDate: {
     fontSize: 13,
-    color: '#95A5A6',
+    color: "#95A5A6",
   },
   ratingContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#F8F9FA',
+    flexDirection: "row",
+    backgroundColor: "#F8F9FA",
     padding: 6,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   starIcon: {
     marginHorizontal: 1,
   },
   reviewText: {
     fontSize: 15,
-    color: '#34495E',
+    color: "#34495E",
     lineHeight: 22,
     letterSpacing: 0.3,
   },
   noReviews: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 16,
-    color: '#95A5A6',
-    fontStyle: 'italic',
+    color: "#95A5A6",
+    fontStyle: "italic",
     marginTop: 20,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     padding: 20,
     borderRadius: 12,
   },
@@ -974,16 +996,16 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "flex-end",
   },
   commentsModalContainer: {
-    backgroundColor: '#fff',
-    height: '85%',
+    backgroundColor: "#fff",
+    height: "85%",
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: -4,
@@ -993,24 +1015,24 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingBottom: 15,
     marginBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: "#E5E5E5",
   },
   modalTitle: {
     fontSize: 22,
-    fontWeight: '700',
-    color: '#2C3E50',
+    fontWeight: "700",
+    color: "#2C3E50",
     letterSpacing: 0.3,
   },
   closeModalButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: '#F0F2F5',
+    backgroundColor: "#F0F2F5",
   },
   modalCommentsList: {
     flex: 1,
@@ -1019,23 +1041,23 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   seeAllReviews: {
-    color: '#2C3E50',
+    color: "#2C3E50",
     fontSize: 14,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
     marginTop: 10,
   },
   addCommentButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 80,
     right: 20,
-    backgroundColor: '#2C3E50',
+    backgroundColor: "#2C3E50",
     width: 56,
     height: 56,
     borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -1044,12 +1066,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   commentModalContainer: {
-    backgroundColor: '#fff',
-    height: '60%',
+    backgroundColor: "#fff",
+    height: "60%",
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: -4,
@@ -1063,39 +1085,39 @@ const styles = StyleSheet.create({
   },
   ratingLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 10,
-    color: '#2C3E50',
+    color: "#2C3E50",
   },
   starsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   },
   starIcon: {
     marginHorizontal: 4,
   },
   commentInput: {
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: "#E5E5E5",
     borderRadius: 12,
     padding: 15,
     fontSize: 16,
     height: 120,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
     marginBottom: 20,
   },
   submitButton: {
-    backgroundColor: '#2C3E50',
+    backgroundColor: "#2C3E50",
     padding: 15,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 10,
   },
   submitButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   virtualTourButton: {
     backgroundColor: "#3498db",
@@ -1108,6 +1130,19 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  chatSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 5,
+    marginVertical: 10,
+  },
+  chatText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: "#333",
   },
 });
 

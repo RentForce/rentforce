@@ -7,6 +7,8 @@ const {
   getPostBookings,
   getBookedDates,
   checkDateAvailability,
+  saveImage,
+  saveLocation,
   getPostComments,
   authenticateToken,
   checkUserBooking,
@@ -26,5 +28,9 @@ router.post('/:postId/comments', authenticateToken, addComment);
 
 router.get("/:postId/booked-dates", getBookedDates);
 router.get("/check-availability", checkDateAvailability);
+
+router.post("/posts/images", saveImage);
+router.post("/posts/location", saveLocation);
+
 router.get('/:postId/comments', getPostComments);
 module.exports = router;
