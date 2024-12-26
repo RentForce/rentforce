@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     color: "#888",
   },
   textSpacing: {
-    marginTop: 5,
+    marginTop: 8,
   },
 });
 
