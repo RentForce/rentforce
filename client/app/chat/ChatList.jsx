@@ -15,7 +15,6 @@ const ChatListScreen = () => {
   const navigation = useNavigation();
   const [chats, setChats] = useState([])
   const [currentUserId, setCurrentUserId] = useState(null);
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   useEffect(() => {
     const fetchCurrentUserAndChats = async () => {

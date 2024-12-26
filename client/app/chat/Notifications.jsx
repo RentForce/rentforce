@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initSocket, addSocketListener, removeSocketListener } from './Socket';
+import api from '../api/axios';
 
 const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [userId, setUserId] = useState(null);
+  const [socket, setSocket] = useState(null);
 
   const fetchUnreadCount = async (currentUserId) => {
     try {
@@ -16,8 +18,7 @@ export const NotificationProvider = ({ children }) => {
       }
   
       console.log('Fetching unread count for user:', currentUserId);
-      console.log('API URL:', `${process.env.EXPO_PUBLIC_API_URL}/api/chat/unread/${currentUserId}`);
-  
+      
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/chat/unread/${currentUserId}`,
         {
@@ -39,7 +40,6 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount(data.count || 0);
     } catch (error) {
       console.error('Error fetching unread count:', error);
-      // Log more details about the error
       if (error.response) {
         console.error('Response:', await error.response.text());
       }
@@ -73,6 +73,7 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (!userId) return;
 
+    // Handler for new messages
     const handleNewMessage = (data) => {
       console.log('New message received:', data);
       if (data.receiverId === userId) {
@@ -80,17 +81,29 @@ export const NotificationProvider = ({ children }) => {
       }
     };
 
-    addSocketListener('new message', handleNewMessage);
+    // Handler for read messages
+    const handleMessagesRead = (data) => {
+      console.log('Messages read event received:', data);
+      if (data && typeof data.count === 'number') {
+        setUnreadCount(prev => Math.max(0, prev - data.count));
+      }
+    };
 
+    // Add socket listeners
+    addSocketListener('new message', handleNewMessage);
+    addSocketListener('messages_read', handleMessagesRead);
+
+    // Cleanup function
     return () => {
       removeSocketListener('new message', handleNewMessage);
+      removeSocketListener('messages_read', handleMessagesRead);
     };
   }, [userId]);
 
   const markChatAsRead = async (chatId) => {
-    if (!userId || !chatId) return;
-
     try {
+      if (!userId) return;
+      
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/chat/messages/read/${chatId}/${userId}`,
         {
@@ -105,8 +118,13 @@ export const NotificationProvider = ({ children }) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // Refresh unread count after marking as read
-      await fetchUnreadCount(userId);
+      const data = await response.json();
+      console.log('Mark as read response:', data);
+
+      // If the server doesn't emit a socket event, we can update the count here
+      if (data.readCount) {
+        setUnreadCount(prev => Math.max(0, prev - data.readCount));
+      }
     } catch (error) {
       console.error('Error marking chat as read:', error);
     }

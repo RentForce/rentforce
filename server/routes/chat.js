@@ -17,7 +17,8 @@ markChatAsRead,
   handleFileUpload,
   getUnreadCount,
   getUnreadMessages,
-  markMessagesAsRead
+  markMessagesAsRead,
+  getAllUsersWithChats
 } = require('../controller/chat');
 
 // Remove local upload directories since we're using Cloudinary
@@ -28,7 +29,7 @@ router.post('/create', authMiddleware, createChat);
 router.post('/message', authMiddleware, sendMessage);
 router.get('/user/:userId', authMiddleware, getUserChats);
 router.get('/messages/:chatId', authMiddleware, getChatMessages);
-router.get('/users', authMiddleware, getAllUsers);
+router.get('/users', authMiddleware, getAllUsersWithChats);
 
 // File upload routes
 // router.post('/upload/image', authMiddleware, handleImageUpload);
@@ -45,7 +46,7 @@ router.post('/push-token', authMiddleware, updatePushToken);
 //router.get('/unread/:userId', authMiddleware, getUnreadMessages);
 
 // Mark messages as read
-//router.put('/:chatId/read/:userId', markMessagesAsRead);
+router.put('/:chatId/read/:userId', markMessagesAsRead);
 router.get('/unread/:userId', getUnreadMessages);
 router.put('/messages/read/:chatId/:userId', markMessagesAsRead);
 

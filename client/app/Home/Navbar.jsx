@@ -28,7 +28,6 @@ const Navbar = ({ navigation }) => {
     }
   };
 
-  // Debug log
   useEffect(() => {
     console.log('Navbar unread count:', unreadCount);
   }, [unreadCount]);
@@ -69,12 +68,7 @@ const Navbar = ({ navigation }) => {
         <Text style={styles.text}>Profile</Text>
       </TouchableOpacity>
       
-      {/* Debug View - Remove in production */}
-      <View style={styles.debug}>
-        <Text style={styles.debugText}>
-          Unread: {unreadCount}
-        </Text>
-      </View>
+     
     </View>
   );
 };
@@ -120,19 +114,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     paddingHorizontal: 4,
   },
-  debug: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 5,
-    borderRadius: 5,
-    margin: 10,
-  },
-  debugText: {
-    color: '#fff',
-    fontSize: 12,
-  }
+ 
 });
 
 export default Navbar;

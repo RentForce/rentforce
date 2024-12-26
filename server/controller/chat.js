@@ -37,28 +37,60 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-const getAllUsers = async (req, res) => {
+const getAllUsersWithChats = async (req, res) => {
   try {
-    console.log('Request user:', req.user)
+    console.log('Request user:', req.user);
 
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const users = await prisma.user.findMany({
+    // Find all chats where the current user is either sender or receiver
+    const chats = await prisma.chat.findMany({
       where: {
-        id: {
-          not: req.user.id
-        }
+        OR: [
+          { userId: req.user.id },
+          { receiverId: req.user.id }
+        ]
       },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        receiver: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
       }
     });
-    console.log('Fetched Users:', users);
+
+    // Extract unique users from chats
+    const usersMap = new Map();
+
+    chats.forEach(chat => {
+      // If current user is the sender, add receiver to map
+      if (chat.userId === req.user.id && chat.receiver) {
+        usersMap.set(chat.receiver.id, chat.receiver);
+      }
+      // If current user is the receiver, add sender to map
+      if (chat.receiverId === req.user.id && chat.user) {
+        usersMap.set(chat.user.id, chat.user);
+      }
+    });
+
+    // Convert map to array
+    const users = Array.from(usersMap.values());
+    
+    console.log('Fetched Users with chats:', users);
 
     res.json(users);
   } catch (error) {
@@ -66,7 +98,6 @@ const getAllUsers = async (req, res) => {
     res.status(500).json({ message: 'Error fetching users' });
   }
 };
-
 const createChat = async (req, res) => {
   const { userId, receiverId } = req.body
 
@@ -229,8 +260,8 @@ const sendMessage = async (req, res) => {
         type: 'TEXT'
       },
       include: {
-        user: true,
-        chat: true
+        chat: true,
+        user: true
       }
     });
 
@@ -790,23 +821,45 @@ const markMessagesAsRead = async (req, res) => {
     const { chatId, userId } = req.params;
     console.log('Marking messages as read:', { chatId, userId });
 
-    // Update all unread messages in the chat where the current user is the receiver
+    // First, count how many messages we're marking as read
+    const messagesToMarkRead = await prisma.message.count({
+      where: {
+        chatId: parseInt(chatId),
+        chat: {
+          receiverId: parseInt(userId)
+        },
+        isRead: false
+      }
+    });
+
+    console.log('Number of messages to mark as read:', messagesToMarkRead);
+
+    // Update the messages
     const result = await prisma.message.updateMany({
       where: {
         chatId: parseInt(chatId),
-        isRead: false,
-        userId: { not: parseInt(userId) } // Only mark messages from other users as read
+        chat: {
+          receiverId: parseInt(userId)
+        },
+        isRead: false
       },
       data: {
         isRead: true
       }
     });
 
-    console.log('Messages marked as read:', result);
+    // Get the socket instance
+    const io = req.app.get('io');
+    if (io) {
+      console.log('Emitting message read count:', messagesToMarkRead);
+      io.to(`user_${userId}`).emit('messages_read', {
+        count: messagesToMarkRead
+      });
+    }
 
     return res.status(200).json({ 
       message: 'Messages marked as read',
-      updatedCount: result.count,
+      readCount: messagesToMarkRead,
       success: true 
     });
   } catch (error) {
@@ -818,6 +871,7 @@ const markMessagesAsRead = async (req, res) => {
   }
 };
 
+
 module.exports = {
   handleFileUpload,
   //handleVoiceMessage,
@@ -826,7 +880,7 @@ module.exports = {
   sendMessage,
   getUserChats,
   getChatMessages,
-  getAllUsers,
+  getAllUsersWithChats,
   authMiddleware,
   markChatAsRead
 ,updatePushToken,

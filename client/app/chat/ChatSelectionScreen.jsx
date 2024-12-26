@@ -35,7 +35,7 @@ const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 // Replace with your actual IP address and port
 const BASE_URL = 'http://192.168.103.4:5000';
 
-export const api = axios.create({
+const api = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,
   headers: {
@@ -98,6 +98,7 @@ const UserSelectionScreen = ({ navigation ,onSendMessage, onLanguageChange }) =>
     const [isUploading, setIsUploading] = useState(false);
     const [imageModalVisible, setImageModalVisible] = useState(false);
     const [selectedModalImage, setSelectedModalImage] = useState(null);
+    const { markChatAsRead } = useNotifications(); // Move this to component level
 
     const socketRef = useRef(null);
     const isMountedRef = useRef(true);
@@ -504,17 +505,17 @@ const handleVoiceMessage = async (audioUri) => {
                 const currentUserId = await AsyncStorage.getItem('userId');
                 const currentUserString = await AsyncStorage.getItem('currentUser');
                 const currentUserData = JSON.parse(currentUserString);
-
+    
                 const response = await axios.get(`${apiUrl}/api/chat/users`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
                 });
-
+    
                 const filteredUsers = response.data.filter(
                     user => user.id.toString() !== currentUserId
                 );
-
+    
                 if (isMountedRef.current) {
                     setUsers(filteredUsers);
                     setCurrentUser(currentUserData);
@@ -530,13 +531,17 @@ const handleVoiceMessage = async (audioUri) => {
         };
         fetchUsersAndCurrentUser();
     }, []);
-
+    useEffect(() => {
+        if (selectedUser?.chatId) {
+            markChatAsRead(selectedUser.chatId);
+        }
+    }, [selectedUser?.chatId]);
     // Initialize chat
     const initiateChat = async (receiver) => {
         try {
             const token = await AsyncStorage.getItem('token');
             const userId = await AsyncStorage.getItem('userId');
-
+    
             const response = await axios.post(
                 `${apiUrl}/api/chat/create`,
                 {
@@ -550,9 +555,12 @@ const handleVoiceMessage = async (audioUri) => {
                     }
                 }
             );
-
+    
             const newChat = response.data;
-
+    
+            // Mark messages as read when chat is initiated
+            await markChatAsRead(newChat.id);
+    
             const messagesResponse = await axios.get(
                 `${apiUrl}/api/chat/messages/${newChat.id}`,
                 {
@@ -561,19 +569,19 @@ const handleVoiceMessage = async (audioUri) => {
                     }
                 }
             );
-
+    
             if (isMountedRef.current) {
                 setSelectedUser({
                     ...receiver,
                     chatId: newChat.id
                 });
-
+    
                 setMessages(messagesResponse.data.map(msg => ({
                     ...msg,
                     sender: msg.user
                 })));
             }
-
+    
         } catch (error) {
             console.error('Detailed Error creating chat', error.response ? error.response.data : error);
             Alert.alert(
