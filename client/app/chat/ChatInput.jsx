@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Modal, FlatList, Text, ActivityIndicator, Image, Alert, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import VoiceRecorder from './VoiceRecorder.jsx';
 import axios from 'axios';
 
@@ -155,10 +155,14 @@ const ChatInput = ({ onSendMessage, selectedLanguage, onLanguageChange, selected
 
 {message.trim() && (
   <TouchableOpacity 
-    style={[styles.sendButton, styles.sendButtonActive]} 
+    style={styles.sendButton} 
     onPress={handleSendText}
   >
-    <Ionicons name="send" size={18} color="#FFFFFF" />
+    <FontAwesome 
+      name="send" 
+      size={24} 
+      color="black" 
+    />
   </TouchableOpacity>
 )}
       </View>
@@ -204,104 +208,52 @@ const ChatInput = ({ onSendMessage, selectedLanguage, onLanguageChange, selected
   );
 };
 const styles = StyleSheet.create({
-    selectedImageContainer: {
-        padding: 10,
-        backgroundColor: '#f5f5f5',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-      },
-      selectedImagePreview: {
-        height: 200,
-        width: '100%',
-        borderRadius: 8,
-        marginBottom: 10,
-
-      },
-      selectedImageActions: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 10,
-
-      },
-      audioMessageContainer: {
-        padding: 10,
-        backgroundColor: '#f5f5f5',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-      },
-      audioMessageText: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 10,
-      },
-      audioMessageActions: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 10,
-      },
-      cancelButton: {
-        backgroundColor: '#dc3545',
-        padding: 10,
-        borderRadius: 5,
-        width: '45%',
-        alignItems: 'center',
-      },
-      sendImageButton: {
-        backgroundColor: '#007bff',
-        padding: 10,
-        borderRadius: 5,
-        width: '45%',
-        alignItems: 'center',
-      },
-      sendAudioButton: {
-        backgroundColor: '#007bff',
-        padding: 10,
-        borderRadius: 5,
-        width: '45%',
-        alignItems: 'center',
-      },
-      cancelButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
-      },
   container: {
     width: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: 'rgba(0, 0, 0, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   uploadingContainer: {
     padding: 16,
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: 'rgba(248, 248, 248, 0.95)',
+    borderRadius: 12,
+    margin: 8,
   },
   uploadingText: {
     marginTop: 8,
     color: '#666',
+    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 8,
-    backgroundColor: '#fff',
+    padding: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 25,
+    margin: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   imageButton: {
     padding: 8,
     marginRight: 8,
+    backgroundColor: '#f0f2f5',
+    borderRadius: 20,
+    height: 40,
+    width: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  imageButtonText: {
-    fontSize: 24,
-  },
-//   languageButton: {
-//     padding: 4,
-//     backgroundColor: '#f0f0f0',
-//     borderRadius: 4,
-//     marginRight: 8,
-//   },
-//   languageButtonText: {
-//     fontSize: 12,
-//     color: '#666',
-//   },
   messageInput: {
     flex: 1,
     minHeight: 40,
@@ -309,57 +261,96 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e0e0e0',
     borderRadius: 20,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     marginRight: 8,
     fontSize: 16,
+    backgroundColor: '#f0f2f5',
+    color: '#1c1e21',
   },
-  sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    marginLeft: 8,
+  selectedImageContainer: {
+    padding: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    margin: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  sendButtonActive: {
-    backgroundColor: '#0084ff', // Messenger blue
-    transform: [{ scale: 1 }],
+  selectedImagePreview: {
+    height: 200,
+    width: '100%',
+    borderRadius: 12,
+    marginBottom: 12,
   },
-  sendButtonTextActive: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+  selectedImageActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
   },
   cancelButton: {
-    backgroundColor: '#dc3545',
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: '#ff4d4f',
+    padding: 12,
+    borderRadius: 25,
     width: '45%',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
   sendImageButton: {
-    backgroundColor: '#0084ff', 
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: '#0084ff',
+    padding: 12,
+    borderRadius: 25,
     width: '45%',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  sendButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+  sendButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 23,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    marginLeft: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  sendButtonActive: {
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     maxHeight: '50%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -367,33 +358,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: '#f8f9fa',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#1c1e21',
   },
   closeButton: {
-    padding: 4,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#f0f2f5',
   },
   closeButtonText: {
-    fontSize: 20,
+    fontSize: 18,
     color: '#666',
+    fontWeight: '600',
   },
   languageItem: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   selectedLanguageItem: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#e7f3ff',
   },
   languageItemText: {
     fontSize: 16,
+    color: '#1c1e21',
   },
   selectedLanguageItemText: {
     fontWeight: 'bold',
-    color: '#007bff',
+    color: '#0084ff',
   },
 });
 

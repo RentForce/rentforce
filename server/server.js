@@ -10,6 +10,9 @@ const dotenv = require('dotenv');
 const { PrismaClient } = require('@prisma/client');
 const path = require('path');
 const socketHandler = require('./socket');
+const reportsRouter = require("./routes/report");
+
+const { Server } = require("socket.io");
 
 dotenv.config();
 
@@ -99,6 +102,7 @@ app.use("/user", userRoutes);
 
 // app.use("/user", userRoutes);
 app.use("/posts", postsRouter);
+app.use("/reports", reportsRouter);
 
 // Stripe Payment Intent Route
 app.post("/create-payment-intent", async (req, res) => {
