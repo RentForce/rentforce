@@ -25,11 +25,13 @@ model User {
   notifications Notification[]
   chatsInitiated Chat[]     @relation("UserChats")       
   chatsReceived  Chat[]     @relation("ReceiverChats")   
-  outgoingCalls CallLog[] @relation("CallerCalls")
-  incomingCalls CallLog[] @relation("ReceiverCalls")
+
   messages       Message[]
   Booking        Booking[]
   expoPushToken String?
+ 
+  comments       Comment[]
+
 }
 
 model Post {
@@ -53,18 +55,24 @@ model Post {
   history            History[]
   cartPosts          CartPost[]
   map                Map?
+  comments           Comment[]
 }
 
 model Booking {
-  id             Int           @id @default(autoincrement())
-  userId         Int
-  postId         Int
-  startDate      DateTime
-  endDate        DateTime
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  postId          Int
+  startDate       DateTime
+  endDate         DateTime
+  guestName       String?
+  guestCountry    String?
+  propertyDetails String?  // JSON string
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   totalPrice     Float
   numberOfGuests Int
-  status         BookingStatus
-
+  status         String     @default("PENDING") // "PENDING", "CONFIRMED", "REJECTED"
+  notifications Notification[]
   user User @relation(fields: [userId], references: [id])
   post Post @relation(fields: [postId], references: [id])
 }
@@ -121,6 +129,7 @@ model History {
   totalPrice   Decimal?
   userId       Int
   postId       Int
+  numberOfGuests Int?
   user         User      @relation(fields: [userId], references: [id])
   post         Post      @relation(fields: [postId], references: [id])
 
@@ -128,14 +137,15 @@ model History {
 }
 
 model Notification {
-  id        Int       @id @default(autoincrement())
-  message   String?
-  status    String?
-  createdAt DateTime?
+  id        Int      @id @default(autoincrement())
+  type      String   // "BOOKING_REQUEST", "BOOKING_ACCEPTED", "BOOKING_REJECTED"
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
   userId    Int
-  user      User      @relation(fields: [userId], references: [id])
-
-  @@unique([id])
+  bookingId Int?
+  user      User     @relation(fields: [userId], references: [id])
+  booking   Booking? @relation(fields: [bookingId], references: [id])
 }
 
 model Chat {
@@ -177,17 +187,6 @@ model MessageTranslation {
   message     Message  @relation(fields: [messageId], references: [id])
   @@unique([messageId, language])
 }
-model CallLog {
-  id         Int       @id @default(autoincrement())
-  callerId   Int
-  receiverId Int
-  startTime  DateTime @default(now())
-  endTime    DateTime?
-  duration   Int?
-  status     CallStatus @default(MISSED)
-  caller     User     @relation("CallerCalls", fields: [callerId], references: [id])
-  receiver   User     @relation("ReceiverCalls", fields: [receiverId], references: [id])
-}
 model Map {
   id        Int      @id @default(autoincrement())
   latitude  Decimal?
@@ -196,6 +195,19 @@ model Map {
   post      Post     @relation(fields: [postId], references: [id])
 
   @@unique([id])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  rating    Int?     // Optional rating score (e.g., 1-5 stars)
+  createdAt DateTime @default(now())
+  
+  // Foreign keys and relations
+  userId    Int
+  postId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
 }
 
 enum UserType {
@@ -236,9 +248,8 @@ enum MessageType {
   VIDEO_CALL
   AUDIO
 }
+
 enum CallStatus {
-  ONGOING
-  COMPLETED
   MISSED
   REJECTED
   FAILED

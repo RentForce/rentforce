@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   View,
@@ -6,14 +5,20 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import SweetAlert from "../../components/SweetAlert";
 
 export default function ForgetPassword({ navigation }) {
 
   const [selectedOption, setSelectedOption] = useState(null);
   const [inputValue, setInputValue] = useState('');
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: '',
+  });
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const handleOptionSelect = (option) => {
@@ -27,7 +32,9 @@ export default function ForgetPassword({ navigation }) {
         const response = await fetch(`${apiUrl}/user/send-code`, {
           method: "POST",
           headers: {
+            "User-Agent":"Thunder Client (https://www.thunderclient.com)",
             "Content-Type": "application/json",
+            "Authorization":"App daa6aec38feddaf03cb3b0f318706f0d-5770c954-04d6-46cd-a3f7-9fd4abdd4e29",
           },
           body: JSON.stringify({
             [selectedOption]: inputValue,
@@ -46,13 +53,31 @@ export default function ForgetPassword({ navigation }) {
         const data = await response.json();
         Alert.alert("Success", `Code sent to ${inputValue}`);
 
-        navigation.navigate("reset", { [selectedOption]: inputValue });
+        const params = selectedOption === "sms" ? { phoneNumber: inputValue } : { email: inputValue };
+        navigation.navigate("reset", params);
       } catch (error) {
         console.error("Error:", error);
-        Alert.alert("Error", "Failed to send code");
+        setAlertConfig({
+          visible: true,
+          title: 'Error',
+          message: 'Failed to send code',
+          type: 'error'
+        });
       }
     } else {
-      Alert.alert("Error", "Please select a recovery option");
+      setAlertConfig({
+        visible: true,
+        title: 'Error',
+        message: 'Please select a recovery option',
+        type: 'error'
+      });
+    }
+  };
+
+  const handleAlertConfirm = () => {
+    setAlertConfig({ ...alertConfig, visible: false });
+    if (alertConfig.type === 'success') {
+      navigation.navigate("reset", { [selectedOption]: inputValue });
     }
   };
 
@@ -100,6 +125,14 @@ export default function ForgetPassword({ navigation }) {
           </TouchableOpacity>
         </View>
       )}
+
+      <SweetAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onConfirm={handleAlertConfirm}
+      />
     </LinearGradient>
   );
 }

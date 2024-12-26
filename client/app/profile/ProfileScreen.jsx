@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -22,8 +29,13 @@ const ProfileScreen = ({ navigation, route }) => {
       try {
         if (route.params?.updatedUser) {
           setUserData(route.params.updatedUser);
-          setProfileImage(route.params.updatedUser.image || DEFAULT_PROFILE_IMAGE);
-          await AsyncStorage.setItem('userData', JSON.stringify(route.params.updatedUser));
+          setProfileImage(
+            route.params.updatedUser.image || DEFAULT_PROFILE_IMAGE
+          );
+          await AsyncStorage.setItem(
+            "userData",
+            JSON.stringify(route.params.updatedUser)
+          );
           return;
         }
 
@@ -36,7 +48,9 @@ const ProfileScreen = ({ navigation, route }) => {
         }
 
         if (route.params?.userId) {
-          const response = await axios.get(`${apiUrl}/user/${route.params.userId}`);
+          const response = await axios.get(
+            `${apiUrl}/user/${route.params.userId}`
+          );
           setUserData(response.data);
           setProfileImage(response.data.image || DEFAULT_PROFILE_IMAGE);
         }
@@ -49,23 +63,23 @@ const ProfileScreen = ({ navigation, route }) => {
   }, [route.params]);
 
   const handleLogout = async () => {
-      try {
-        // Clear AsyncStorage
-        await AsyncStorage.removeItem("userToken");
-        await AsyncStorage.removeItem("userId");
-        await AsyncStorage.removeItem("currentUser");
-        console.log("cleared")
-        
-        // Navigate back to the sign-up page
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "signup" }], // Change to "signup"
-        });
-      } catch (error) {
-        console.error("Error during logout:", error);
-        Alert.alert("Logout Failed", "Could not log out. Please try again.");
-      }
-    };
+    try {
+      // Clear AsyncStorage
+      await AsyncStorage.removeItem("userToken");
+      await AsyncStorage.removeItem("userId");
+      await AsyncStorage.removeItem("currentUser");
+      console.log("cleared");
+
+      // Navigate back to the sign-up page
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "signup" }], // Change to "signup"
+      });
+    } catch (error) {
+      console.error("Error during logout:", error);
+      Alert.alert("Logout Failed", "Could not log out. Please try again.");
+    }
+  };
 
   const handleNavigateToPersonalScreen = () => {
     navigation.navigate("personal", { userId: userData.id });
@@ -145,7 +159,7 @@ const ProfileScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-      
+
       <Navbar navigation={navigation} />
     </View>
   );
@@ -158,7 +172,7 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   profileHeader: {
     alignItems: "center",

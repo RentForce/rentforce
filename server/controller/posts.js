@@ -1,10 +1,78 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key";
+
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    console.log('Received Authorization Header:', authHeader);
+    console.log('Extracted Token:', token);
+
+    if (token == null) {
+        return res.status(401).json({ 
+            message: 'No token provided', 
+            details: 'Authorization header is missing or incorrectly formatted' 
+        });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            console.error('Token Verification Error:', err);
+            return res.status(403).json({ 
+                message: 'Invalid or expired token', 
+                error: err.message 
+            });
+        }
+        req.user = user; 
+        next();
+    });
+};
+const { createNotification } = require("./notification");
+require('dotenv').config();
 const createBooking = async (req, res) => {
   try {
-    const { userId, postId, startDate, endDate, numberOfGuests, totalPrice } =
-      req.body;
+    const { 
+      userId, 
+      postId, 
+      startDate, 
+      endDate, 
+      numberOfGuests, 
+      totalPrice,
+      guestName,
+      guestCountry,
+      propertyDetails 
+    } = req.body;
 
+    console.log('Received booking request:', {
+      userId,
+      postId,
+      startDate,
+      endDate,
+      numberOfGuests,
+      totalPrice
+    });
+
+    // Validate required fields
+    if (!userId || !postId || !startDate || !endDate || !numberOfGuests || !totalPrice) {
+      return res.status(400).json({
+        message: "Missing required fields",
+        received: { userId, postId, startDate, endDate, numberOfGuests, totalPrice }
+      });
+    }
+
+    // Check if post exists
+    const post = await prisma.post.findUnique({
+      where: { id: Number(postId) },
+      include: { user: true },
+    });
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Check for existing bookings
     const existingBookings = await prisma.booking.findMany({
       where: {
         postId: Number(postId),
@@ -45,13 +113,53 @@ const createBooking = async (req, res) => {
         numberOfGuests: Number(numberOfGuests),
         totalPrice: Number(totalPrice),
         status: "PENDING",
+        guestName,
+        guestCountry,
+        propertyDetails: propertyDetails ? JSON.stringify(propertyDetails) : null
+      },
+      include: {
+        user: true,
+        post: true,
       },
     });
 
+    // Check if booking.user is defined
+    if (!booking.user) {
+      throw new Error("Booking user information is missing");
+    }
+
+    // Create notification for the host
+    const notification = await createNotification(
+      req,
+      "BOOKING_REQUEST",
+      `New booking request from ${booking.user.firstName} for ${post.title}`,
+      post.user.id,
+      booking.id
+    );
+
+    // Emit real-time notification using socket.io
+    if (req.io) {
+      console.log("Emitting notification to host:", post.user.id); // Debug log
+      req.io.to(`notification-${post.user.id}`).emit("new_notification", {
+        type: "BOOKING_REQUEST",
+        message: `New booking request from ${booking.user.firstName} for ${post.title}`,
+        userId: post.user.id,
+        bookingId: booking.id,
+        booking: booking,
+        id: notification.id,
+        isRead: false,
+        createdAt: new Date(),
+      });
+    }
+
     res.status(201).json(booking);
   } catch (error) {
-    console.error("Error creating booking:", error);
-    res.status(500).json({ message: "Error creating booking" });
+    console.error("Detailed booking error:", error);
+    res.status(500).json({ 
+      message: "Error creating booking",
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
@@ -224,13 +332,146 @@ const checkDateAvailability = async (req, res) => {
   }
 };
 
+// Save images for a post
+const saveImage = async (req, res) => {
+  const { postId, url } = req.body;
+  try {
+    const image = await prisma.image.create({
+      data: {
+        url,
+        postId: Number(postId),
+      },
+    });
+    res.status(201).json(image);
+  } catch (error) {
+    console.error("Error saving image:", error);
+    res.status(500).json({ message: "Error saving image" });
+  }
+};
+
+// Save location for a post
+const saveLocation = async (req, res) => {
+  const { postId, latitude, longitude } = req.body;
+  try {
+    const map = await prisma.map.create({
+      data: {
+        postId: Number(postId),
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
+      },
+    });
+    res.status(201).json(map);
+  } catch (error) {
+    console.error("Error saving location:", error);
+    res.status(500).json({ message: "Error saving location" });
+  }}
+const getPostComments = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    
+    const comments = await prisma.comment.findMany({
+      where: {
+        postId: parseInt(postId),
+      },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            image: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    res.json(comments);
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ message: 'Error fetching comments' });
+  }
+};
+
+const addComment = async (req, res) => {
+  try {
+    const { content, rating } = req.body;
+    const { postId } = req.params;
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    const comment = await prisma.comment.create({
+      data: {
+        content,
+        rating,
+        userId: parseInt(userId),
+        postId: parseInt(postId),
+      },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            image: true,
+          },
+        },
+      },
+    });
+
+    res.status(201).json(comment);
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ 
+      message: 'Failed to add comment', 
+      error: error.message 
+    });
+  }
+};
+const checkUserBooking = async (req, res) => {
+  try {
+    const { postId, userId } = req.params;
+
+    const booking = await prisma.booking.findFirst({
+      where: {
+        postId: parseInt(postId),
+        userId: parseInt(userId),
+        status: 'CONFIRMED', // Only consider confirmed bookings
+
+      }
+    });
+
+    res.json({
+      hasBooked: !!booking
+    });
+  } catch (error) {
+    console.error('Error checking user booking:', error);
+    res.status(500).json({ 
+      message: 'Failed to check booking status', 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   getPostsByCategory,
   getImagesByPostId,
   createBooking,
 
   getPostBookings,
-
+  
+  saveImage,
+  saveLocation,
+  checkUserBooking,
   getBookedDates,
   checkDateAvailability,
-};
+  getPostComments,
+  addComment,
+  authenticateToken
+}

@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUserData, updateUserData, signup, login, createPost, authenticateToken,addToFavourites,removeFromFavourites,getFavouritePosts} = require('../controller/user');
+const { getUserData, updateUserData, signup, login, createPost, authenticateToken,addToFavourites,removeFromFavourites,getFavouritePosts, getUserHistory, createHistory} = require('../controller/user');
 const {sendCode , verifyCode , updatePassword} = require('../controller/emailPassword')
 
 const router = express.Router();
@@ -15,6 +15,8 @@ router.post('/posts', authenticateToken, createPost);
 router.post("/favourites", addToFavourites)
 router.delete("/favourites", removeFromFavourites)
 router.get("/favourites/:userId", getFavouritePosts)
+router.get('/:userId/history', getUserHistory)
+router.post('/history', createHistory);
 
 
 module.exports = router;

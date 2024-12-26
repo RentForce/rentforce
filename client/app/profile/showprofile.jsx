@@ -13,16 +13,10 @@ const ShowProfile = ({ navigation, route }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [bio, setBio] = useState('');
-console.log(userId);
-  // Add dummy trip data for testing
-  const dummyTrips = [
-    { id: 1, destination: 'Paris', date: '2023-06-15' },
-    { id: 2, destination: 'New York', date: '2023-07-20' },
-    { id: 3, destination: 'Tokyo', date: '2023-08-10' },
-  ];
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchData = async () => {
       if (!userId) {
         setError('No user ID provided');
         setLoading(false);
@@ -31,30 +25,29 @@ console.log(userId);
 
       try {
         setLoading(true);
-        const response = await axios.get(`${apiUrl}/user/${userId}`, {
-          timeout: 10000, // 10 second timeout
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        });
+        const [userResponse, historyResponse] = await Promise.all([
+          axios.get(`${apiUrl}/user/${userId}`),
+          axios.get(`${apiUrl}/user/${userId}/history`)
+        ]);
 
-        if (response.data) {
-          setUserData({ ...response.data, trips: dummyTrips }); 
-          setBio(response.data.bio || '');
-        } else {
-          throw new Error('No data received');
+        if (userResponse.data) {
+          setUserData(userResponse.data);
+          setBio(userResponse.data.bio || '');
+        }
+
+        if (historyResponse.data) {
+          setHistory(historyResponse.data);
         }
       } catch (err) {
-        console.error('Error fetching user data:', err);
-        setError(err.message || 'Failed to fetch user data');
-        Alert.alert('Error', err.message || 'Failed to fetch user data');
+        console.error('Error fetching data:', err);
+        setError(err.message || 'Failed to fetch data');
+        Alert.alert('Error', err.message || 'Failed to fetch data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserData();
+    fetchData();
   }, [userId]);
 
   const handleBioUpdate = async () => {
@@ -142,18 +135,29 @@ console.log(userId);
           </>
         )}
       </View>
-      {/* Optional: Trips section can be added later if you have trip data */}
-      <View style={styles.tripsSection}>
-        <Text style={styles.tripTitle}>Trips</Text>
-        {userData?.trips && userData.trips.length > 0 ? (
-          userData.trips.map(trip => (
-            <View key={trip.id} style={styles.tripCard}>
-              <Text>{trip.destination} - {trip.date}</Text>
+      <View style={styles.historySection}>
+        <Text style={styles.historyTitle}>History</Text>
+        {history.length > 0 ? (
+          history.map(item => (
+            <View key={item.id} style={styles.historyCard}>
+              <Text style={styles.historyDate}>
+                Booking Date: {new Date(item.bookingDate).toLocaleDateString()}
+              </Text>
+              <Text style={styles.historyDate}>
+                Check-in: {new Date(item.checkInDate).toLocaleDateString()}
+              </Text>
+              <Text style={styles.historyDate}>
+                Check-out: {new Date(item.checkOutDate).toLocaleDateString()}
+              </Text>
+              <Text style={styles.historyStatus}>Status: {item.status}</Text>
+              <Text style={styles.historyPrice}>
+                Total Price: ${Number(item.totalPrice).toFixed(2)}
+              </Text>
             </View>
           ))
         ) : (
-          <View style={styles.tripCard}>
-            <Text>No trips recorded</Text>
+          <View style={styles.historyCard}>
+            <Text>No history recorded</Text>
           </View>
         )}
       </View>
@@ -244,15 +248,16 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 5,
   },
-  tripsSection: {
+  historySection: {
     marginVertical: 20,
   },
-  tripTitle: {
+  historyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 10,
   },
-  tripCard: {
+  historyCard: {
     padding: 15,
     backgroundColor: '#ffffff',
     borderRadius: 10,
@@ -262,6 +267,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+  },
+  historyDate: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  historyStatus: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+    marginTop: 8,
+  },
+  historyPrice: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 8,
   },
   initialsContainer: {
     width: 100,

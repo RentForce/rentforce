@@ -1,27 +1,29 @@
-import React, { useEffect } from "react";
+import React, { useEffect,useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNotifications } from '../chat/Notifications.jsx';
+import { useNotifications } from "../chat/Notifications.jsx";
 import { NotificationBadge } from "../chat/NotificationBadge.jsx";
+import NotificationIcon from "../../components/NotificationIcon";
 
 const Navbar = ({ navigation }) => {
   const { unreadCount } = useNotifications();
-  console.log('Navbar rendering with unread count:', unreadCount);
+  const [pressedIcon, setPressedIcon] = useState(null);
+
+  console.log("Navbar rendering with unread count:", unreadCount);
 
   const handleConfirmExplore = () => {
     console.log("Navigating to Home");
     navigation.navigate("Home");
-
   };
 
   const handleProfileNavigation = async () => {
     try {
       const userData = await AsyncStorage.getItem("userData");
       const parsedUserData = JSON.parse(userData);
-      navigation.navigate('profile', { 
+      navigation.navigate("profile", {
         userId: parsedUserData.id,
-        updatedUser: parsedUserData
+        updatedUser: parsedUserData,
       });
     } catch (error) {
       console.error("Error navigating to profile:", error);
@@ -29,46 +31,56 @@ const Navbar = ({ navigation }) => {
   };
 
   useEffect(() => {
-    console.log('Navbar unread count:', unreadCount);
+    console.log("Navbar unread count:", unreadCount);
   }, [unreadCount]);
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.iconContainer}
-        onPress={handleConfirmExplore}
-      >
+    <TouchableOpacity onPress={() => navigation.navigate("Home")}>
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.iconContainer} onPress={() => navigation.navigate('favourites')}>
-        <Ionicons name="heart-outline" size={24} style={styles.icon} />
-        <Text style={styles.text}>Favourites</Text>
-        
+      <TouchableOpacity 
+        style={styles.iconContainer} 
+        onPress={() => navigation.navigate('favourites')}
+      >
+        <MaterialIcons name="bookmark-outline" size={24} style={styles.icon} />
+        <Text style={styles.text}>Saved</Text>
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.iconContainer} 
         onPress={() => navigation.navigate("ChatSelectionScreen")}
+        onPressIn={() => setPressedIcon("chat")}
+        onPressOut={() => setPressedIcon(null)}
       >
-        <View style={styles.iconWrapper}>
-          <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
-          {unreadCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unreadCount}</Text>
-            </View>
-          )}
-        </View>
+        <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
+        <View style={styles.notificationDot} />
         <Text style={styles.text}>Inbox</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.iconContainer} 
+      <TouchableOpacity
+        style={[
+          styles.iconContainer,
+          pressedIcon === "notifications" && styles.pressedIcon,
+        ]}
+        onPress={() => navigation.navigate("notifications")}
+        onPressIn={() => setPressedIcon("notifications")}
+        onPressOut={() => setPressedIcon(null)}
+      >
+        <NotificationIcon size={24} color="#fff" />
+        <Text style={styles.text}>Notifications</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.iconContainer,
+          pressedIcon === "profile" && styles.pressedIcon,
+        ]}
         onPress={handleProfileNavigation}
+        onPressIn={() => setPressedIcon("profile")}
+        onPressOut={() => setPressedIcon(null)}
       >
         <Ionicons name="person-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Profile</Text>
       </TouchableOpacity>
-      
-     
     </View>
   );
 };
@@ -92,29 +104,29 @@ const styles = StyleSheet.create({
     color: "#888",
   },
   iconWrapper: {
-    position: 'relative',
+    position: "relative",
     width: 24,
     height: 24,
   },
   badge: {
-    position: 'absolute',
+    position: "absolute",
     top: -8,
     right: -8,
-    backgroundColor: 'red',
+    backgroundColor: "red",
     borderRadius: 10,
     minWidth: 20,
     height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 1,
   },
   badgeText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     paddingHorizontal: 4,
   },
- 
 });
 
 export default Navbar;
+
