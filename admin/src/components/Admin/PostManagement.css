@@ -1,0 +1,81 @@
+.post-management {
+  padding: 20px;
+  background-color: #F1EFEF;
+}
+
+.post-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  padding: 8px 12px;
+  border: 1px solid #082631;
+  border-radius: 4px;
+  width: 300px;
+}
+
+.posts-table {
+  background: #F1EFEF;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #082631;
+}
+
+th {
+  background-color: #082631;
+  color: #F1EFEF;
+  font-weight: 600;
+}
+
+.view-btn, .delete-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.view-btn {
+  background-color: #082631;
+  color: #F1EFEF;
+}
+
+.delete-btn {
+  background-color: #F1EFEF;
+  color: #082631;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  border: 1px solid #082631;
+  background: #F1EFEF;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.pagination button.active {
+  background: #082631;
+  color: #F1EFEF;
+  border-color: #082631;
+} 
