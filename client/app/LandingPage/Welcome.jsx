@@ -5,23 +5,25 @@ import { AntDesign } from '@expo/vector-icons';
 const Welcome = ({ navigation }) => {
   return (
     <ImageBackground
-    // source={{ uri: 'https://a0.muscache.com/im/pictures/miso/Hosting-54138769/original/e1dcfadb-1ff1-4ad8-8c82-2f25a351a864.jpeg?im_w=960&im_format=avif' }} // Replace with your image URL
-    // source={{ uri: 'https://a0.muscache.com/im/pictures/miso/Hosting-54377673/original/9b129398-5644-458e-823f-8ac918644a87.jpeg?im_w=960&im_format=avif' }} // Replace with your image URL
-    source={{ uri: 'https://a0.muscache.com/im/pictures/miso/Hosting-1009307940936592554/original/aae6b59d-c589-4ba1-b9f8-33a56ed5df01.jpeg?im_w=960&im_format=avif' }} // Replace with your image URL
-
-    // source={{ uri: 'https://a0.muscache.com/im/pictures/7637816f-3817-4ca9-a381-82723cc9e220.jpg?im_w=960&im_format=avif' }} // Replace with your image URL
+      source={require('../assets/landing.jpg')}
       style={styles.background}
     >
-      <View style={styles.content}>
-        <Text style={styles.title}>Explore Your</Text>
-        <Text style={styles.subtitle}>Dream House</Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Text style={styles.buttonText}>Get Started</Text>
-          <AntDesign name="arrowright" size={24} color="black" />
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <View style={styles.gradientOverlay1} />
+        <View style={styles.gradientOverlay2} />
+        <View style={styles.content}>
+          <View style={styles.textContainer}>
+            <Text style={styles.title}>Explore Your</Text>
+            <Text style={styles.subtitle}>Dream House</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate('Home')}
+          >
+            <Text style={styles.buttonText}>Get Started</Text>
+            <AntDesign name="arrowright" size={20} color="black" />
+          </TouchableOpacity>
+        </View>
       </View>
     </ImageBackground>
   );
@@ -30,46 +32,59 @@ const Welcome = ({ navigation }) => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  },
+  container: {
+    flex: 1,
+  },
+  gradientOverlay1: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '35%',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  gradientOverlay2: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '30%',
+    backgroundColor: 'rgba(0,0,0,0.7)',
   },
   content: {
-    // backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 550,
-    marginLeft: -60,
-    // marginRight: 10,
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 24,
+    paddingBottom: 40,
+  },
+  textContainer: {
+    marginBottom: 24,
   },
   title: {
-    fontSize: 50,
+    fontSize: 32,
     color: '#fff',
     fontWeight: 'bold',
   },
   subtitle: {
-    fontSize: 42,
+    fontSize: 32,
     color: '#fff',
     fontWeight: 'bold',
-    marginBottom: 20,
   },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#fff',
-    paddingVertical: 10,
-    paddingHorizontal: 35,
-    borderRadius: 35,
-    borderWidth: 1,
-    borderColor: '#000',
-    
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 8,
   },
   buttonText: {
     color: 'black',
-    fontSize: 19,
-    marginRight: 5,
-    fontWeight: 'bold',
+    fontSize: 16,
+    marginRight: 8,
+    fontWeight: '600',
   },
 });
 

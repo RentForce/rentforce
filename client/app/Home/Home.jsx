@@ -89,7 +89,6 @@ const Home = ({ navigation }) => {
   const scrollViewRef = useRef(null);
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   console.log(apiUrl, "saleeemm");
-
   useEffect(() => {
     const fetchUserId = async () => {
       try {

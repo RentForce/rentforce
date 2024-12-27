@@ -1,27 +1,27 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Image, Text } from 'react-native';
 import LottieView from 'lottie-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const LogoPage = ({ navigation }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.navigate('Welcome');
-    }, 7000); // 7 seconds
+    }, 2500); // 7 seconds
 
     return () => clearTimeout(timer); // Cleanup the timer on component unmount
   }, [navigation]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.overlay}>
+      {/* <View style={styles.overlay}>
         <Image
-          source={require('../assets/land.jpeg')}
+          source={require('../assets/final.jpeg')}
           style={styles.logo}
         />
-        <Text style={styles.title}>RENT FORCE</Text>
-      </View>
+      </View> */}
       <LottieView
-        source={require('../assets/new.json')}
+        source={require('../assets/logoani.json')}
         autoPlay
         loop
         style={styles.animation}
@@ -33,7 +33,7 @@ const LogoPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e5f4fb',
+    backgroundColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -41,10 +41,10 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     resizeMode: 'contain',
-    marginTop: -50,
+    marginTop: 100,
   },
   animation: {
-    marginTop: 160,
+    marginTop: -50,
     width: 200,
     height: 200,
   },
