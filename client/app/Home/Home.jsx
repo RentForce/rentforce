@@ -326,7 +326,6 @@ const Home = ({ navigation }) => {
     if (posts.length === 0) {
       return <Text>No posts available for this category.</Text>;
     }
-    console.log(posts[0].images[0].url, "salem");
 
     return posts.map((post) => (
       <View key={post.id} style={styles.postContainer}>

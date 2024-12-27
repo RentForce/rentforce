@@ -6,6 +6,7 @@ import NotificationIcon from "../../components/NotificationIcon";
 
 const Navbar = ({ navigation, userId }) => {
   const [pressedIcon, setPressedIcon] = useState(null);
+  const token =  AsyncStorage.getItem("userToken");
 
   const handleConfirmExplore = () => {
     console.log("Navigating to Home");
@@ -15,11 +16,16 @@ const Navbar = ({ navigation, userId }) => {
   const handleProfileNavigation = async () => {
     try {
       const userData = await AsyncStorage.getItem("userData");
-      const parsedUserData = JSON.parse(userData);
-      navigation.navigate("profile", {
-        userId: parsedUserData.id,
-        updatedUser: parsedUserData,
-      });
+      if(!userData){
+        navigation.navigate('signup')
+      }
+      else{
+        const parsedUserData = JSON.parse(userData);
+        navigation.navigate("profile", {
+          userId: parsedUserData.id,
+          updatedUser: parsedUserData,
+        });
+      }
     } catch (error) {
       console.error("Error navigating to profile:", error);
     }
@@ -27,20 +33,37 @@ const Navbar = ({ navigation, userId }) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+      <TouchableOpacity onPress={() =>
+        
+        navigation.navigate("Home")}>
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.iconContainer} 
-        onPress={() => navigation.navigate('favourites')}
+        onPress={() =>{
+          if(token){
+            navigation.navigate('favourites')}
+          else{
+            navigation.navigate('signup')
+          }
+          }
+        }
       >
         <MaterialIcons name="bookmark-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Saved</Text>
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.iconContainer} 
-        onPress={() => navigation.navigate("ChatSelectionScreen")}
+        onPress={() =>{
+          if(token){
+            navigation.navigate('ChatSelectionScreen')}
+          else{
+            navigation.navigate('signup')
+          }
+          }
+          
+          }
         onPressIn={() => setPressedIcon("chat")}
         onPressOut={() => setPressedIcon(null)}
       >
@@ -53,7 +76,15 @@ const Navbar = ({ navigation, userId }) => {
           styles.iconContainer,
           pressedIcon === "notifications" && styles.pressedIcon,
         ]}
-        onPress={() => navigation.navigate("notifications")}
+        onPress={() => {
+          if(token){
+            navigation.navigate('notifications')}
+          else{
+            navigation.navigate('signup')
+          }
+          }
+
+        }
         onPressIn={() => setPressedIcon("notifications")}
         onPressOut={() => setPressedIcon(null)}
       >
