@@ -115,49 +115,55 @@ const ShowProfile = ({ navigation, route }) => {
           {userData?.firstName} {userData?.lastName}
         </Text>
         <View style={styles.bioContainer}>
-          <Text style={styles.bioText}>{bio}</Text>
+          <View style={styles.bioHeader}>
+            <Text style={styles.bioLabel}>About Me</Text>
+          </View>
+          <View style={styles.bioContent}>
+            <Text style={styles.bioText}>{bio || 'No bio available'}</Text>
+          </View>
         </View>
       </View>
       <View style={styles.confirmationSection}>
-        <Text style={styles.confirmationTitle}>Confirmed Details</Text>
-        <Text style={styles.emailLabel}>Email address</Text>
-        <Text style={styles.email}>{userData?.email}</Text>
-        {userData?.phoneNumber && (
-          <>
-            <Text style={styles.emailLabel}>Phone Number</Text>
-            <Text style={styles.email}>{userData.phoneNumber}</Text>
-          </>
-        )}
-        {userData?.address && (
-          <>
-            <Text style={styles.emailLabel}>Address</Text>
-            <Text style={styles.email}>{userData.address}</Text>
-          </>
-        )}
+        <Text style={styles.sectionTitle}>Confirmed Details</Text>
+        <View style={styles.detailsContainer}>
+          <Text style={styles.detailLabel}>Email address</Text>
+          <Text style={styles.detailText}>{userData?.email}</Text>
+          {userData?.phoneNumber && (
+            <>
+              <Text style={styles.detailLabel}>Phone Number</Text>
+              <Text style={styles.detailText}>{userData.phoneNumber}</Text>
+            </>
+          )}
+          {userData?.address && (
+            <>
+              <Text style={styles.detailLabel}>Address</Text>
+              <Text style={styles.detailText}>{userData.address}</Text>
+            </>
+          )}
+        </View>
       </View>
       <View style={styles.historySection}>
-        <Text style={styles.historyTitle}>History</Text>
+        <Text style={styles.sectionTitle}>History</Text>
         {history.length > 0 ? (
           history.map(item => (
             <View key={item.id} style={styles.historyCard}>
-              <Text style={styles.historyDate}>
+              <Text style={styles.detailText}>
+                Total Price: ${Number(item.totalPrice).toFixed(2)}
+              </Text>
+              <Text style={styles.detailLabel}>
                 Booking Date: {new Date(item.bookingDate).toLocaleDateString()}
               </Text>
-              <Text style={styles.historyDate}>
+              <Text style={styles.detailLabel}>
                 Check-in: {new Date(item.checkInDate).toLocaleDateString()}
               </Text>
-              <Text style={styles.historyDate}>
+              <Text style={styles.detailLabel}>
                 Check-out: {new Date(item.checkOutDate).toLocaleDateString()}
-              </Text>
-              <Text style={styles.historyStatus}>Status: {item.status}</Text>
-              <Text style={styles.historyPrice}>
-                Total Price: ${Number(item.totalPrice).toFixed(2)}
               </Text>
             </View>
           ))
         ) : (
           <View style={styles.historyCard}>
-            <Text>No history recorded</Text>
+            <Text style={styles.detailText}>No history recorded</Text>
           </View>
         )}
       </View>
@@ -169,13 +175,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F1EFEF',
   },
   centeredContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f4f4f4',
+    backgroundColor: '#F1EFEF',
   },
   errorText: {
     color: 'red',
@@ -193,14 +199,14 @@ const styles = StyleSheet.create({
   },
   editButton: {
     padding: 10,
-    backgroundColor: '#808080',
+    backgroundColor: '#082631',
     borderRadius: 5,
   },
   profileSection: {
     alignItems: 'center',
     marginVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#082631',
     paddingBottom: 20,
   },
   profileImageContainer: {
@@ -219,7 +225,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginVertical: 10,
-    color: '#333',
+    color: '#082631',
   },
   info: {
     fontSize: 16,
@@ -228,87 +234,101 @@ const styles = StyleSheet.create({
   },
   confirmationSection: {
     marginVertical: 20,
-    padding: 10,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 5,
+    padding: 15,
+    backgroundColor: '#F1EFEF',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#082631',
   },
-  confirmationTitle: {
+  sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
+    color: '#082631',
+    marginBottom: 15,
   },
-  emailLabel: {
+  detailsContainer: {
+    gap: 8,
+  },
+  detailLabel: {
     fontSize: 16,
-    color: '#666',
+    color: '#082631',
+    opacity: 0.8,
     marginTop: 5,
   },
-  email: {
+  detailText: {
     fontSize: 16,
-    color: '#333',
+    color: '#082631',
+    fontWeight: '500',
     marginBottom: 5,
   },
   historySection: {
     marginVertical: 20,
   },
-  historyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-  },
   historyCard: {
     padding: 15,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F1EFEF',
     borderRadius: 10,
     marginTop: 10,
-    shadowColor: '#000',
+    borderWidth: 2,
+    borderColor: '#082631',
+    shadowColor: '#082631',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 2,
-  },
-  historyDate: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  historyStatus: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginTop: 8,
-  },
-  historyPrice: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 8,
+    elevation: 3,
   },
   initialsContainer: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#808080',
+    backgroundColor: '#082631',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#F1EFEF',
+    shadowColor: '#082631',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4,
   },
   initialsText: {
     fontSize: 40,
-    color: '#ffffff',
+    color: '#F1EFEF',
     fontWeight: 'bold',
   },
   bioContainer: {
-    backgroundColor: '#ffffff',
-    borderColor: '#000000',
-    borderWidth: 1,
-    borderRadius: 10,
+    width: '100%',
+    marginVertical: 15,
+    borderRadius: 15,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#082631',
+  },
+  bioHeader: {
+    backgroundColor: '#082631',
     padding: 12,
-    marginVertical: 10,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  bioContent: {
+    backgroundColor: '#F1EFEF',
+    padding: 15,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+  },
+  bioLabel: {
+    color: '#F1EFEF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   bioText: {
     fontSize: 16,
-    color: '#333',
+    color: '#082631',
+    lineHeight: 24,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
 

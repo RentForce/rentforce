@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { formatDistanceToNow } from "date-fns";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Navbar from "../Home/Navbar";
+import { useNavigation } from "@react-navigation/native";
 
 const EmptyNotifications = () => {
   return (
@@ -218,6 +219,13 @@ const NotificationScreen = ({ navigation }) => {
     }
   };
 
+  const handlePaymentNavigation = (booking) => {
+    navigation.navigate("payment", {
+      amount: booking.totalPrice,
+      bookingId: booking.id,
+    });
+  };
+
   const renderNotification = ({ item }) => (
     <Animated.View
       style={[
@@ -241,6 +249,16 @@ const NotificationScreen = ({ navigation }) => {
           </Text>
         </View>
       </View>
+
+      {item.type === "BOOKING_CONFIRMED" && item.booking && !item.booking.isPaid && (
+        <TouchableOpacity
+          style={styles.paymentButton}
+          onPress={() => handlePaymentNavigation(item.booking)}
+        >
+          <Ionicons name="card-outline" size={20} color="white" />
+          <Text style={styles.paymentButtonText}>Pay Now</Text>
+        </TouchableOpacity>
+      )}
 
       {item.type === "BOOKING_REQUEST" && !item.isRead && (
         <View style={styles.actionButtons}>
@@ -429,6 +447,21 @@ const styles = StyleSheet.create({
   },
   emptyList: {
     flex: 1,
+  },
+  paymentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#082631',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    justifyContent: 'center',
+    gap: 8,
+  },
+  paymentButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

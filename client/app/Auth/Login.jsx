@@ -26,7 +26,6 @@ const Login = ({ navigation }) => {
   const [screenWidth, setScreenWidth] = useState(Dimensions.get('window').width);
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
-
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
       setScreenHeight(window.height);

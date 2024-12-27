@@ -17,6 +17,8 @@ import HomeDetails from "./Home/HomeDetails.jsx";
 import BookingPage from "./Home/BookingPage";
 import pay from "./Home/payment.jsx";
 import NotificationScreen from "./notifications/NotificationScreen.jsx";
+import PaymentHistory from "./profile/PaymentHistory.jsx";
+import AboutUsScreen from "./profile/AboutUsScreen";
 
 const Stack = createNativeStackNavigator();
 function App() {
@@ -40,7 +42,16 @@ function App() {
         <Stack.Screen name="payment" component={pay} options={{ headerShown: false }}/>
         <Stack.Screen name="notifications" component={NotificationScreen} options={{ headerShown: false, title: "Notifications"}} />
       <Stack.Screen name="ChatSelectionScreen"component={ChatSelectionScreen} options={{ title: "Select User" }}/>
-      <Stack.Screen name="Chat" component={Chat}options={({ route }) => ({title: `Chat with ${route.params?.receiverName || "User"}`, })}/></Stack.Navigator>
+      <Stack.Screen name="Chat" component={Chat}options={({ route }) => ({title: `Chat with ${route.params?.receiverName || "User"}`, })}/>
+      <Stack.Screen name="PaymentHistory" component={PaymentHistory} options={{ headerShown: false }}/>
+      <Stack.Screen 
+        name="AboutUs" 
+        component={AboutUsScreen} 
+        options={{ 
+          headerShown: false 
+        }} 
+      />
+    </Stack.Navigator>
   );
 }
 
