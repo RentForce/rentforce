@@ -4,30 +4,30 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key";
 
 const authenticateToken = (req, res, next) => {
+  try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    console.log('Received Authorization Header:', authHeader);
-    console.log('Extracted Token:', token);
-
-    if (token == null) {
-        return res.status(401).json({ 
-            message: 'No token provided', 
-            details: 'Authorization header is missing or incorrectly formatted' 
-        });
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
     }
 
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) {
-            console.error('Token Verification Error:', err);
-            return res.status(403).json({ 
-                message: 'Invalid or expired token', 
-                error: err.message 
-            });
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+      if (err) {
+        if (err.name === 'TokenExpiredError') {
+          return res.status(401).json({ 
+            message: 'Token expired',
+            expired: true
+          });
         }
-        req.user = user; 
-        next();
+        return res.status(403).json({ message: 'Invalid token' });
+      }
+      req.user = user;
+      next();
     });
+  } catch (error) {
+    res.status(500).json({ message: 'Authentication error' });
+  }
 };
 const { createNotification } = require("./notification");
 require('dotenv').config();
@@ -459,6 +459,57 @@ const checkUserBooking = async (req, res) => {
   }
 };
 
+const getPostDetails = async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    const post = await prisma.post.findUnique({
+      where: {
+        id: parseInt(postId)
+      },
+      include: {
+        images: true,
+        map: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            image: true
+          }
+        },
+        comments: {
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                image: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
+      }
+    });
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.json(post);
+  } catch (error) {
+    console.error("Error fetching post details:", error);
+    res.status(500).json({ 
+      message: "Error fetching post details",
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   getPostsByCategory,
   getImagesByPostId,
@@ -473,5 +524,6 @@ module.exports = {
   checkDateAvailability,
   getPostComments,
   addComment,
-  authenticateToken
+  authenticateToken,
+  getPostDetails
 }

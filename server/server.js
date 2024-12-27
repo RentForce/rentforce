@@ -42,9 +42,8 @@ const transporter = nodemailer.createTransport({
 });
 app.use(
   cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    credentials: true
   })
 );
 const corsOptions = {

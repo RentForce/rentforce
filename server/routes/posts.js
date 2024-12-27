@@ -12,6 +12,7 @@ const {
   getPostComments,
   authenticateToken,
   checkUserBooking,
+  getPostDetails,
 } = require("../controller/posts");
 const router = express.Router();
 // Add this new route
@@ -33,4 +34,7 @@ router.post("/posts/images", saveImage);
 router.post("/posts/location", saveLocation);
 
 router.get('/:postId/comments', getPostComments);
+
+router.get("/:postId", getPostDetails);
+
 module.exports = router;

@@ -25,21 +25,24 @@ const Login = ({ navigation }) => {
         email,
         password,
       });
-      const { token, user } = response.data;
-      if (token) {
-        await AsyncStorage.setItem("userToken", token);
-        await AsyncStorage.setItem("userData", JSON.stringify(user));
-        await AsyncStorage.setItem('userId', response.data.user.id.toString());
-        await AsyncStorage.setItem("token", token);
-        await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
+      
+      const { token, refreshToken, user } = response.data;
+      
+      if (token && refreshToken) {
+        await AsyncStorage.setItem('userToken', token);
+        await AsyncStorage.setItem('refreshToken', refreshToken);
+        await AsyncStorage.setItem('userData', JSON.stringify(user));
+        await AsyncStorage.setItem('userId', user.id.toString());
+        await AsyncStorage.setItem('currentUser', JSON.stringify(user));
 
         initSocket(process.env.EXPO_PUBLIC_API_URL);
-        console.log("Token successfully stored:", user);
+        console.log('Token successfully stored:', user);
         
-        navigation.navigate("Home", { updatedUser: user });
+        navigation.navigate('Home', { updatedUser: user });
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error('Error:', error);
+      // Handle login error
     }
   };
 

@@ -56,32 +56,13 @@ const HomeDetails = ({ route, navigation }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch comments
-        const commentsResponse = await axios.get(`${apiUrl}/posts/${post.id}/comments`);
-        console.log('Comments data:', commentsResponse.data); // Debug log
-        setComments(commentsResponse.data);
-
-        // Fetch images
-        const imagesResponse = await axios.get(`${apiUrl}/posts/images/${post.id}`);
-        setImages(imagesResponse.data);
-
-        // Add new check for user booking status
-        const token = await AsyncStorage.getItem("userToken");
-        if (token) {
-          const decodedToken = JSON.parse(atob(token.split('.')[1]));
-          const userId = decodedToken.id;
-          
-          const bookingResponse = await axios.get(
-            `${apiUrl}/posts/${post.id}/check-booking/${userId}`,
-            {
-              headers: { Authorization: `Bearer ${token}` }
-            }
-          );
-          
-          setUserCanComment(bookingResponse.data.hasBooked);
-          setUserCanReport(bookingResponse.data.hasBooked);
+        const response = await fetch(`${apiUrl}/posts/${post.id}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch post details');
         }
-
+        const data = await response.json();
+        setImages(data.images || []);
+        // Update other state variables with the fetched data
         setLoading(false);
       } catch (err) {
         console.error("Error fetching data:", err);

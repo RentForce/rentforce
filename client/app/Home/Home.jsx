@@ -371,8 +371,21 @@ const Home = ({ navigation }) => {
           </Text>
           <Text style={styles.price}>
             <Text style={styles.priceValue}>${post.price}</Text>
-            {/* <Text style={styles.priceText}>  night </Text> */}
           </Text>
+          <View style={styles.roomConfiguration}>
+            <View style={styles.roomItem}>
+              <FontAwesome5 name="bed" size={16} color="#FFD700" />
+              <Text style={styles.roomText}>{post.beds} Beds</Text>
+            </View>
+            <View style={styles.roomItem}>
+              <FontAwesome5 name="bath" size={16} color="#FFD700" />
+              <Text style={styles.roomText}>{post.baths} Baths</Text>
+            </View>
+            <View style={styles.roomItem}>
+              <FontAwesome5 name="warehouse" size={16} color="#FFD700" />
+              <Text style={styles.roomText}>{post.garage} Garage</Text>
+            </View>
+          </View>
         </View>
       </View>
     ));
@@ -381,6 +394,48 @@ const Home = ({ navigation }) => {
   const handleSearchIconPress = () => {
     // Navigate to Home when the search icon is pressed
     navigation.navigate("Home");
+  };
+
+  const fetchData = async () => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        navigation.navigate('Login');
+        return;
+      }
+
+      const response = await axios.get(`${apiUrl}/posts/all`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      setPosts(response.data);
+    } catch (error) {
+      if (error.response?.status === 401 && error.response?.data?.expired) {
+        // Token is expired, try to refresh it
+        try {
+          const refreshToken = await AsyncStorage.getItem('refreshToken');
+          const response = await axios.post(`${apiUrl}/user/refresh-token`, {
+            refreshToken
+          });
+
+          // Save new tokens
+          await AsyncStorage.setItem('userToken', response.data.token);
+          await AsyncStorage.setItem('refreshToken', response.data.refreshToken);
+
+          // Retry the original request
+          fetchData();
+        } catch (refreshError) {
+          // If refresh fails, redirect to login
+          console.error('Error refreshing token:', refreshError);
+          navigation.navigate('Login');
+        }
+      } else {
+        console.error('Error fetching data:', error);
+        // Handle other errors
+      }
+    }
   };
 
   return (
@@ -983,6 +1038,20 @@ const styles = StyleSheet.create({
   closeIcon: {
     padding: 8,
     marginRight: -19,
+  },
+  roomConfiguration: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  roomItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  roomText: {
+    marginLeft: 4,
+    color: '#FFD700',
+    fontSize: 14,
   },
 });
 
