@@ -16,7 +16,7 @@ model User {
   phoneNumber   String?    
   image         String?    
   bio           String?    
-  type          UserType?  
+  type          UserType   @default(guest)
   address       String?    
   posts         Post[]     
   cart          Cart?      
@@ -29,7 +29,6 @@ model User {
   Booking        Booking[]
   comments       Comment[]
   reports        Report[]
-
 }
 
 model Post {
@@ -47,15 +46,14 @@ model Post {
   roomConfiguration  String?
   houseRules         String?
   safetyProperty     String?
-  bookings           Booking[] // New relation to Booking model
+  bookings           Booking[]
   calendar           Calendar[]
   favourites         Favourite[]
   history            History[]
   cartPosts          CartPost[]
   map                Map?
   comments           Comment[]
-  reports        Report[]
-
+  reports            Report[]
 }
 
 model Booking {
@@ -221,6 +219,7 @@ model Report {
 }
 
 enum UserType {
+  admin
   host
   guest
 }

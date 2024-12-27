@@ -30,7 +30,6 @@ console.log("Loaded routes:", {
 
 const prisma = new PrismaClient();
 const app = express();
-
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
