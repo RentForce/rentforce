@@ -89,65 +89,80 @@ const Home = ({ navigation }) => {
   const scrollViewRef = useRef(null);
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   console.log(apiUrl, "saleeemm");
-  useEffect(() => {
-    const fetchUserId = async () => {
-      try {
-        const storedUserId = await AsyncStorage.getItem("userId");
-        if (storedUserId) {
-          setUserId(storedUserId);
-          console.log("Retrieved userId from local storage:", storedUserId);
-        } else {
-          console.error("No userId found in local storage");
-        }
-      } catch (error) {
-        console.error("Error retrieving userId from local storage:", error);
-      }
-    };
 
+  const fetchUserId = async () => {
+    try {
+      const storedUserId = await AsyncStorage.getItem('userId');
+      if (storedUserId) {
+        setUserId(storedUserId);
+        console.log('Retrieved userId:', storedUserId);
+      } else {
+        console.log('No userId found, redirecting to login');
+        navigation.navigate('Login');
+      }
+    } catch (error) {
+      console.error('Error retrieving userId:', error);
+      navigation.navigate('Login');
+    }
+  };
+
+  useEffect(() => {
     fetchUserId();
   }, []);
-  useEffect(() => {
-    // Fetch initial favorite posts from the server
-    const fetchFavorites = async () => {
-      try {
-        const token = await AsyncStorage.getItem("userToken");
-        if (!token) {
-          throw new Error("User token not found");
-        }
 
-        const decodedToken = jwtDecode(token);
-        const userId = decodedToken.id;
-
-        const response = await axios.get(
-          `${apiUrl}/user/favourites/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const favoritePostIds = new Set(response.data.map((post) => post.id));
-        setFavorites(favoritePostIds);
-      } catch (err) {
-        console.error("Error fetching favorites:", err);
+  const fetchFavorites = async () => {
+    try {
+      if (!userId) {
+        console.log('No userId available, skipping favorites fetch');
+        return;
       }
-    };
 
-    fetchFavorites();
-  }, []);
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        console.log('No token available, redirecting to login');
+        navigation.navigate('Login');
+        return;
+      }
+
+      const response = await axios.get(
+        `${apiUrl}/user/favourites/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const favoritePostIds = new Set(response.data.map((post) => post.id));
+      setFavorites(favoritePostIds);
+    } catch (err) {
+      console.error("Error fetching favorites:", err);
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigation.navigate('Login');
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchFavorites();
+    }
+  }, [userId]);
 
   const handleAddFavourite = async (postId) => {
     try {
-      const token = await AsyncStorage.getItem("userToken");
+      const token = await AsyncStorage.getItem('userToken');
+      
+      // If no token, redirect to login
       if (!token) {
-        throw new Error("User token not found");
+        navigation.navigate('Login');
+        return;
       }
 
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.id;
 
-      await axios.post(
+      const response = await axios.post(
         `${apiUrl}/user/favourites`,
         {
           userId,
@@ -161,9 +176,15 @@ const Home = ({ navigation }) => {
         }
       );
 
-      setFavorites((prevFavorites) => new Set(prevFavorites).add(postId));
+      if (response.data) {
+        setFavorites((prevFavorites) => new Set(prevFavorites).add(postId));
+      }
     } catch (err) {
       console.error("Error adding favourite:", err);
+      // If token is invalid, redirect to login
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigation.navigate('Login');
+      }
     }
   };
 
