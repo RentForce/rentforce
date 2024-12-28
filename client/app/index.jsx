@@ -5,8 +5,9 @@ import PersonalScreen from "./profile/PersonalScreen.jsx";
 import ShowProfile from "./profile/showprofile";
 import CreatePost from "./profile/CreatePost.jsx";
 import ChatSelectionScreen from "./chat/ChatSelectionScreen.jsx";
-import Chat from "../app/chat/Chat.jsx";
+import ChatScreen from "../app/chat/Chat.jsx";
 import ChatList from "./chat/ChatList.jsx";
+import ChatInput from "./chat/ChatInput.jsx";
 import Login from "./Auth/Login";
 import SignUpScreen from "./Auth/Sign-up";
 import ForgetPassword from "./Auth/Forget";
@@ -17,7 +18,6 @@ import HomeDetails from "./Home/HomeDetails.jsx";
 import BookingPage from "./Home/BookingPage";
 import pay from "./Home/payment.jsx";
 import { NotificationProvider } from "./chat/Notifications.jsx";
-import { useNotifications } from "./chat/Notifications.jsx";
 import NotificationScreen from "./notifications/NotificationScreen.jsx";
 
 const Stack = createNativeStackNavigator();
@@ -96,13 +96,14 @@ function App() {
           component={ChatSelectionScreen}
           options={{ title: "Select User" }}
         />
-        <Stack.Screen
-          name="Chat"
-          component={Chat}
-          options={({ route }) => ({
-            title: `Chat with ${route.params?.receiverName || "User"}`,
-          })}
-        />
+          <Stack.Screen 
+        name="ChatScreen" 
+        component={ChatScreen}
+        options={({ route }) => ({ 
+          title: `${route.params.otherUser.firstName} ${route.params.otherUser.lastName}` 
+        })}
+      />
+   
         <Stack.Screen
           name="notifications"
           component={NotificationScreen}
@@ -110,6 +111,7 @@ function App() {
         />
       </Stack.Navigator>
     </NotificationProvider>
+
   );
 }
 

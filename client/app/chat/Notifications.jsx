@@ -17,6 +17,12 @@ export const NotificationProvider = ({ children }) => {
         return;
       }
   
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        console.error('No auth token available');
+        return;
+      }
+  
       console.log('Fetching unread count for user:', currentUserId);
       
       const response = await fetch(
@@ -26,6 +32,7 @@ export const NotificationProvider = ({ children }) => {
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
         }
       );
@@ -45,6 +52,43 @@ export const NotificationProvider = ({ children }) => {
       }
     }
   };
+  
+  const markChatAsRead = async (chatId) => {
+    try {
+      if (!userId) return;
+      
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        console.error('No auth token available');
+        return;
+      }
+  
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/chat/${chatId}/read/${userId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log('Mark as read response:', data);
+  
+      if (data.readCount) {
+        setUnreadCount(prev => Math.max(0, prev - data.readCount));
+      }
+    } catch (error) {
+      console.error('Error marking chat as read:', error);
+    }
+  };
+  
 
   useEffect(() => {
     const loadUserIdAndInitialize = async () => {
@@ -100,35 +144,7 @@ export const NotificationProvider = ({ children }) => {
     };
   }, [userId]);
 
-  const markChatAsRead = async (chatId) => {
-    try {
-      if (!userId) return;
-      
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/chat/messages/read/${chatId}/${userId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Mark as read response:', data);
-
-      // If the server doesn't emit a socket event, we can update the count here
-      if (data.readCount) {
-        setUnreadCount(prev => Math.max(0, prev - data.readCount));
-      }
-    } catch (error) {
-      console.error('Error marking chat as read:', error);
-    }
-  };
+  
 
   return (
     <NotificationContext.Provider value={{

@@ -1,4 +1,4 @@
-import React, { useEffect,useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -36,25 +36,33 @@ const Navbar = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-    <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+      <TouchableOpacity onPress={() => navigation.navigate("Home")}>
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.iconContainer} 
+      <TouchableOpacity
+        style={styles.iconContainer}
         onPress={() => navigation.navigate('favourites')}
       >
         <MaterialIcons name="bookmark-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Saved</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.iconContainer} 
+
+      <TouchableOpacity
+        style={styles.iconContainer}
         onPress={() => navigation.navigate("ChatSelectionScreen")}
         onPressIn={() => setPressedIcon("chat")}
         onPressOut={() => setPressedIcon(null)}
       >
-        <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
-        <View style={styles.notificationDot} />
+        <View style={styles.iconWrapper}>
+
+          <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unreadCount}</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.text}>Inbox</Text>
       </TouchableOpacity>
       <TouchableOpacity
@@ -130,10 +138,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "bold",
     paddingHorizontal: 4,
-  textSpacing: {
-    marginTop: 5,
+    textSpacing: {
+      marginTop: 8,
+    },
   },
-}});
+  
+  iconWrapper: {
+    position: 'relative',
+    width: 24,
+    height: 24,
+  },
+  badge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    paddingHorizontal: 4,
+  },
+ 
+});
 
 export default Navbar;
 

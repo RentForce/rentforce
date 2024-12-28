@@ -160,6 +160,7 @@ model Chat {
   messages   Message[]
   createdAt  DateTime  @default(now())
     unreadCount Int @default(0)
+  lastMessageAt DateTime  @default(now())  
 
 }
 

@@ -45,6 +45,11 @@
           "microphonePermission": "The app needs access to your microphone to record voice messages."
 
         }
+      ],[
+        "expo-av",
+        {
+          "microphonePermission": "The app needs access to your microphone to record voice messages."
+        }
       ],
       "expo-router",
       [

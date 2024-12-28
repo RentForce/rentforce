@@ -22,6 +22,7 @@ import ImageZoom from "react-native-image-pan-zoom";
 import MapView, { Marker } from "react-native-maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Checkbox } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -209,6 +210,49 @@ const HomeDetails = ({ route, navigation }) => {
     }
   };
 
+  const handleChatWithReceiver = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        navigation.navigate("Login");
+        return;
+      }
+
+      const currentUserId = JSON.parse(atob(token.split('.')[1])).id;
+      
+      // Don't allow chatting with yourself
+      if (currentUserId === post.userId) {
+        Alert.alert("Error", "You cannot chat with yourself");
+        return;
+      }
+
+      // Create or get existing chat
+      const response = await axios.post(
+        `${apiUrl}/api/chat/create`,
+        {
+          userId: currentUserId,
+          receiverId: post.userId
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      // Navigate to chat screen
+      navigation.navigate("chat/Chat", {
+        chatId: response.data.id,
+        otherUser: {
+          id: post.userId,
+          firstName: post.userFirstName,
+          lastName: post.userLastName,
+          image: post.userImage
+        }
+      });
+    } catch (error) {
+      console.error("Error starting chat:", error);
+      Alert.alert("Error", "Could not start chat. Please try again.");
+    }
+  };
   const ImageModal = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const scrollX = new Animated.Value(0);
@@ -441,6 +485,17 @@ const HomeDetails = ({ route, navigation }) => {
             <Text style={styles.sectionTitle}>Safety & property</Text>
             <Text style={styles.detailText}>{post.safetyProperty}</Text>
           </View>
+
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.chatSection}
+              onPress={handleChatWithReceiver}
+            >
+              <MaterialCommunityIcons name="chat" size={24} color="#666666" />
+              <Text style={styles.chatText}>Chat with the Owner</Text>
+            </TouchableOpacity>
+          </View>
+
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Guest Reviews</Text>
@@ -1360,6 +1415,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+  },
+  chatSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 5,
+    marginVertical: 10,
+  },
+  chatText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: "#333",
   },
 });
 
