@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import './PostManagement.css';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5000';
 
 function PostManagement({ onPageChange, onViewPost }) {
   const [posts, setPosts] = useState([]);
@@ -7,17 +10,30 @@ function PostManagement({ onPageChange, onViewPost }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
+  const [error, setError] = useState(null);
 
   const fetchPosts = async (page = 1, searchTerm = '') => {
     try {
+      setLoading(true);
+      setError(null);
+      
       const response = await fetch(
         `http://localhost:5000/admin/posts?page=${page}&limit=10&search=${searchTerm}`
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setPosts(data.posts);
-      setTotalPages(data.pagination.pages);
+      
+      setPosts(data.posts || []);
+      setTotalPages(data.pagination?.pages || 1);
     } catch (error) {
       console.error('Error fetching posts:', error);
+      setError('Failed to load posts');
+      setPosts([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -64,8 +80,41 @@ function PostManagement({ onPageChange, onViewPost }) {
     }
   };
 
+  const handleApprovePost = async (postId) => {
+    try {
+      const response = await axios.put(`${API_URL}/admin/posts/${postId}/status`, {
+        status: 'APPROVED'
+      });
+      
+      if (response.status === 200) {
+        console.log('Post approved successfully');
+      } else {
+        throw new Error('Failed to approve post');
+      }
+    } catch (error) {
+      console.error('Error approving post:', error);
+      alert('Failed to approve post. Please try again.');
+    }
+  };
+
+  const handleRejectPost = async (postId, rejectionReason) => {
+    try {
+      const response = await axios.put(`${API_URL}/admin/posts/${postId}/status`, {
+        status: 'REJECTED',
+        rejectionReason
+      });
+      // Refresh posts list
+    } catch (error) {
+      console.error('Error rejecting post:', error);
+    }
+  };
+
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="loading">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
   }
 
   return (
@@ -90,25 +139,37 @@ function PostManagement({ onPageChange, onViewPost }) {
               <th>Location</th>
               <th>Price</th>
               <th>Category</th>
-              <th>Host</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {posts.map((post) => (
-              <tr key={post.id}>
-                <td>{post.id}</td>
-                <td>{post.title}</td>
-                <td>{post.location}</td>
-                <td>${post.price}</td>
-                <td>{post.category}</td>
-                <td>{`${post.user.firstName} ${post.user.lastName}`}</td>
-                <td>
-                  <button className="view-btn" onClick={() => handleView(post.id)}>View</button>
-                  <button className="delete-btn" onClick={() => handleDelete(post.id)}>Delete</button>
-                </td>
+            {posts && posts.length > 0 ? (
+              posts.map((post) => (
+                <tr key={post.id}>
+                  <td>{post.id}</td>
+                  <td>{post.title}</td>
+                  <td>{post.location}</td>
+                  <td>${post.price}</td>
+                  <td>{post.category}</td>
+                  <td>{post.status}</td>
+                  <td>
+                    <button className="view-btn" onClick={() => handleView(post.id)}>View</button>
+                    {post.status === 'PENDING' && (
+                      <>
+                        <button className="approve-btn" onClick={() => handleApprovePost(post.id)}>Approve</button>
+                        <button className="reject-btn" onClick={() => handleRejectPost(post.id)}>Reject</button>
+                      </>
+                    )}
+                    <button className="delete-btn" onClick={() => handleDelete(post.id)}>Delete</button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="no-posts">No posts found</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

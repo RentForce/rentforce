@@ -318,51 +318,48 @@ router.delete('/users/:id', async (req, res) => {
   }
 });
 
-// Get all posts with pagination
+// Get all posts with pagination and search
 router.get('/posts', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const search = req.query.search || '';
+  const status = req.query.status || 'ALL';
 
   try {
     const skip = (page - 1) * limit;
     
-    const posts = await prisma.post.findMany({
-      where: {
-        OR: [
-          { title: { contains: search } },
-          { description: { contains: search } },
-          { location: { contains: search } }
-        ]
-      },
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true
-          }
+    const whereClause = {
+      OR: [
+        { title: { contains: search } },
+        { description: { contains: search } },
+        { location: { contains: search } }
+      ],
+      ...(status !== 'ALL' && { status: status })
+    };
+
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where: whereClause,
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true
+            }
+          },
+          images: true
         },
-        images: true
-      },
-      orderBy: {
-        id: 'desc'
-      },
-      skip: skip,
-      take: limit
-    });
+        orderBy: {
+          createdAt: 'desc'
+        },
+        skip,
+        take: limit
+      }),
+      prisma.post.count({ where: whereClause })
+    ]);
 
-    const total = await prisma.post.count({
-      where: {
-        OR: [
-          { title: { contains: search } },
-          { description: { contains: search } },
-          { location: { contains: search } }
-        ]
-      }
-    });
-
-    res.json({ 
+    res.json({
       posts,
       pagination: {
         total,
@@ -372,85 +369,29 @@ router.get('/posts', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching posts:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Error fetching posts',
-      details: error.message 
+      details: error.message
     });
   }
 });
 
-// Delete a post
-router.delete('/posts/:id', async (req, res) => {
+// Get pending posts count
+router.get('/posts/pending/count', async (req, res) => {
   try {
-    const postId = parseInt(req.params.id);
-
-    await prisma.$transaction(async (prisma) => {
-      // 1. Delete all images associated with the post
-      await prisma.image.deleteMany({
-        where: { postId: postId }
-      });
-
-      // 2. Delete map data if exists
-      await prisma.map.deleteMany({
-        where: { postId: postId }
-      });
-
-      // 3. Delete calendar entries
-      await prisma.calendar.deleteMany({
-        where: { postId: postId }
-      });
-
-      // 4. Delete favourites
-      await prisma.favourite.deleteMany({
-        where: { postId: postId }
-      });
-
-      // 5. Delete cart posts
-      await prisma.cartPost.deleteMany({
-        where: { postId: postId }
-      });
-
-      // 6. Delete history entries
-      await prisma.history.deleteMany({
-        where: { postId: postId }
-      });
-
-      // 7. Delete bookings
-      await prisma.booking.deleteMany({
-        where: { postId: postId }
-      });
-
-      // 8. Delete comments
-      await prisma.comment.deleteMany({
-        where: { postId: postId }
-      });
-
-      // 9. Delete reports
-      await prisma.report.deleteMany({
-        where: { postId: postId }
-      });
-
-      // 10. Finally delete the post
-      await prisma.post.delete({
-        where: { id: postId }
-      });
+    const count = await prisma.post.count({
+      where: {
+        status: 'PENDING'
+      }
     });
-
-    res.json({ 
-      success: true, 
-      message: 'Post deleted successfully' 
-    });
+    res.json({ count });
   } catch (error) {
-    console.error('Error deleting post:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Error deleting post', 
-      details: error.message 
-    });
+    console.error('Error fetching pending post count:', error);
+    res.status(500).json({ error: 'Error fetching pending post count' });
   }
 });
 
-// Add this new route for getting a single post
+// Get a single post by ID
 router.get('/posts/:id', async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
@@ -464,19 +405,7 @@ router.get('/posts/:id', async (req, res) => {
             email: true
           }
         },
-        images: true,
-        calendar: true,
-        bookings: {
-          include: {
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-                email: true
-              }
-            }
-          }
-        }
+        images: true
       }
     });
 
@@ -487,8 +416,76 @@ router.get('/posts/:id', async (req, res) => {
     res.json(post);
   } catch (error) {
     console.error('Error fetching post:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Error fetching post details',
+      details: error.message
+    });
+  }
+});
+
+// Delete a post
+router.delete('/posts/:id', async (req, res) => {
+  try {
+    const postId = parseInt(req.params.id);
+    
+    await prisma.post.delete({
+      where: { id: postId }
+    });
+
+    res.json({
+      success: true,
+      message: 'Post deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error deleting post',
+      details: error.message
+    });
+  }
+});
+
+// Add new route for approving/rejecting posts
+router.put('/posts/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, rejectionReason } = req.body;
+
+    const post = await prisma.post.update({
+      where: { id: parseInt(id) },
+      data: { 
+        status,
+        rejectionReason: status === 'REJECTED' ? rejectionReason : null
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    // Create notification for the user
+    await prisma.notification.create({
+      data: {
+        userId: post.user.id,
+        type: status === 'APPROVED' ? 'POST_APPROVED' : 'POST_REJECTED',
+        message: status === 'APPROVED' 
+          ? `Your post "${post.title}" has been approved`
+          : `Your post "${post.title}" has been rejected: ${rejectionReason}`,
+        isRead: false
+      }
+    });
+
+    res.json(post);
+  } catch (error) {
+    console.error('Error updating post status:', error);
+    res.status(500).json({ 
+      error: 'Error updating post status',
       details: error.message 
     });
   }

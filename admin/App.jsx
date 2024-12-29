@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './src/components/Auth/Login';
-import Dashboard from './src/components/Admin/Dashboard'
+import Dashboard from './src/components/Admin/Dashboard';
 import "./App.css";
 
 const App = () => {
@@ -11,20 +11,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route
-          path="/*"
-          element={
-            user && user.type === "admin" ? (
-              <>
-                <Routes>
-                  <Route path="/Dashboard" element={<Dashboard />} />
-                </Routes>
-              </>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+        <Route path="/Dashboard"element={<Dashboard/>}/> 
       </Routes>
     </Router>
   );

@@ -8,8 +8,10 @@ CREATE TABLE `User` (
     `phoneNumber` VARCHAR(191) NULL,
     `image` VARCHAR(191) NULL,
     `bio` VARCHAR(191) NULL,
-    `type` ENUM('host', 'guest') NULL,
+    `type` ENUM('admin', 'host', 'guest') NOT NULL DEFAULT 'guest',
     `address` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `bannedUntil` DATETIME(3) NULL,
 
     UNIQUE INDEX `User_email_key`(`email`),
     PRIMARY KEY (`id`)
@@ -29,6 +31,10 @@ CREATE TABLE `Post` (
     `roomConfiguration` VARCHAR(191) NULL,
     `houseRules` VARCHAR(191) NULL,
     `safetyProperty` VARCHAR(191) NULL,
+    `status` ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    `rejectionReason` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
