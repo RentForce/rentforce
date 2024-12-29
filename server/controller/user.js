@@ -122,6 +122,7 @@ const login = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+console.log(isMatch , "math");
 
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
@@ -272,19 +273,44 @@ const createPost = async (req, res) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
+    // First create the post
     const post = await prisma.post.create({
       data: {
         title,
-        images: uploadedImages,
         description,
         location: location || "",
         price: parseFloat(price),
         category,
         userId: req.user.id,
-      },
+      }
     });
 
-    res.status(201).json(post);
+    // Create all images if they exist
+    if (images && Array.isArray(images) && images.length > 0) {
+      // Use createMany for better performance with multiple images
+      await prisma.image.createMany({
+        data: images.map(img => ({
+          url: img.url,
+          postId: post.id
+        }))
+      });
+    }
+
+    // Fetch the complete post with all images
+    const postWithImages = await prisma.post.findUnique({
+      where: { id: post.id },
+      include: {
+        images: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          }
+        }
+      }
+    });
+
+    res.status(201).json(postWithImages);
   } catch (error) {
     console.error("Error creating post:", error);
     res.status(500).json({
@@ -472,6 +498,55 @@ const createHistory = async (req, res) => {
     }
 };
 
+const getUserPaymentHistory = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const bookings = await prisma.booking.findMany({
+      where: { 
+        userId: parseInt(userId),
+        NOT: {
+          status: 'CANCELLED'
+        }
+      },
+      include: {
+        post: {
+          select: {
+            title: true,
+            location: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    // Transform the data to include property details
+    const paymentHistory = bookings.map(booking => ({
+      id: booking.id,
+      bookingDate: booking.createdAt,
+      checkInDate: booking.startDate,
+      checkOutDate: booking.endDate,
+      totalPrice: booking.totalPrice,
+      status: booking.status,
+      numberOfGuests: booking.numberOfGuests,
+      propertyDetails: {
+        title: booking.post.title,
+        location: booking.post.location
+      }
+    }));
+
+    res.status(200).json(paymentHistory);
+  } catch (error) {
+    console.error('Error fetching payment history:', error);
+    res.status(500).json({ 
+      message: 'Error retrieving payment history', 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
     getUserData,
     updateUserData,
@@ -485,4 +560,5 @@ module.exports = {
     addToFavourites,
     getUserHistory,
     createHistory,
+    getUserPaymentHistory,
 };

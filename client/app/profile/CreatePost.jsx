@@ -13,6 +13,24 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+
+const categories = [
+  "house",
+  "apartment",
+  "villa",
+  "hotel",
+  "historical",
+  "lake",
+  "beachfront",
+  "countryside",
+  "castles",
+  "experiences",
+  "camping",
+  "desert",
+  "luxe",
+  "islands",
+];
 
 const CreatePost = () => {
   const navigation = useNavigation();
@@ -40,39 +58,35 @@ const CreatePost = () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
       
-      // Upload images to Cloudinary
+      // Parse the stored images array
       const imagesArray = formData.images ? JSON.parse(formData.images) : [];
-      const uploadPromises = imagesArray.map(async (image) => {
+      
+      // Upload all images to Cloudinary
+      const uploadPromises = imagesArray.map(async (imageUri) => {
         const formData = new FormData();
         formData.append("file", {
-          uri: image,
+          uri: imageUri,
           type: 'image/jpeg',
           name: `upload_${Date.now()}.jpg`,
         });
         formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
         formData.append("cloud_name", CLOUDINARY_CLOUD_NAME);
 
-        try {
-          const response = await axios.post(
-            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-            formData,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data",
-              },
-            }
-          );
-          return { url: response.data.secure_url };
-        } catch (uploadError) {
-          console.error("Error uploading image:", uploadError.response?.data || uploadError);
-          throw new Error("Image upload failed. Please try again.");
-        }
+        const response = await axios.post(
+          `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        return { url: response.data.secure_url };
       });
 
       const uploadedImages = await Promise.all(uploadPromises);
-      console.log("Uploaded images:", uploadedImages);
 
-      // Create the post with proper structure
+      // Create the post with all images
       const postData = {
         title: formData.title,
         description: formData.description,
@@ -82,11 +96,6 @@ const CreatePost = () => {
         images: uploadedImages
       };
 
-      console.log("Sending post data:", postData);
-      console.log("API URL:", `${apiUrl}/user/posts`);
-      console.log("Token:", token);
-
-      // Create the post
       const postResponse = await axios.post(
         `${apiUrl}/user/posts`,
         postData,
@@ -128,14 +137,15 @@ const CreatePost = () => {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
+      allowsMultipleSelection: true, // Enable multiple selection
+      selectionLimit: 4, // Limit to 4 images
       aspect: [4, 3],
       quality: 1,
-      selectionLimit: 4, // Limit to 4 images
     });
 
     if (!result.canceled) {
-      handleChange("images", JSON.stringify(result.assets.map(asset => asset.uri))); // Update images state
+      // Store the array of image URIs
+      handleChange("images", JSON.stringify(result.assets.map(asset => asset.uri)));
     }
   };
 
@@ -145,24 +155,26 @@ const CreatePost = () => {
 
   return (
     <LinearGradient
-      colors={["#F1EFEF", "#FFFFFF"]} // Gradient for background
+      colors={["#F1EFEF", "#F1EFEF"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       style={styles.container}
     >
+      <View style={styles.headerContainer}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#F1EFEF" />
+        </TouchableOpacity>
+      </View>
+
       <Text style={styles.title}>Create a New Post</Text>
       <TextInput
         placeholder="Title"
         onChangeText={(value) => handleChange("title", value)}
         value={formData.title}
         style={styles.input}
-      />
-      <TextInput
-        placeholder="Images (JSON format)"
-        onChangeText={(value) => handleChange("images", value)}
-        value={formData.images}
-        style={styles.input}
-        editable={false}
       />
       <TouchableOpacity onPress={handleImagePick} style={styles.imagePickerButton}>
         <Text style={styles.buttonText}>Pick Images</Text>
@@ -192,13 +204,16 @@ const CreatePost = () => {
         style={styles.picker}
       >
         <Picker.Item label="Select Category" value="" />
-        <Picker.Item label="House" value="house" />
-        <Picker.Item label="Apartment" value="apartment" />
-        <Picker.Item label="Villa" value="villa" />
-        <Picker.Item label="Hotel" value="hotel" />
+        {categories.map((category) => (
+          <Picker.Item
+            key={category}
+            label={category.charAt(0).toUpperCase() + category.slice(1)}
+            value={category}
+          />
+        ))}
       </Picker>
       <LinearGradient
-        colors={["#333333", "#000000"]} // Gradient for button
+        colors={["#082631", "#082631"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.buttonContainer}
@@ -215,37 +230,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#F1EFEF", // Soft ash gray for background
+    backgroundColor: "#F1EFEF",
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#333333", // Charcoal black for title
+    color: "#082631",
     marginBottom: 20,
     textAlign: "center",
   },
   input: {
     height: 50,
-    borderColor: "#A9A9A9", // Soft ash gray border
+    borderColor: "#082631",
     borderWidth: 1,
     marginBottom: 15,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: "#FFFFFF", // White background for inputs
+    backgroundColor: "#F1EFEF",
     fontSize: 16,
-    color: "#333333", // Charcoal black text
+    color: "#082631",
   },
   picker: {
     height: 50,
     marginBottom: 15,
     borderRadius: 8,
-    backgroundColor: "#FFFFFF", // White background for picker
-    color: "#333333", // Charcoal black text
+    backgroundColor: "#F1EFEF",
+    color: "#082631",
   },
   buttonContainer: {
     marginTop: 20,
     borderRadius: 8,
-    overflow: "hidden", // Ensures the gradient follows the button shape
+    overflow: "hidden",
   },
   button: {
     paddingVertical: 12,
@@ -254,16 +269,28 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18,
-    color: "#FFFFFF", 
+    color: "#F1EFEF",
     fontWeight: "bold",
   },
   imagePickerButton: {
-    backgroundColor: "#333333",
+    backgroundColor: "#082631",
     padding: 10,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 15,
+  },
+  headerContainer: {
+    paddingTop: 20,
+    paddingHorizontal: 10,
+    paddingBottom: 0,
+    marginBottom: 10,
+  },
+  backButton: {
+    backgroundColor: '#082631',
+    borderRadius: 20,
+    padding: 8,
+    alignSelf: 'flex-start',
   },
 });
 

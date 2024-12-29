@@ -11,6 +11,7 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Navbar from "../Home/Navbar";
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 const DEFAULT_PROFILE_IMAGE =
   "https://www.shutterstock.com/image-vector/user-icon-vector-trendy-flat-600nw-1720665448.jpg";
@@ -89,16 +90,23 @@ const ProfileScreen = ({ navigation, route }) => {
     <View style={styles.container}>
       <ScrollView style={styles.mainContent}>
         <View style={styles.profileHeader}>
+          <View style={styles.headerBackground}>
+            <View style={styles.headerPattern} />
+          </View>
           <View style={styles.imageContainer}>
             <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            <View style={styles.statusIndicator} />
           </View>
-          <Text
-            style={styles.profileName}
-            onPress={() =>
-              navigation.navigate("showprofile", { userId: userData.id })
-            }
-          >{`${userData.firstName} ${userData.lastName}`}</Text>
-          <Text style={styles.profileEmail}>{userData.email}</Text>
+          <View style={styles.userInfoContainer}>
+            <Text
+              style={styles.profileName}
+              onPress={() =>
+                navigation.navigate("showprofile", { userId: userData.id })
+              }
+            >{`${userData.firstName} ${userData.lastName}`}</Text>
+            <Text style={styles.profileEmail}>{userData.email}</Text>
+           
+          </View>
         </View>
 
         <View style={styles.accountSettings}>
@@ -113,41 +121,36 @@ const ProfileScreen = ({ navigation, route }) => {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => navigation.navigate('PaymentHistory')}
+          >
             <View style={styles.settingContent}>
               <Ionicons name="card" size={20} color="#333" />
               <Text style={styles.settingText}>Payments and payouts</Text>
+              <Ionicons name="chevron-forward" size={20} color="#333" />
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => navigation.navigate('AboutUs')}
+          >
             <View style={styles.settingContent}>
-              <Ionicons name="notifications" size={20} color="#333" />
-              <Text style={styles.settingText}>Notifications</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingItem}>
-            <View style={styles.settingContent}>
-              <Ionicons name="lock-closed" size={20} color="#333" />
-              <Text style={styles.settingText}>Privacy and sharing</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingItem}>
-            <View style={styles.settingContent}>
-              <Ionicons name="briefcase" size={20} color="#333" />
-              <Text style={styles.settingText}>Travel for work</Text>
+              <Ionicons name="information-circle" size={20} color="#333" />
+              <Text style={styles.settingText}>About Us</Text>
+              <Ionicons name="chevron-forward" size={20} color="#333" />
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.settingItem}
-            onPress={() => navigation.navigate("CreatePost")} // Navigate to CreatePost
+            onPress={() => navigation.navigate("CreatePost")}
           >
             <View style={styles.settingContent}>
               <Ionicons name="create" size={20} color="#333" />
-              <Text style={styles.settingText}>Create Post</Text>
+              <Text style={styles.settingText}>Liste your space </Text>
+              <Ionicons name="chevron-forward" size={20} color="#333" />
             </View>
           </TouchableOpacity>
 
@@ -168,68 +171,129 @@ const ProfileScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
   },
   mainContent: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   profileHeader: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: 30,
-    backgroundColor: "#fff",
-    marginTop: 50,
+    backgroundColor: '#fff',
+  },
+  headerBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+    backgroundColor: '#082631',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  headerPattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#082631',
+    opacity: 0.5,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   imageContainer: {
-    position: "relative",
+    position: 'relative',
+    padding: 6,
+    backgroundColor: '#fff',
+    borderRadius: 85,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 8,
   },
   profileImage: {
     width: 150,
     height: 150,
     borderRadius: 75,
-    alignSelf: "center",
-    marginBottom: 20,
+    borderWidth: 4,
+    borderColor: '#fff',
   },
-  editIcon: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    borderRadius: 15,
-    padding: 5,
+  userInfoContainer: {
+    alignItems: 'center',
+    marginTop: 15,
   },
   profileName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 10,
   },
   profileEmail: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 5,
+  },
+  roleContainer: {
+    marginTop: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+    backgroundColor: '#082631',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#FFB5A7',
+  },
+  roleText: {
+    color: '#666',
     fontSize: 14,
-    color: "#666",
-    marginBottom: 10,
+    fontWeight: '500',
+  },
+  statusIndicator: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    width: 15,
+    height: 15,
+    borderRadius: 10,
+    backgroundColor: '#95D1CC',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   accountSettings: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 20,
   },
   settingItem: {
     paddingVertical: 15,
-    paddingHorizontal: 5,
-    borderRadius: 10,
-    backgroundColor: "#f7f7f7",
-    marginVertical: 3,
+    paddingHorizontal: 15,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    marginVertical: 8,
+    shadowColor: '#082631',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   settingContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   settingText: {
     fontSize: 16,
-    color: "#333",
+    color: '#082631',
     flex: 1,
-    marginLeft: 10,
+    marginLeft: 15,
+    fontWeight: '500',
   },
 });
 

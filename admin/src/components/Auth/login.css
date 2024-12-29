@@ -1,0 +1,256 @@
+
+
+
+.loginContainer {
+    font-family: 'Inter', sans-serif;
+        height: 100vh;
+        background: linear-gradient(to right, rgba(144,146,150,1), 35% ,  rgba(61,85,96,1));
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    width: 100%;
+}
+
+.login-image-container {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    margin-right: 20px;
+}
+
+.loginImage {
+    width: 500px;
+    padding-right: 230px;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.912));
+}
+
+.Logingreeting {
+    position:absolute;
+    font-size: 20px;
+    margin-left: 20px;
+    position: center;
+    top: 82%;
+  left:20%;
+  color: white;
+}
+
+.loginForm {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 40px;
+    border-radius: 8px;
+    width: 500px;
+    box-sizing: border-box;
+    height: 85%;
+}
+
+.loginMessage {
+    margin-top: 0;
+    font-size: 30px;
+    font-weight: 600;
+    margin-right: 305px;
+}
+
+.login-link {
+    font-size: 14px;
+}
+
+.login-link a {
+    color: #082631;
+    text-decoration: none;
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}
+
+.loginForm div {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.loginForm .password-container {
+    position: relative;
+    width: 100%;
+}
+
+.loginForm input,
+.loginForm select {
+    width: 100%;
+    padding: 4px;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0);
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    border-radius: 0;
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(0px);
+}
+
+.loginForm input::placeholder,
+.loginForm select {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.loginForm .error-message {
+    color: red;
+    font-size: 14px;
+}
+
+.loginForm .loginButton {
+    background: linear-gradient(90deg, #082631 0%, #082631 100%);
+    box-shadow: 0px 4px 8px #082631, 0px 8px 16px #082631;
+    border-radius: 100px;
+    padding: 10px 24px;
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 24px;
+    text-align: center;
+    color: #FFFFFF;
+    border: none;
+    margin-left: 300px;
+    cursor: pointer;
+}
+
+.loginForm .loginButton:hover {
+    transform: scale(1.1);
+}
+
+.loginForm .or-container {
+    text-align: center;
+    font-size: 18px;
+    color: rgb(255, 255, 255);
+    margin-bottom: 0px;
+
+}
+
+.loginForm .socialButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.loginForm .socialButton {
+    display: flex;               
+    align-items: center;         
+    justify-content: center;     
+    gap: 10px; 
+    padding: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 30px;
+    width: 100%;
+    color: white;
+    border: 2px solid transparent;
+    background-color: #555;
+}
+
+.loginForm .googleButton {
+    background-color: #db453700;
+    border: 1px solid;
+    padding: 18px;
+    margin-bottom: 18px;
+    transition: transform 0.3s ease;
+}
+
+.loginForm .facebookButton  {
+    background-color:#1877f2 ; 
+    padding: 18px ; 
+    transition: transform 0.3s ease;
+    
+
+
+}
+.githubButton{
+    background-color: rgba(29, 29, 29, 1);
+    padding: 18px ; 
+    transition: transform 0.3s ease;
+height: 60px;
+margin-top: 20px;
+
+}
+
+.loginForm .socialButton:hover {
+    transform: scale(1.05);
+}
+
+#email {
+    width: 100%;
+    padding: 4px;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0);
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    border-radius: 0;
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(0px);
+}
+
+#email::placeholder {
+    color: rgba(255, 255, 255, 0.7); 
+}
+
+
+.swal2-confirm.custom-button {
+    border-radius: 20px; 
+    padding: 15px 30px;  
+    background-color: #3fc3ee;
+    color: white;
+    border: none;
+
+}
+
+.swal2-confirm.custom-button:hover{
+    background:#3fc3ee;
+    transform: scale(1.05);
+    transition: background-color 0.3s ease, transform 0.3s ease; 
+    }
+
+    .form-group {
+        transition: opacity 0.3s ease-in-out;
+      }
+      
+      .form-group.hidden {
+        opacity: 0;
+        height: 0;
+        overflow: hidden;
+      }
+      
+
+      
+      .loginTitle{
+        margin-left: -310px;
+        margin-bottom: 30px;
+        font-size: 30px;
+        font-weight: bold;
+        line-height: 35.8px;
+        letter-spacing: 0.01em;
+        text-align: center;
+        text-underline-position: from-font;
+        text-decoration-skip-ink: none;
+        
+      }
+
+      .login-link-text{
+        color:#082631
+      }
+
+      .orText{
+        font-size: 17px;
+      }
+
