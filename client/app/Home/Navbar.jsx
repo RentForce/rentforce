@@ -1,11 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNotifications } from "../chat/Notifications.jsx";
+import { NotificationBadge } from "../chat/NotificationBadge.jsx";
 import NotificationIcon from "../../components/NotificationIcon";
 
-const Navbar = ({ navigation, userId }) => {
+const Navbar = ({ navigation }) => {
+  const { unreadCount } = useNotifications();
   const [pressedIcon, setPressedIcon] = useState(null);
+
+  console.log("Navbar rendering with unread count:", unreadCount);
 
   const handleConfirmExplore = () => {
     console.log("Navigating to Home");
@@ -38,6 +43,10 @@ const Navbar = ({ navigation, userId }) => {
     }
   };
 
+  useEffect(() => {
+    console.log("Navbar unread count:", unreadCount);
+  }, [unreadCount]);
+
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={handlenavigation('Home')}>
@@ -51,16 +60,28 @@ const Navbar = ({ navigation, userId }) => {
         <MaterialIcons name="bookmark-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Saved</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.iconContainer} 
-        onPress={handlenavigation('ChatSelectionScreen')}
+
+      <TouchableOpacity
+        style={styles.iconContainer}
+        onPress={() => navigation.navigate("ChatSelectionScreen")}
         onPressIn={() => setPressedIcon("chat")}
         onPressOut={() => setPressedIcon(null)}
       >
-        <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
-        <View style={styles.notificationDot} />
+        <View style={styles.iconWrapper}>
+          <Ionicons 
+            name="chatbubble-outline" 
+            size={24} 
+            style={styles.icon} 
+          />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unreadCount}</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.text}>Inbox</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
         style={[
           styles.iconContainer,
@@ -71,8 +92,9 @@ const Navbar = ({ navigation, userId }) => {
         onPressOut={() => setPressedIcon(null)}
       >
         <NotificationIcon size={24} color="#fff" />
-        <Text style={[styles.text, styles.textSpacing]}>Ping</Text>
+        <Text style={styles.text}>Ping</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
         style={[
           styles.iconContainer,
@@ -106,14 +128,36 @@ const styles = StyleSheet.create({
   },
   icon: {
     color: "#fff",
-    margin: 5,
   },
   text: {
     fontSize: 12,
     color: "#888",
+    marginTop: 4,
   },
-  textSpacing: {
-    marginTop: 8,
+  iconWrapper: {
+    position: "relative",
+    width: 32,  // Increased from 24 to give more space
+    height: 32, // Increased from 24 to give more space
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badge: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    backgroundColor: "red",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1,
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
+    paddingHorizontal: 4,
   },
 });
 

@@ -210,6 +210,49 @@ const HomeDetails = ({ route, navigation }) => {
     }
   };
 
+  const handleChatWithReceiver = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        navigation.navigate("Login");
+        return;
+      }
+
+      const currentUserId = JSON.parse(atob(token.split('.')[1])).id;
+      
+      // Don't allow chatting with yourself
+      if (currentUserId === post.userId) {
+        Alert.alert("Error", "You cannot chat with yourself");
+        return;
+      }
+
+      // Create or get existing chat
+      const response = await axios.post(
+        `${apiUrl}/api/chat/create`,
+        {
+          userId: currentUserId,
+          receiverId: post.userId
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      // Navigate to chat screen
+      navigation.navigate("chat/Chat", {
+        chatId: response.data.id,
+        otherUser: {
+          id: post.userId,
+          firstName: post.userFirstName,
+          lastName: post.userLastName,
+          image: post.userImage
+        }
+      });
+    } catch (error) {
+      console.error("Error starting chat:", error);
+      Alert.alert("Error", "Could not start chat. Please try again.");
+    }
+  };
   const ImageModal = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const scrollX = new Animated.Value(0);
@@ -446,7 +489,7 @@ const HomeDetails = ({ route, navigation }) => {
           <View style={styles.section}>
             <TouchableOpacity
               style={styles.chatSection}
-              onPress={() => navigation.navigate("ChatSelectionScreen")}
+              onPress={handleChatWithReceiver}
             >
               <MaterialCommunityIcons name="chat" size={24} color="#666666" />
               <Text style={styles.chatText}>Chat with the Owner</Text>

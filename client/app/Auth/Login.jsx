@@ -16,6 +16,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
 import { initSocket } from "../chat/Socket.js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import SweetAlert from '../../components/SweetAlert.jsx';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const Login = ({ navigation }) => {
