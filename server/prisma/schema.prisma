@@ -18,6 +18,7 @@ model User {
   bio           String?    
   type          UserType   @default(guest)
   address       String?    
+  createdAt     DateTime   @default(now())
   posts         Post[]     
   cart          Cart?      
   favourites    Favourite[] 
@@ -29,6 +30,10 @@ model User {
   Booking        Booking[]
   comments       Comment[]
   reports        Report[]
+<<<<<<< HEAD
+=======
+  bannedUntil   DateTime?
+>>>>>>> 232b49e2fb651be982d6b7810d277a9db46c9b59
 }
 
 model Post {

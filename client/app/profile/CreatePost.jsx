@@ -15,6 +15,23 @@ import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
+const categories = [
+  "house",
+  "apartment",
+  "villa",
+  "hotel",
+  "historical",
+  "lake",
+  "beachfront",
+  "countryside",
+  "castles",
+  "experiences",
+  "camping",
+  "desert",
+  "luxe",
+  "islands",
+];
+
 const CreatePost = () => {
   const navigation = useNavigation();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -159,13 +176,6 @@ const CreatePost = () => {
         value={formData.title}
         style={styles.input}
       />
-      <TextInput
-        placeholder="Images (JSON format)"
-        onChangeText={(value) => handleChange("images", value)}
-        value={formData.images}
-        style={styles.input}
-        editable={false}
-      />
       <TouchableOpacity onPress={handleImagePick} style={styles.imagePickerButton}>
         <Text style={styles.buttonText}>Pick Images</Text>
       </TouchableOpacity>
@@ -194,10 +204,13 @@ const CreatePost = () => {
         style={styles.picker}
       >
         <Picker.Item label="Select Category" value="" />
-        <Picker.Item label="House" value="house" />
-        <Picker.Item label="Apartment" value="apartment" />
-        <Picker.Item label="Villa" value="villa" />
-        <Picker.Item label="Hotel" value="hotel" />
+        {categories.map((category) => (
+          <Picker.Item
+            key={category}
+            label={category.charAt(0).toUpperCase() + category.slice(1)}
+            value={category}
+          />
+        ))}
       </Picker>
       <LinearGradient
         colors={["#082631", "#082631"]}

@@ -20,7 +20,7 @@ const Navbar = ({ navigation, userId }) => {
       else{
         navigation.navigate(params);
       }
-  }
+  }                                  
   const handleProfileNavigation = async () => {
     const token = AsyncStorage.getItem("userToken");
     if (!token) {
