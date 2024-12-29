@@ -11,8 +11,21 @@ const Navbar = ({ navigation, userId }) => {
     console.log("Navigating to Home");
     navigation.navigate("Home");
   };
-
+  const handlenavigation = (params) => {
+    
+      const token = AsyncStorage.getItem("userToken");
+      if (!token) {
+        navigation.navigate("signup");
+      }
+      else{
+        navigation.navigate(params);
+      }
+  }                                  
   const handleProfileNavigation = async () => {
+    const token = AsyncStorage.getItem("userToken");
+    if (!token) {
+      navigation.navigate("signup");
+    }
     try {
       const userData = await AsyncStorage.getItem("userData");
       const parsedUserData = JSON.parse(userData);
@@ -27,20 +40,20 @@ const Navbar = ({ navigation, userId }) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+      <TouchableOpacity onPress={handlenavigation('Home')}>
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.iconContainer} 
-        onPress={() => navigation.navigate('favourites')}
+        onPress={handlenavigation('favourites')}
       >
         <MaterialIcons name="bookmark-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Saved</Text>
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.iconContainer} 
-        onPress={() => navigation.navigate("ChatSelectionScreen")}
+        onPress={handlenavigation('ChatSelectionScreen')}
         onPressIn={() => setPressedIcon("chat")}
         onPressOut={() => setPressedIcon(null)}
       >
@@ -53,7 +66,7 @@ const Navbar = ({ navigation, userId }) => {
           styles.iconContainer,
           pressedIcon === "notifications" && styles.pressedIcon,
         ]}
-        onPress={() => navigation.navigate("notifications")}
+        onPress={handlenavigation('notifications')}
         onPressIn={() => setPressedIcon("notifications")}
         onPressOut={() => setPressedIcon(null)}
       >

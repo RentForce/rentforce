@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-
-
+import Login from './src/components/Auth/Login';
+import Dashboard from './src/components/Admin/Dashboard';
 import "./App.css";
 
 const App = () => {
@@ -9,17 +9,10 @@ const App = () => {
 
   return (
     <Router>
-      {user && user.type === "admin" ? (
-        <>
-          <Navbar />
-          <Routes>
-
-          </Routes>
-          <Footer />
-        </>
-      ) : (
-        <Navigate to="/login"  />
-      )}
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/Dashboard"element={<Dashboard/>}/> 
+      </Routes>
     </Router>
   );
 };

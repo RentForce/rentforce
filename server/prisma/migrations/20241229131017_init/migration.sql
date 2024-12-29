@@ -8,7 +8,7 @@ CREATE TABLE `User` (
     `phoneNumber` VARCHAR(191) NULL,
     `image` VARCHAR(191) NULL,
     `bio` VARCHAR(191) NULL,
-    `type` ENUM('host', 'guest') NULL,
+    `type` ENUM('admin', 'host', 'guest') NOT NULL DEFAULT 'guest',
     `address` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `bannedUntil` DATETIME(3) NULL,

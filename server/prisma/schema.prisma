@@ -16,7 +16,7 @@ model User {
   phoneNumber   String?    
   image         String?    
   bio           String?    
-  type          UserType?  
+  type          UserType   @default(guest)
   address       String?    
   createdAt     DateTime   @default(now())
   posts         Post[]     
@@ -48,7 +48,7 @@ model Post {
   roomConfiguration  String?
   houseRules         String?
   safetyProperty     String?
-  bookings           Booking[] // New relation to Booking model
+  bookings           Booking[]
   calendar           Calendar[]
   favourites         Favourite[]
   history            History[]
@@ -225,6 +225,7 @@ model Report {
 }
 
 enum UserType {
+  admin
   host
   guest
 }
