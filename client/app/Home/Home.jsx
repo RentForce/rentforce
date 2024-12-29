@@ -234,16 +234,15 @@ const Home = ({ navigation }) => {
       const response = await axios.get(endpoint, {
         params: {
           search: searchQuery,
+          status: 'APPROVED'
         },
       });
 
       console.log("Response data:", response.data);
       setPosts(response.data);
     } catch (error) {
-      console.error(
-        "Failed to fetch posts:",
-        error.response?.data || error.message
-      );
+      console.error("Failed to fetch posts:", error);
+      // Handle error appropriately
     } finally {
       setLoading(false);
     }

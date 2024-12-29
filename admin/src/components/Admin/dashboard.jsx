@@ -12,6 +12,7 @@ function Dashboard() {
     totalUsers: 0,
     totalBookings: 0,
     totalPosts: 0,
+    pendingPosts: 0,
     notifications: []
   });
 
@@ -23,10 +24,11 @@ function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       // Fetch counts
-      const [usersResponse, bookingsResponse, postsResponse, notificationsResponse] = await Promise.all([
+      const [usersResponse, bookingsResponse, postsResponse, pendingPostsResponse, notificationsResponse] = await Promise.all([
         fetch('http://localhost:5000/admin/user/count'),
         fetch('http://localhost:5000/admin/bookings/count'),
         fetch('http://localhost:5000/admin/posts/count'),
+        fetch('http://localhost:5000/admin/posts/pending/count'),
         fetch('http://localhost:5000/admin/notifications/recent')
       ]);
 
@@ -34,10 +36,11 @@ function Dashboard() {
         throw new Error('One or more count requests failed');
       }
 
-      const [usersData, bookingsData, postsData, notificationsData] = await Promise.all([
+      const [usersData, bookingsData, postsData, pendingPostsData, notificationsData] = await Promise.all([
         usersResponse.json(),
         bookingsResponse.json(),
         postsResponse.json(),
+        pendingPostsResponse.json(),
         notificationsResponse.ok ? notificationsResponse.json() : { notifications: [] }
       ]);
 
@@ -46,6 +49,7 @@ function Dashboard() {
         totalUsers: usersData.count,
         totalBookings: bookingsData.count,
         totalPosts: postsData.count,
+        pendingPosts: pendingPostsData.count,
         notifications: notificationsData.notifications || []
       }));
     } catch (error) {
@@ -56,6 +60,7 @@ function Dashboard() {
         totalUsers: 0,
         totalBookings: 0,
         totalPosts: 0,
+        pendingPosts: 0,
         notifications: []
       }));
     }
@@ -95,6 +100,10 @@ function Dashboard() {
               <div className="stat-card">
                 <h3>Total Posts</h3>
                 <p>{dashboardData.totalPosts}</p>
+              </div>
+              <div className="stat-card pending-posts">
+                <h3>Pending Posts</h3>
+                <p>{dashboardData.pendingPosts}</p>
               </div>
             </section>
           </>
