@@ -23,7 +23,6 @@ const stripe = require("stripe")(
 const bodyParser = require("body-parser");
 const { sendBookingRequestEmail } = require("./services/emailService");
 const notificationRoutes = require("./routes/notification");
-const adminRoutes = require('./routes/admin');
 
 // Add this to debug imports
 console.log("Loaded routes:", {
@@ -152,7 +151,6 @@ app.use((req, res, next) => {
 app.use("/api/chat", chatRoutes);
 app.use("/user", userRoutes);
 app.use("/notification", notificationRoutes);
-app.use('/admin', adminRoutes);
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.handshake.query.userId);
@@ -194,11 +192,6 @@ app.use((err, req, res, next) => {
         error: 'Internal server error',
         message: err.message
     });
-});
-
-// Handle 404s
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
 });
 
 const PORT = process.env.PORT || 5000;

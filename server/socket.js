@@ -52,8 +52,6 @@ const socketHandler = (io) => {
                 timestamp: new Date(),
               });
             }
-            
-            console.log('Message emitted to room:', receiverRoom);
           }
         } catch (error) {
           console.error('Error handling new message:', error);
@@ -61,21 +59,10 @@ const socketHandler = (io) => {
       });
   
       // Handle disconnection
-      socket.on('disconnect', (reason) => {
-        console.log(`User ${userId} disconnected:`, reason);
+      socket.on('disconnect', () => {
+        console.log(`User ${userId} disconnected`);
         connectedUsers.delete(userId);
-        socket.leave(userRoom);
       });
-  
-      // Handle errors
-      socket.on('error', (error) => {
-        console.error(`Socket error for user ${userId}:`, error);
-      });
-    });
-  
-    // Global error handler
-    io.engine.on('connection_error', (error) => {
-      console.error('Connection error:', error);
     });
   };
   
