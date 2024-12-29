@@ -20,6 +20,7 @@ const ChatSelectionScreen = () => {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const { markChatAsRead } = useNotifications(); // Move this to component level
@@ -37,12 +38,13 @@ const ChatSelectionScreen = () => {
 
       try {
         const userId = JSON.parse(atob(token.split('.')[1])).id;
+        setCurrentUserId(userId); // Set currentUserId from token
         console.log("Fetching conversations for user:", userId);
-        
+
         const response = await axios.get(
           `${apiUrl}/api/chat/conversations/${userId}`,
           {
-            headers: { 
+            headers: {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
@@ -70,7 +72,24 @@ const ChatSelectionScreen = () => {
       setRefreshing(false);
     }
   };
-
+  const formatMessageTime = (timestamp) => {
+    if (!timestamp) return '';
+    
+    const messageDate = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = (now - messageDate) / (1000 * 60 * 60);
+    
+    if (diffInHours < 24) {
+      return messageDate.toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    } else if (diffInHours < 168) { // 7 days
+      return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][messageDate.getDay()];
+    } else {
+      return messageDate.toLocaleDateString();
+    }
+  };
   useEffect(() => {
     if (isFocused) {
       fetchConversations();
@@ -83,11 +102,14 @@ const ChatSelectionScreen = () => {
   };
 
   const handleChatPress = (conversation) => {
+    const isCurrentUserSender = conversation.userId === parseInt(currentUserId);
+    const receiverId = isCurrentUserSender ? conversation.receiverId : conversation.userId;
+
     navigation.navigate("ChatScreen", {
       chatId: conversation.id,
-      receiverId: conversation.otherUserId,
+      receiverId: receiverId,
       otherUser: {
-        id: conversation.otherUserId,
+        id: receiverId,
         firstName: conversation.otherUserFirstName,
         lastName: conversation.otherUserLastName,
         image: conversation.otherUserImage || 'https://via.placeholder.com/50'
@@ -260,4 +282,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChatSelectionScreen;
+export default ChatSelectionScreen

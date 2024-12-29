@@ -36,10 +36,14 @@ const Navbar = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+      <TouchableOpacity 
+        style={styles.iconContainer} 
+        onPress={() => navigation.navigate("Home")}
+      >
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
+      
       <TouchableOpacity
         style={styles.iconContainer}
         onPress={() => navigation.navigate('favourites')}
@@ -55,8 +59,11 @@ const Navbar = ({ navigation }) => {
         onPressOut={() => setPressedIcon(null)}
       >
         <View style={styles.iconWrapper}>
-
-          <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
+          <Ionicons 
+            name="chatbubble-outline" 
+            size={24} 
+            style={styles.icon} 
+          />
           {unreadCount > 0 && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{unreadCount}</Text>
@@ -65,6 +72,7 @@ const Navbar = ({ navigation }) => {
         </View>
         <Text style={styles.text}>Inbox</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
         style={[
           styles.iconContainer,
@@ -75,8 +83,9 @@ const Navbar = ({ navigation }) => {
         onPressOut={() => setPressedIcon(null)}
       >
         <NotificationIcon size={24} color="#fff" />
-        <Text style={[styles.text, styles.textSpacing]}>Ping</Text>
+        <Text style={styles.text}>Ping</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
         style={[
           styles.iconContainer,
@@ -110,16 +119,18 @@ const styles = StyleSheet.create({
   },
   icon: {
     color: "#fff",
-    margin: 5,
   },
   text: {
     fontSize: 12,
     color: "#888",
+    marginTop: 4,
   },
   iconWrapper: {
     position: "relative",
-    width: 24,
-    height: 24,
+    width: 32,  // Increased from 24 to give more space
+    height: 32, // Increased from 24 to give more space
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   badge: {
     position: "absolute",
@@ -138,36 +149,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "bold",
     paddingHorizontal: 4,
-    textSpacing: {
-      marginTop: 8,
-    },
   },
-  
-  iconWrapper: {
-    position: 'relative',
-    width: 24,
-    height: 24,
-  },
-  badge: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: 'red',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-    paddingHorizontal: 4,
-  },
- 
 });
 
 export default Navbar;
-

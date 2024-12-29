@@ -171,16 +171,17 @@ model Message {
   isRead           Boolean      @default(false)
   userId           Int
   chatId           Int
+  receiverId       Int
   callStatus       String?
   duration         Int?
   type             MessageType? @default(TEXT)
   voiceMessagePath String?
   
   user     User     @relation(fields: [userId], references: [id])
+  receiver User     @relation("MessageReceiver", fields: [receiverId], references: [id])
   chat     Chat     @relation(fields: [chatId], references: [id])
-  translations MessageTranslation[] // Add this line
-    read Boolean @default(false)
-
+  translations MessageTranslation[] 
+  read Boolean @default(false)
 }
 
 model MessageTranslation {

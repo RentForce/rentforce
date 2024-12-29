@@ -169,12 +169,13 @@ const createChat = async (req, res) => {
 const getConversations = async (req, res) => {
   try {
     const { userId } = req.params;
+    const parsedUserId = parseInt(userId);
 
     const conversations = await prisma.chat.findMany({
       where: {
         OR: [
-          { userId: parseInt(userId) },
-          { receiverId: parseInt(userId) }
+          { userId: parsedUserId },
+          { receiverId: parsedUserId }
         ]
       },
       include: {
@@ -204,18 +205,20 @@ const getConversations = async (req, res) => {
     });
 
     const formattedConversations = conversations.map(chat => {
-      const isReceiver = chat.receiverId === parseInt(userId);
+      const isReceiver = chat.receiverId === parsedUserId;
       const otherUser = isReceiver ? chat.user : chat.receiver;
 
       return {
         id: chat.id,
+        userId: chat.userId,
+        receiverId: chat.receiverId,
         otherUserId: otherUser.id,
         otherUserFirstName: otherUser.firstName || 'User',
         otherUserLastName: otherUser.lastName || '',
         otherUserImage: otherUser.image || 'default-image-url',
         lastMessage: chat.messages[0]?.content || '',
-        unreadCount: chat.unreadCount || 0,
-        createdAt: chat.createdAt
+        lastMessageTime: chat.messages[0]?.sentAt || chat.createdAt,
+        unreadCount: chat.unreadCount || 0
       };
     });
 
@@ -231,55 +234,46 @@ const getConversations = async (req, res) => {
 
 const sendMessage = async (req, res) => {
   try {
-    const { content, chatId, userId } = req.body;
-    console.log('Creating new message:', { content, chatId, userId });
+    const { content, chatId, userId, receiverId, type } = req.body;
 
-    // Get the chat first
-    const chat = await prisma.chat.findUnique({
-      where: { id: parseInt(chatId) },
-      include: {
-        user: true,
-        receiver: true
-      }
+    console.log('Received message request:', {
+      content,
+      chatId: parseInt(chatId),
+      userId: parseInt(userId),
+      type
     });
 
-    if (!chat) {
-      return res.status(404).json({ error: 'Chat not found' });
+    // Validate required fields
+    if (!content || !chatId || !userId) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        received: { content, chatId, userId }
+      });
     }
 
     // Create the message
     const message = await prisma.message.create({
       data: {
         content,
+        type: type || 'TEXT',
         chatId: parseInt(chatId),
         userId: parseInt(userId),
-        isRead: false,
-        type: 'TEXT'
+        read: false,
+        sentAt: new Date()
       },
       include: {
-        chat: true,
-        user:  { 
+        user: {
           select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          image: true
-        }}
+            id: true,
+            firstName: true,
+            lastName: true,
+            image: true
+          }
+        }
       }
     });
 
-    // Get the receiver's ID
-    const receiverId = chat.userId === parseInt(userId) ? chat.receiverId : chat.userId;
-
-    // Emit socket event
-    const io = req.app.get('io');
-    if (io) {
-      console.log('Emitting new message to:', receiverId);
-      io.to(`user_${receiverId}`).emit('new message', {
-        ...message,
-        receiverId
-      });
-    }
+    // Update chat's lastMessageAt
     await prisma.chat.update({
       where: { id: parseInt(chatId) },
       data: {
@@ -290,12 +284,33 @@ const sendMessage = async (req, res) => {
       }
     });
 
-    return res.status(201).json(message);
+    // Format the response
+    const formattedMessage = {
+      id: message.id,
+      content: message.content,
+      type: message.type,
+      chatId: message.chatId,
+      userId: message.userId,
+      read: message.read,
+      sentAt: message.sentAt,
+      sender: message.user
+    };
+
+    // Emit socket events if receiverId is provided
+    if (req.io && receiverId) {
+      req.io.to(`user_${receiverId}`).emit('new_message', formattedMessage);
+      req.io.to(`user_${receiverId}`).emit('update_unread_count', {
+        chatId: parseInt(chatId),
+        unreadCount: 1
+      });
+    }
+
+    res.status(201).json(formattedMessage);
   } catch (error) {
-    console.error('Error sending message:', error);
-    return res.status(500).json({
+    console.error('Error in sendMessage:', error);
+    res.status(500).json({
       error: 'Failed to send message',
-      success: false
+      details: error.message
     });
   }
 };
@@ -317,6 +332,23 @@ const markChatAsRead = async (req, res) => {
       }
     });
 
+    // Get the updated unread count for the user
+    const unreadCount = await prisma.message.count({
+      where: {
+        chat: {
+          OR: [
+            { userId: parseInt(userId) },
+            { receiverId: parseInt(userId) }
+          ]
+        },
+        userId: {
+          not: parseInt(userId)
+        },
+        read: false
+      }
+    });
+
+    // Update the chat's unread count
     await prisma.chat.update({
       where: { id: parseInt(chatId) },
       data: { unreadCount: 0 }
@@ -324,6 +356,7 @@ const markChatAsRead = async (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
+    console.error('Error marking messages as read:', error);
     res.status(500).json({ error: 'Could not mark messages as read' });
   }
 };
@@ -514,136 +547,89 @@ const upload = multer({
   }
 }).single('file');
 
-const handleFileUpload = async (req, res) => {
-  try {
-    console.log('Starting file upload...');
-    
-    await new Promise((resolve, reject) => {
-      upload(req, res, (err) => {
-        if (err) {
-          console.error('Multer upload error:', err);
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
+const handleImageUpload = async (req, res) => {
+  const cleanupTempFile = (path) => {
+    if (path) {
+      try {
+        fs.unlinkSync(path);
+        console.log('Temporary file cleaned up:', path);
+      } catch (err) {
+        console.error('Error cleaning up temporary file:', err);
+      }
+    }
+  };
 
-    if (!req.file) {
-      console.error('No file in request');
-      return res.status(400).json({
-        error: 'No file provided',
-        details: 'File upload is required'
-      });
+  try {
+    if (!req.files || !req.files.image) {
+      return res.status(400).json({ error: 'No image file provided' });
     }
 
-    console.log('File received:', {
-      filename: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      path: req.file.path
-    });
-
-    const chatId = parseInt(req.body.chatId);
-    const senderId = parseInt(req.body.senderId);
-    const receiverId = parseInt(req.body.receiverId);
-    const messageType = req.body.messageType || 
-      (req.file.mimetype.startsWith('audio/') ? 'VOICE' : 'IMAGE');
-
-    console.log('Request data:', { chatId, senderId, receiverId, messageType });
+    const { chatId, senderId, receiverId } = req.body;
 
     if (!chatId || !senderId || !receiverId) {
-      console.error('Invalid IDs provided:', { chatId, senderId, receiverId });
-      if (req.file?.path) {
-        try {
-          fs.unlinkSync(req.file.path);
-        } catch (err) {
-          console.error('Error deleting temp file:', err);
-        }
-      }
       return res.status(400).json({
-        error: 'Invalid data',
-        details: 'Valid chatId, senderId, and receiverId are required'
+        error: 'Missing required fields',
+        received: { chatId, senderId, receiverId },
       });
     }
 
-    let uploadResult;
-    try {
-      console.log('Uploading to Cloudinary...');
-      const uploadOptions = {
-        resource_type: messageType === 'VOICE' ? 'video' : 'auto',
-        folder: messageType === 'VOICE' ? 'voice-messages' : 'chat-images',
-        format: messageType === 'VOICE' ? 'm4a' : null,
-        quality: 'auto:good'
-      };
-      console.log('Upload options:', uploadOptions);
+    console.log('Processing image upload:', {
+      chatId,
+      senderId,
+      receiverId,
+      fileSize: req.files.image.size,
+    });
 
-      uploadResult = await cloudinary.uploader.upload(req.file.path, uploadOptions);
-      console.log('Cloudinary upload successful:', uploadResult);
+    // Upload image to Cloudinary
+    const uploadResult = await cloudinary.uploader.upload(req.files.image.path, {
+      folder: 'chat_images',
+    });
 
-      // Clean up the temporary file
-      if (req.file.path) {
-        try {
-          fs.unlinkSync(req.file.path);
-        } catch (err) {
-          console.error('Error deleting temp file after successful upload:', err);
-        }
-      }
-    } catch (uploadError) {
-      console.error('Cloudinary upload error:', uploadError);
-      if (req.file?.path) {
-        try {
-          fs.unlinkSync(req.file.path);
-        } catch (err) {
-          console.error('Error deleting temp file after failed upload:', err);
-        }
-      }
-      throw new Error(`Failed to upload file to cloud storage: ${uploadError.message}`);
-    }
+    console.log('Image uploaded successfully:', uploadResult.secure_url);
 
-    console.log('Creating message in database...');
+    // Clean up the temporary file
+    cleanupTempFile(req.files.image.path);
+
+    // Create a new message in the database
     const message = await prisma.message.create({
       data: {
-        chatId,
-        userId: senderId,
         content: uploadResult.secure_url,
-        type: messageType,
-        isRead: false
-      }
+        type: 'IMAGE',
+        chatId: parseInt(chatId, 10),
+        userId: parseInt(senderId, 10),
+        receiverId: parseInt(receiverId, 10),
+        read: false,
+        sentAt: new Date(),
+      },
     });
-    console.log('Message created:', message);
+    console.log('Message created in the database:', message);
 
+    // Update the chat's metadata
     await prisma.chat.update({
-      where: { id: chatId },
-      data: { 
+      where: { id: parseInt(chatId, 10) },
+      data: {
         lastMessageAt: new Date(),
         unreadCount: {
-          increment: 1
-        }
-      }
+          increment: 1,
+        },
+      },
     });
 
     return res.status(200).json({
       message: 'File uploaded successfully',
       url: uploadResult.secure_url,
-      messageId: message.id
+      messageId: message.id,
     });
 
   } catch (error) {
     console.error('File upload error:', error);
-    console.error('Error stack:', error.stack);
-    
-    if (req.file?.path) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (cleanupError) {
-        console.error('Error cleaning up temporary file:', cleanupError);
-      }
-    }
+
+    // Clean up the temporary file in case of an error
+    cleanupTempFile(req.files?.image?.path);
 
     return res.status(500).json({
       error: 'File upload failed',
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -741,6 +727,7 @@ const markMessagesAsRead = async (req, res) => {
     const { chatId, userId } = req.params;
     console.log('Marking messages as read:', { chatId, userId });
 
+    // Find the chat to get the participants
     const chat = await prisma.chat.findUnique({
       where: { id: parseInt(chatId) },
       select: {
@@ -755,24 +742,27 @@ const markMessagesAsRead = async (req, res) => {
       });
     }
 
+    // Ensure the user is part of this chat
     if (chat.userId !== parseInt(userId) && chat.receiverId !== parseInt(userId)) {
       return res.status(403).json({
         error: 'User is not part of this chat'
       });
     }
 
+    // Count unread messages sent by the other user
     const messagesToMarkRead = await prisma.message.count({
       where: {
         chatId: parseInt(chatId),
-        userId: chat.userId === parseInt(userId) ? chat.receiverId : chat.userId, 
+        userId: chat.userId === parseInt(userId) ? chat.receiverId : chat.userId, // Messages from the other user
         isRead: false
       }
     });
 
+    // Mark messages as read
     await prisma.message.updateMany({
       where: {
         chatId: parseInt(chatId),
-        userId: chat.userId === parseInt(userId) ? chat.receiverId : chat.userId, 
+        userId: chat.userId === parseInt(userId) ? chat.receiverId : chat.userId, // Messages from the other user
         isRead: false
       },
       data: {
@@ -780,6 +770,7 @@ const markMessagesAsRead = async (req, res) => {
       }
     });
 
+    // Update chat's unread count
     await prisma.chat.update({
       where: {
         id: parseInt(chatId)
@@ -791,8 +782,9 @@ const markMessagesAsRead = async (req, res) => {
       }
     });
 
+    // Emit socket event for real-time updates to the receiver
     if (req.io) {
-      req.io.to(`chat:${chatId}`).emit('messagesRead', {
+      req.io.to(`user:${chat.userId}`).emit('messagesRead', {
         chatId: parseInt(chatId),
         readBy: parseInt(userId),
         count: messagesToMarkRead
@@ -813,6 +805,96 @@ const markMessagesAsRead = async (req, res) => {
   }
 };
 
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Configure Cloudinary storage
+
+
+const handleFileUpload = async (req, res) => {
+  try {
+    // Handle the file upload using Promise
+    await new Promise((resolve, reject) => {
+      upload(req, res, (err) => {
+        if (err) {
+          console.error('Upload error:', err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'No file provided',
+        details: 'File upload is required'
+      });
+    }
+
+    const { chatId, senderId, receiverId } = req.body;
+    
+    // Determine message type based on the file
+    const messageType = req.file.mimetype.startsWith('audio/') || 
+                       req.file.originalname.toLowerCase().endsWith('.m4a') 
+                       ? 'AUDIO' 
+                       : 'IMAGE';
+
+    // Validate required fields
+    if (!chatId || !senderId) {
+      // Delete the uploaded file if validation fails
+      if (req.file?.public_id) {
+        await cloudinary.uploader.destroy(req.file.public_id, { resource_type: 'raw' });
+      }
+      return res.status(400).json({
+        error: 'Missing required data',
+        details: 'chatId and senderId are required'
+      });
+    }
+
+    // Create message in database
+    const message = await prisma.message.create({
+      data: {
+        chatId: parseInt(chatId),
+        userId: parseInt(senderId),
+        content: req.file.path, // Cloudinary URL
+        type: messageType
+      }
+    });
+
+    // Return success response with Cloudinary URL
+    return res.status(200).json({
+      message: 'File uploaded successfully',
+      url: req.file.path,
+      messageId: message.id
+    });
+
+  } catch (error) {
+    console.error('File upload error:', error);
+    
+    // Clean up any uploaded file if there's an error
+    if (req.file?.public_id) {
+      try {
+        await cloudinary.uploader.destroy(req.file.public_id, { 
+          resource_type: 'raw'
+        });
+      } catch (cleanupError) {
+        console.error('Error cleaning up file:', cleanupError);
+      }
+    }
+
+    return res.status(error.status || 500).json({
+      error: 'File upload failed',
+      details: error.message
+    });
+  }
+};
+
+
 module.exports = {
   createChat,
   sendMessage,
@@ -826,7 +908,6 @@ module.exports = {
   getUnreadMessages,
   markMessagesAsRead,
   getConversations,
-  upload,
   handleFileUpload,
   sendPushNotification
-}
+}   

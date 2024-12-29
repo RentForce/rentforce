@@ -11,6 +11,9 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000;
+
 const ImageMessage = ({ chatId, onImageSent }) => {
   const [uploading, setUploading] = useState(false);
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -32,21 +35,19 @@ const ImageMessage = ({ chatId, onImageSent }) => {
       });
 
       if (!result.canceled && result.assets[0]) {
-        await sendImage(result.assets[0]);
+        setUploading(true);
+        sendImageWithSilentRetry(result.assets[0]);
       }
     } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Could not select image');
+      setUploading(false);
     }
   };
 
-  const sendImage = async (imageAsset) => {
-    setUploading(true);
+  const sendImageWithSilentRetry = async (imageAsset, attempt = 1) => {
     try {
       const token = await AsyncStorage.getItem('userToken');
       const formData = new FormData();
       
-      // Prepare image data
       const imageUri = imageAsset.uri;
       const filename = imageUri.split('/').pop();
       const match = /\.(\w+)$/.exec(filename);
@@ -65,19 +66,24 @@ const ImageMessage = ({ chatId, onImageSent }) => {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}`
+          },
+          timeout: 60000
         }
       );
 
       if (response.data) {
         onImageSent(response.data);
+        setUploading(false);
       }
     } catch (error) {
-      console.error('Error sending image:', error);
-      Alert.alert('Error', 'Could not send image. Please try again.');
-    } finally {
-      setUploading(false);
+      if (attempt < MAX_RETRIES) {
+        setTimeout(() => {
+          sendImageWithSilentRetry(imageAsset, attempt + 1);
+        }, RETRY_DELAY);
+      } else {
+        setUploading(false);
+      }
     }
   };
 
