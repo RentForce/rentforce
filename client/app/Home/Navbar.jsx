@@ -16,21 +16,8 @@ const Navbar = ({ navigation }) => {
     console.log("Navigating to Home");
     navigation.navigate("Home");
   };
-  const handlenavigation = (params) => {
-    
-      const token = AsyncStorage.getItem("userToken");
-      if (!token) {
-        navigation.navigate("signup");
-      }
-      else{
-        navigation.navigate(params);
-      }
-  }                                  
+
   const handleProfileNavigation = async () => {
-    const token = AsyncStorage.getItem("userToken");
-    if (!token) {
-      navigation.navigate("signup");
-    }
     try {
       const userData = await AsyncStorage.getItem("userData");
       const parsedUserData = JSON.parse(userData);
@@ -49,13 +36,17 @@ const Navbar = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={handlenavigation('Home')}>
+      <TouchableOpacity 
+        style={styles.iconContainer} 
+        onPress={() => navigation.navigate("Home")}
+      >
         <Ionicons name="search-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Explore</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.iconContainer} 
-        onPress={handlenavigation('favourites')}
+      
+      <TouchableOpacity
+        style={styles.iconContainer}
+        onPress={() => navigation.navigate('favourites')}
       >
         <MaterialIcons name="bookmark-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Saved</Text>
@@ -87,7 +78,7 @@ const Navbar = ({ navigation }) => {
           styles.iconContainer,
           pressedIcon === "notifications" && styles.pressedIcon,
         ]}
-        onPress={handlenavigation('notifications')}
+        onPress={() => navigation.navigate("notifications")}
         onPressIn={() => setPressedIcon("notifications")}
         onPressOut={() => setPressedIcon(null)}
       >

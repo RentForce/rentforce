@@ -16,9 +16,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
 import { initSocket } from "../chat/Socket.js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import SweetAlert from '../../components/SweetAlert.jsx';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getBaseUrl } from "../../config";
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -26,7 +24,7 @@ const Login = ({ navigation }) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [screenHeight, setScreenHeight] = useState(Dimensions.get('window').height);
   const [screenWidth, setScreenWidth] = useState(Dimensions.get('window').width);
-  const baseUrl = getBaseUrl();
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -38,7 +36,7 @@ const Login = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post(`${baseUrl}/user/login`, {
+      const response = await axios.post(`${apiUrl}/user/login`, {
         email,
         password,
       });
@@ -50,8 +48,7 @@ const Login = ({ navigation }) => {
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
 
-        // Initialize socket with user ID
-        initSocket(user.id);
+        initSocket(process.env.EXPO_PUBLIC_API_URL);
         navigation.navigate("Home", { updatedUser: user });
       }
     } catch (error) {
@@ -83,15 +80,15 @@ const Login = ({ navigation }) => {
             style={[styles.gradient, { height: screenHeight * 0.3 }]}
           />
           
-          <View style={[styles.welcomeContainer, { top: screenHeight * 0.34 }]} >
-            <Text style={[styles.welcome, { fontSize: screenWidth * 0.15 }]} >
+          <View style={[styles.welcomeContainer, { top: screenHeight * 0.34 }]}>
+            <Text style={[styles.welcome, { fontSize: screenWidth * 0.15 }]}>
               Welcome Back!
             </Text>
           </View>
 
-          <View style={[styles.inputsContainer, { top: screenHeight * 0.42 }]} >
-            <Text style={styles.inputLabel} >Email</Text>
-            <View style={styles.inputContainer} >
+          <View style={[styles.inputsContainer, { top: screenHeight * 0.42 }]}>
+            <Text style={styles.inputLabel}>Email</Text>
+            <View style={styles.inputContainer}>
               <FontAwesome name="user" size={screenWidth * 0.05} color="black" style={styles.icon} />
               <TextInput
                 placeholder="Email"
@@ -103,8 +100,8 @@ const Login = ({ navigation }) => {
               />
             </View>
 
-            <Text style={styles.inputLabel} >Password</Text>
-            <View style={styles.inputContainer} >
+            <Text style={styles.inputLabel}>Password</Text>
+            <View style={styles.inputContainer}>
               <FontAwesome name="lock" size={screenWidth * 0.05} color="black" style={styles.icon} />
               <TextInput
                 placeholder="Password"
@@ -121,18 +118,18 @@ const Login = ({ navigation }) => {
               />
             </View>
 
-            <TouchableOpacity onPress={() => navigation.navigate("forget")} >
-              <Text style={styles.forgotPassword} >Forgot Password?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("forget")}>
+              <Text style={styles.forgotPassword}>Forgot Password?</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.button} onPress={handleLogin} >
-              <Text style={styles.buttonText} >Sign In</Text>
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+              <Text style={styles.buttonText}>Sign In</Text>
             </TouchableOpacity>
 
-            <View style={styles.socialLoginContainer} >
-              <Text style={styles.socialLoginText} >Or continue with</Text>
-              <View style={styles.socialIcons} >
-                <View style={styles.iconBox} >
+            <View style={styles.socialLoginContainer}>
+              <Text style={styles.socialLoginText}>Or continue with</Text>
+              <View style={styles.socialIcons}>
+                <View style={styles.iconBox}>
                   <FontAwesome
                     name="google"
                     size={screenWidth * 0.075}
@@ -140,7 +137,7 @@ const Login = ({ navigation }) => {
                     style={styles.socialIcon}
                   />
                 </View>
-                <View style={styles.iconBox} >
+                <View style={styles.iconBox}>
                   <FontAwesome
                     name="apple"
                     size={screenWidth * 0.075}
@@ -148,7 +145,7 @@ const Login = ({ navigation }) => {
                     style={styles.socialIcon}
                   />
                 </View>
-                <View style={styles.iconBox} >
+                <View style={styles.iconBox}>
                   <FontAwesome
                     name="facebook"
                     size={screenWidth * 0.075}
