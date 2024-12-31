@@ -28,6 +28,7 @@ model User {
   chatsReceived  Chat[]     @relation("ReceiverChats")   
 
   messages       Message[]
+  receivedMessages Message[] @relation("MessageReceiver")
   Booking        Booking[]
   expoPushToken String?
  

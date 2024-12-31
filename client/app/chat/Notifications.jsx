@@ -8,39 +8,40 @@ export const NotificationProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [userId, setUserId] = useState(null);
   const [socket, setSocket] = useState(null);
-  const [readChats, setReadChats] = useState(new Set());
 
   // Initialize socket and user ID
   useEffect(() => {
     const loadUserIdAndInitialize = async () => {
       try {
-        const token = await AsyncStorage.getItem('token');
+        const token = await AsyncStorage.getItem('userToken');
         if (!token) return;
 
         const decodedToken = JSON.parse(atob(token.split('.')[1]));
         const currentUserId = decodedToken.id;
         setUserId(currentUserId);
         
-        // Initialize socket connection with server URL and user ID
         const serverUrl = process.env.EXPO_PUBLIC_API_URL;
         const newSocket = await initSocket(serverUrl, currentUserId);
         
         if (newSocket) {
-          console.log('Socket initialized successfully');
           setSocket(newSocket);
           
-          // Set up socket event listeners
+          // Only increment for messages where we are the receiver
           newSocket.on('new_message', (message) => {
-            if (message.userId !== currentUserId) {
+            if (message.receiverId === parseInt(currentUserId)) {
               setUnreadCount(prev => prev + 1);
             }
           });
 
+          // Update unread count when messages are read
           newSocket.on('messages_read', (data) => {
-            if (data.userId === currentUserId) {
-              fetchUnreadCount(currentUserId);
+            if (data.userId === currentUserId && typeof data.unreadCount === 'number') {
+              setUnreadCount(data.unreadCount);
             }
           });
+
+          // Get initial unread count
+          fetchUnreadCount();
         }
 
         return () => {
@@ -56,20 +57,12 @@ export const NotificationProvider = ({ children }) => {
     loadUserIdAndInitialize();
   }, []);
 
-  const markChatAsRead = useCallback(async (chatId) => {
+  const markChatAsRead = useCallback(async (chatId, unreadMessagesCount = 1) => {
     try {
-      if (!userId || !chatId) {
-        console.log('Missing required data:', { userId, chatId });
-        return false;
-      }
+      if (!userId || !chatId) return false;
 
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        console.log('No auth token available');
-        return false;
-      }
-
-      console.log('Marking chat as read:', chatId);
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) return false;
 
       const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       const response = await fetch(
@@ -84,72 +77,67 @@ export const NotificationProvider = ({ children }) => {
         }
       );
 
-      if (!response.ok) {
-        if (response.status === 403) {
-          // Token might be expired, trigger re-auth
-          return false;
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) return false;
 
       const data = await response.json();
-      if (data.success) {
-        setReadChats(prev => new Set([...prev, chatId]));
-        await fetchUnreadCount(userId);
-        return true;
+      if (!data.success) return false;
+
+      // Update unread count from server response
+      if (typeof data.unreadCount === 'number') {
+        setUnreadCount(data.unreadCount);
       }
-      return false;
+
+      return true;
     } catch (error) {
       console.error('Error marking chat as read:', error);
       return false;
     }
-  }, [userId, fetchUnreadCount]);
+  }, [userId]);
 
-  const fetchUnreadCount = useCallback(async (currentUserId) => {
+  const fetchUnreadCount = useCallback(async () => {
+    if (!userId) return;
+
     try {
-      if (!currentUserId) {
-        console.log('No userId available for fetching unread count');
-        return;
-      }
-
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        console.error('No auth token available');
-        return;
-      }
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) return;
 
       const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/chat/unread/${currentUserId}`,
+        `${process.env.EXPO_PUBLIC_API_URL}/api/chat/unread/${userId}`,
         {
-          method: 'GET',
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
             'Authorization': authToken
-          },
+          }
         }
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const data = await response.json();
-      setUnreadCount(Math.max(0, parseInt(data.count) || 0));
+      if (data.success && typeof data.count === 'number') {
+        setUnreadCount(data.count);
+      }
     } catch (error) {
       console.error('Error fetching unread count:', error);
     }
-  }, []);
+  }, [userId]);
 
+  // Fetch unread count when userId changes
   useEffect(() => {
     if (userId) {
-      fetchUnreadCount(userId);
+      fetchUnreadCount();
     }
   }, [userId, fetchUnreadCount]);
 
   return (
-    <NotificationContext.Provider value={{ unreadCount, markChatAsRead, userId }}>
+    <NotificationContext.Provider value={{ 
+      unreadCount,
+      markChatAsRead,
+      userId,
+      fetchUnreadCount
+    }}>
       {children}
     </NotificationContext.Provider>
   );
