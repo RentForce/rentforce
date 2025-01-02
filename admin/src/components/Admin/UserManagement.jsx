@@ -143,9 +143,9 @@ const UserManagement = () => {
       <div className="user-management-header">
         <h2>User Management</h2>
         <div className="search-container">
-          <i className="fas fa-search search-icon"></i>
+          <i className="fas fa-search"></i>
           <input
-            type="search"
+            type="text"
             placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}

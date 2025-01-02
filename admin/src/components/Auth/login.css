@@ -1,16 +1,21 @@
-
-
-
 .loginContainer {
-    font-family: 'Inter', sans-serif;
-        height: 100vh;
-        background: linear-gradient(to right, rgba(144,146,150,1), 35% ,  rgba(61,85,96,1));
-
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    color: white;
+    justify-content: center;
+    padding: 2.5rem;
+    background: rgba(241, 239, 239, 0.25);
+    border-radius: 8px;
+    width: fit-content;
+}
+
+.login-wrapper {
+    min-height: 100vh;
     width: 100%;
+    background-image: url('https://img.freepik.com/free-photo/armchair-green-living-room-with-copy-space_43614-910.jpg?t=st=1735828039~exp=1735831639~hmac=a3349d1792a7afab5cacd4772256703f18789d5101bb597f3eec8521c1adb631&w=996');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .login-image-container {
@@ -40,14 +45,10 @@
 .loginForm {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     align-items: center;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 40px;
-    border-radius: 8px;
-    width: 500px;
+    padding: 0.5rem;
     box-sizing: border-box;
-    height: 85%;
+    color: #082631;
 }
 
 .loginMessage {
@@ -75,30 +76,24 @@
     margin-bottom: 20px;
 }
 
-.loginForm .password-container {
-    position: relative;
-    width: 100%;
-}
-
 .loginForm input,
 .loginForm select {
     width: 100%;
     padding: 4px;
     margin: 10px 0;
     background: rgba(255, 255, 255, 0);
-    color: rgb(255, 255, 255);
+    color: #082631;
     font-size: 16px;
     border-radius: 0;
     box-sizing: border-box;
     outline: none;
     border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(0px);
+    border-bottom: 1px solid rgba(8, 38, 49, 0.4);
 }
 
 .loginForm input::placeholder,
 .loginForm select {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(8, 38, 49, 0.7);
 }
 
 .loginForm .error-message {
@@ -186,25 +181,191 @@ margin-top: 20px;
     transform: scale(1.05);
 }
 
-#email {
+#email, #password {
     width: 100%;
-    padding: 4px;
-    margin: 10px 0;
-    background: rgba(255, 255, 255, 0);
-    color: rgb(255, 255, 255);
+    padding: 2px;
+    margin: 5px 0;
+    background: transparent;
+    color: #082631;
     font-size: 16px;
     border-radius: 0;
     box-sizing: border-box;
     outline: none;
     border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(0px);
 }
 
-#email::placeholder {
-    color: rgba(255, 255, 255, 0.7); 
+#email:-webkit-autofill,
+#email:-webkit-autofill:hover, 
+#email:-webkit-autofill:focus,
+#password:-webkit-autofill,
+#password:-webkit-autofill:hover,
+#password:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 30px transparent inset !important;
+    -webkit-text-fill-color: #082631 !important;
+    transition: background-color 5000s ease-in-out 0s;
+    background-clip: content-box !important;
 }
 
+#email::placeholder, #password::placeholder {
+    color: rgba(8, 38, 49, 0.7); 
+}
+
+.form-group {
+    position: relative;
+    margin-bottom: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+    padding: 4px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+}
+
+.password-toggle {
+    background: none;
+    border: none;
+    color: rgba(8, 38, 49, 0.7);
+    cursor: pointer;
+    padding: 4px;
+    margin-right: 8px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+}
+
+.password-toggle:hover {
+    color: rgba(8, 38, 49, 0.9);
+}
+
+.password-toggle:focus {
+    outline: none;
+}
+
+.form-group {
+    transition: opacity 0.3s ease-in-out;
+}
+
+.form-group.hidden {
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.logo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.logo-image {
+    width: 110px;
+    height: 24px;
+    margin-bottom: 1rem;
+    object-fit: contain;
+}
+
+.loginTitle {
+    font-size: 1.5rem;
+    margin: 0.5rem 0 1.5rem;
+    text-align: center;
+    color: #082631;
+    font-weight: 600;
+}
+
+.logo-container span {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #082631;
+    letter-spacing: 0.5px;
+}
+
+.formInput {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid rgba(8, 38, 49, 0.2);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #082631;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.formInput:focus {
+    border-color: #082631;
+    box-shadow: 0 2px 4px rgba(8, 38, 49, 0.1);
+    background: rgba(255, 255, 255, 1);
+}
+
+.formInput::placeholder {
+    color: rgba(8, 38, 49, 0.5);
+}
+
+.loginButton {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #082631;
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.loginButton:hover {
+    background: #0a3242;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(8, 38, 49, 0.2);
+}
+
+.loginButton:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.forgot-password {
+    display: block;
+    text-align: right;
+    color: rgba(8, 38, 49, 0.7);
+    text-decoration: none;
+    font-size: 14px;
+    margin-top: 8px;
+    margin-bottom: 16px;
+    transition: color 0.3s ease;
+}
+
+.forgot-password:hover {
+    color: rgba(8, 38, 49, 0.9);
+    text-decoration: underline;
+}
+
+.error-message {
+    color: #e53935;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    width: 100%;
+}
+
+.login-link-text{
+    color:#082631
+}
+
+.orText{
+    font-size: 17px;
+}
 
 .swal2-confirm.custom-button {
     border-radius: 20px; 
@@ -220,37 +381,3 @@ margin-top: 20px;
     transform: scale(1.05);
     transition: background-color 0.3s ease, transform 0.3s ease; 
     }
-
-    .form-group {
-        transition: opacity 0.3s ease-in-out;
-      }
-      
-      .form-group.hidden {
-        opacity: 0;
-        height: 0;
-        overflow: hidden;
-      }
-      
-
-      
-      .loginTitle{
-        margin-left: -310px;
-        margin-bottom: 30px;
-        font-size: 30px;
-        font-weight: bold;
-        line-height: 35.8px;
-        letter-spacing: 0.01em;
-        text-align: center;
-        text-underline-position: from-font;
-        text-decoration-skip-ink: none;
-        
-      }
-
-      .login-link-text{
-        color:#082631
-      }
-
-      .orText{
-        font-size: 17px;
-      }
-

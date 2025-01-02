@@ -19,7 +19,8 @@ import BookingPage from "./Home/BookingPage";
 import pay from "./Home/payment.jsx";
 import { NotificationProvider } from "./chat/Notifications.jsx";
 import NotificationScreen from "./notifications/NotificationScreen.jsx";
-
+import PaymentHistory from "./profile/PaymentHistory.jsx";
+import AboutUsScreen from "./profile/AboutUsScreen.jsx";
 const Stack = createNativeStackNavigator();
 
 function App() {
@@ -109,6 +110,14 @@ function App() {
           component={NotificationScreen}
           options={{ headerShown: false, title: "Notifications" }}
         />
+        <Stack.Screen name="PaymentHistory" component={PaymentHistory} options={{ headerShown: false }}/>
+    <Stack.Screen 
+      name="AboutUs" 
+      component={AboutUsScreen} 
+      options={{ 
+        headerShown: false 
+      }} 
+      />
       </Stack.Navigator>
     </NotificationProvider>
 
