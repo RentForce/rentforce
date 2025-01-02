@@ -2,6 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+// fetch('http://localhost:5000/admin/user/count'),
+// fetch('http://localhost:5000/admin/bookings/count'),
+// fetch('http://localhost:5000/admin/posts/count'),
+// fetch('http://localhost:5000/admin/posts/pending/count'),
+// fetch('http://localhost:5000/admin/notifications/recent')
+// ]);
 
 // Get total users count
 router.get('/user/count', async (req, res) => {

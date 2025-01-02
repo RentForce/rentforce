@@ -1,4 +1,4 @@
-const DEV_URL = 'http://192.168.1.20:5000';
+const DEV_URL = 'http://localhost:5000';
 const PROD_URL = 'http://192.168.1.20:5000'
 
 export const getBaseUrl = () => {
