@@ -82,30 +82,77 @@ function PostManagement({ onPageChange, onViewPost }) {
 
   const handleApprovePost = async (postId) => {
     try {
-      const response = await axios.put(`${API_URL}/admin/posts/${postId}/status`, {
-        status: 'APPROVED'
-      });
+      const token = localStorage.getItem('token');
+      console.log('Token:', token);
+      console.log('PostId:', postId);
       
-      if (response.status === 200) {
-        console.log('Post approved successfully');
-      } else {
-        throw new Error('Failed to approve post');
+      const data = { status: 'APPROVED' };
+      console.log('Sending data:', data);
+
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      };
+
+      const response = await axios.put(
+        `${API_URL}/admin/posts/${postId}/status`,
+        data,
+        config
+      );
+      
+      console.log('Response:', response.data);
+      
+      if (response.data.success) {
+        setPosts(posts.map(post => 
+          post.id === postId 
+            ? { ...post, status: 'APPROVED' }
+            : post
+        ));
+        alert('Post approved successfully');
+        fetchPosts(currentPage, search);
       }
     } catch (error) {
-      console.error('Error approving post:', error);
-      alert('Failed to approve post. Please try again.');
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      alert(`Failed to approve post: ${error.response?.data?.error || error.message}`);
     }
   };
 
   const handleRejectPost = async (postId, rejectionReason) => {
     try {
-      const response = await axios.put(`${API_URL}/admin/posts/${postId}/status`, {
-        status: 'REJECTED',
-        rejectionReason
-      });
-      // Refresh posts list
+      const token = localStorage.getItem('token');
+      const response = await axios.put(
+        `${API_URL}/admin/posts/${postId}/status`,
+        { 
+          status: 'REJECTED',
+          rejectionReason 
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.status === 200) {
+        setPosts(posts.map(post => 
+          post.id === postId 
+            ? { ...post, status: 'REJECTED' }
+            : post
+        ));
+        alert('Post rejected successfully');
+        // Refresh the posts list
+        fetchPosts(currentPage, search);
+      }
     } catch (error) {
       console.error('Error rejecting post:', error);
+      alert('Failed to reject post. Please try again.');
     }
   };
 

@@ -1,16 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNotifications } from "../chat/Notifications.jsx";
-import { NotificationBadge } from "../chat/NotificationBadge.jsx";
 import NotificationIcon from "../../components/NotificationIcon";
 
-const Navbar = ({ navigation }) => {
-  const { unreadCount } = useNotifications();
+const Navbar = ({ navigation, userId }) => {
   const [pressedIcon, setPressedIcon] = useState(null);
-
-  console.log("Navbar rendering with unread count:", unreadCount);
+  const token = AsyncStorage.getItem("userToken");
 
   const handleConfirmExplore = () => {
     console.log("Navigating to Home");
@@ -20,72 +16,79 @@ const Navbar = ({ navigation }) => {
   const handleProfileNavigation = async () => {
     try {
       const userData = await AsyncStorage.getItem("userData");
-      const parsedUserData = JSON.parse(userData);
-      navigation.navigate("profile", {
-        userId: parsedUserData.id,
-        updatedUser: parsedUserData,
-      });
+      if (!userData) {
+        navigation.navigate("signup");
+      } else {
+        const parsedUserData = JSON.parse(userData);
+        navigation.navigate("profile", {
+          userId: parsedUserData.id,
+          updatedUser: parsedUserData,
+        });
+      }
     } catch (error) {
       console.error("Error navigating to profile:", error);
     }
   };
 
-  useEffect(() => {
-    console.log("Navbar unread count:", unreadCount);
-  }, [unreadCount]);
-
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.iconContainer} 
-        onPress={() => navigation.navigate("Home")}
-      >
-        <Ionicons name="search-outline" size={24} style={styles.icon} />
-        <Text style={styles.text}>Explore</Text>
-      </TouchableOpacity>
-      
       <TouchableOpacity
         style={styles.iconContainer}
-        onPress={() => navigation.navigate('favourites')}
+        onPress={() => {
+          if (token) {
+            navigation.navigate("ChatSelectionScreen");
+          } else {
+            navigation.navigate("signup");
+          }
+        }}
+        onPressIn={() => setPressedIcon("chat")}
+        onPressOut={() => setPressedIcon(null)}
+      >
+        <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
+        <View style={styles.notificationDot} />
+        <Text style={styles.text}>Inbox</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.iconContainer, styles.spacedIcon]}
+        onPress={() => {
+          if (token) {
+            navigation.navigate("favourites");
+          } else {
+            navigation.navigate("signup");
+          }
+        }}
       >
         <MaterialIcons name="bookmark-outline" size={24} style={styles.icon} />
         <Text style={styles.text}>Saved</Text>
       </TouchableOpacity>
-
       <TouchableOpacity
-        style={styles.iconContainer}
-        onPress={() => navigation.navigate("ChatSelectionScreen")}
-        onPressIn={() => setPressedIcon("chat")}
-        onPressOut={() => setPressedIcon(null)}
+        onPress={() => navigation.navigate("Home")}
+        activeOpacity={0.7}
       >
-        <View style={styles.iconWrapper}>
-          <Ionicons 
-            name="chatbubble-outline" 
-            size={24} 
-            style={styles.icon} 
+        <View style={styles.exploreContainer}>
+          <Ionicons
+            name="search-outline"
+            size={24}
+            style={styles.exploreIcon}
           />
-          {unreadCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unreadCount}</Text>
-            </View>
-          )}
+          <Text style={styles.exploreText}>Explore</Text>
         </View>
-        <Text style={styles.text}>Inbox</Text>
       </TouchableOpacity>
-
       <TouchableOpacity
-        style={[
-          styles.iconContainer,
-          pressedIcon === "notifications" && styles.pressedIcon,
-        ]}
-        onPress={() => navigation.navigate("notifications")}
+        style={[styles.iconContainer, styles.spacedIcon]}
+        onPress={() => {
+          if (token) {
+            navigation.navigate("notifications");
+          } else {
+            navigation.navigate("signup");
+          }
+        }}
         onPressIn={() => setPressedIcon("notifications")}
         onPressOut={() => setPressedIcon(null)}
       >
         <NotificationIcon size={24} color="#fff" />
-        <Text style={styles.text}>Ping</Text>
+        <Text style={[styles.text, styles.textSpacing]}>Ping</Text>
       </TouchableOpacity>
-
       <TouchableOpacity
         style={[
           styles.iconContainer,
@@ -104,51 +107,63 @@ const Navbar = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
+    borderRadius: 10,
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
     alignItems: "center",
-    padding: 12,
+    padding: 5,
     backgroundColor: "#082631",
   },
   iconContainer: {
-    alignItems: "center",
+    alignItems: "baseline",
+    marginBottom: 6,
     transform: [{ scale: 1 }],
+    padding: 3,
   },
   pressedIcon: {
     transform: [{ scale: 1.2 }],
   },
   icon: {
+    marginLeft: 5,
+    marginRight: 4,
     color: "#fff",
+    margin: 5,
+    transform: [{ scale: 1 }],
   },
   text: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#888",
-    marginTop: 4,
+    marginLeft: 2,
+    marginRight: 4,
+    alignItems: "baseline",
   },
-  iconWrapper: {
-    position: "relative",
-    width: 32,  // Increased from 24 to give more space
-    height: 32, // Increased from 24 to give more space
-    alignItems: 'center',
-    justifyContent: 'center',
+  textSpacing: {
+    marginBottom: -6,
+    marginTop: 5,
+    marginLeft: 4,
+    marginRight: 4,
   },
-  badge: {
+  exploreContainer: {
     position: "absolute",
-    top: -8,
-    right: -8,
-    backgroundColor: "red",
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    top: -55,
+    // left: 10,
+    right: -25,
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 1,
+    backgroundColor: "#082631",
+    borderRadius: 50,
+    width: 51,
+    height: 51,
   },
-  badgeText: {
+  exploreIcon: {
     color: "#fff",
+    transform: [{ scale: 1.3 }],
+    marginTop: 16,
+    marginBottom: 15,
+  },
+  exploreText: {
     fontSize: 12,
-    fontWeight: "bold",
-    paddingHorizontal: 4,
+    color: "#fff",
   },
 });
 

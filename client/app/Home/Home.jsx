@@ -90,65 +90,70 @@ const Home = ({ navigation }) => {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   console.log(apiUrl, "saleeemm");
 
-  useEffect(() => {
-    const fetchUserId = async () => {
-      try {
-        const storedUserId = await AsyncStorage.getItem("userId");
-        if (storedUserId) {
-          setUserId(storedUserId);
-          console.log("Retrieved userId from local storage:", storedUserId);
-        } else {
-          console.error("No userId found in local storage");
-        }
-      } catch (error) {
-        console.error("Error retrieving userId from local storage:", error);
+  const fetchUserId = async () => {
+    try {
+      const storedUserId = await AsyncStorage.getItem("userId");
+      if (storedUserId) {
+        setUserId(storedUserId);
       }
-    };
-
+    } catch (error) {
+      console.error("Error retrieving userId:", error);
+    }
+  };
+  useEffect(() => {
     fetchUserId();
   }, []);
-  useEffect(() => {
-    // Fetch initial favorite posts from the server
-    const fetchFavorites = async () => {
-      try {
-        const token = await AsyncStorage.getItem("userToken");
-        if (!token) {
-          throw new Error("User token not found");
-        }
 
-        const decodedToken = jwtDecode(token);
-        const userId = decodedToken.id;
-
-        const response = await axios.get(
-          `${apiUrl}/user/favourites/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const favoritePostIds = new Set(response.data.map((post) => post.id));
-        setFavorites(favoritePostIds);
-      } catch (err) {
-        console.error("Error fetching favorites:", err);
+  const fetchFavorites = async () => {
+    try {
+      if (!userId) {
+        console.log("No userId available, skipping favorites fetch");
+        return;
       }
-    };
 
-    fetchFavorites();
-  }, []);
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        console.log("No token available, redirecting to login");
+        navigation.navigate("Login");
+        return;
+      }
+
+      const response = await axios.get(`${apiUrl}/user/favourites/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const favoritePostIds = new Set(response.data.map((post) => post.id));
+      setFavorites(favoritePostIds);
+    } catch (err) {
+      console.error("Error fetching favorites:", err);
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigation.navigate("Login");
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchFavorites();
+    }
+  }, [userId]);
 
   const handleAddFavourite = async (postId) => {
     try {
       const token = await AsyncStorage.getItem("userToken");
+
+      // If no token, redirect to login
       if (!token) {
-        throw new Error("User token not found");
+        navigation.navigate("Login");
+        return;
       }
 
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.id;
 
-      await axios.post(
+      const response = await axios.post(
         `${apiUrl}/user/favourites`,
         {
           userId,
@@ -162,9 +167,15 @@ const Home = ({ navigation }) => {
         }
       );
 
-      setFavorites((prevFavorites) => new Set(prevFavorites).add(postId));
+      if (response.data) {
+        setFavorites((prevFavorites) => new Set(prevFavorites).add(postId));
+      }
     } catch (err) {
       console.error("Error adding favourite:", err);
+      // If token is invalid, redirect to login
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigation.navigate("Login");
+      }
     }
   };
 
@@ -234,7 +245,7 @@ const Home = ({ navigation }) => {
       const response = await axios.get(endpoint, {
         params: {
           search: searchQuery,
-          status: 'APPROVED'
+          status: "APPROVED",
         },
       });
 
@@ -326,7 +337,6 @@ const Home = ({ navigation }) => {
     if (posts.length === 0) {
       return <Text>No posts available for this category.</Text>;
     }
-    console.log(posts[0].images[0].url, "salem");
 
     return posts.map((post) => (
       <View key={post.id} style={styles.postContainer}>
@@ -370,10 +380,41 @@ const Home = ({ navigation }) => {
           <Text style={styles.title} numberOfLines={1}>
             {post.title}
           </Text>
-          <Text style={styles.price}>
-            <Text style={styles.priceValue}>${post.price}</Text>
-            <Text style={styles.priceText}> night</Text>
+          <View style={styles.roomConfiguration}>
+  {post.roomConfiguration &&
+    post.roomConfiguration.split(", ").map((item, index) => {
+      const parts = item.split(" ");
+      const count = parts[0];
+      const type = parts[1];
+
+      if (!type) return null;
+
+      let iconComponent;
+      
+      switch (type.toLowerCase()) {
+        case "beds":
+          iconComponent = <FontAwesome5 name="bed" size={16} color="#FFD700" />;
+          break;
+        case "baths":
+          iconComponent = <FontAwesome5 name="bath" size={16} color="#FFD700" />;
+          break;
+        case "garage":
+          iconComponent = <FontAwesome name="car" size={16} color="#FFD700" />;
+          break;
+        default:
+          iconComponent = <FontAwesome5 name="home" size={16} color="#FFD700" />;
+      }
+
+      return (
+        <View key={index} style={styles.roomItem}>
+          {iconComponent}
+          <Text style={styles.roomText}>
+            {count} {type}
           </Text>
+        </View>
+      );
+    })}
+          </View>
         </View>
       </View>
     ));
@@ -382,6 +423,51 @@ const Home = ({ navigation }) => {
   const handleSearchIconPress = () => {
     // Navigate to Home when the search icon is pressed
     navigation.navigate("Home");
+  };
+
+  const fetchData = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        navigation.navigate("Login");
+        return;
+      }
+
+      const response = await axios.get(`${apiUrl}/posts/all`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setPosts(response.data);
+    } catch (error) {
+      if (error.response?.status === 401 && error.response?.data?.expired) {
+        // Token is expired, try to refresh it
+        try {
+          const refreshToken = await AsyncStorage.getItem("refreshToken");
+          const response = await axios.post(`${apiUrl}/user/refresh-token`, {
+            refreshToken,
+          });
+
+          // Save new tokens
+          await AsyncStorage.setItem("userToken", response.data.token);
+          await AsyncStorage.setItem(
+            "refreshToken",
+            response.data.refreshToken
+          );
+
+          // Retry the original request
+          fetchData();
+        } catch (refreshError) {
+          // If refresh fails, redirect to login
+          console.error("Error refreshing token:", refreshError);
+          navigation.navigate("Login");
+        }
+      } else {
+        console.error("Error fetching data:", error);
+        // Handle other errors
+      }
+    }
   };
 
   return (
@@ -624,13 +710,13 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    padding:2,
+    padding: 2,
   },
   searchBarContainer: {
     paddingHorizontal: 3,
     paddingVertical: 10,
     marginTop: 12,
-    marginBottom: 15,
+    marginBottom: 5,
   },
   searchBar: {
     flexDirection: "row",
@@ -639,7 +725,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DDDDDD",
     borderRadius: 40,
-    padding: 12,
+    padding: 10,
     marginHorizontal: 4,
     shadowColor: "#000",
     shadowOffset: {
@@ -691,48 +777,48 @@ const styles = StyleSheet.create({
   categoryTabs: {
     flexDirection: "row",
     marginTop: 8,
-    paddingLeft: 4,
+    paddingLeft: 2,
   },
   tabContainer: {
     alignItems: "center",
-    marginRight: 32,
-    opacity: 0.9,
+    marginRight: 8, // hethiiii
+    marginTop: 10,
+    marginLeft: 10,
   },
   tab: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 4,
-    minWidth: 50,
-    backgroundColor: "#E0E0E0",
-    borderRadius: 10,
+    backgroundColor: "#1A3A4F",
+    borderRadius: 30,
+    width: 60,
+    height: 60,
+    marginBottom: 8,
   },
   tabIcon: {
-    color: "#717171",
-    marginBottom: 8,
-    // opacity: 0.7,
-    height: 24,
-    width: 24,
-  },
-  activeTabIcon: {
-    color: "#000000",
-    opacity: 1,
+    color: "#FFFFFF",
   },
   tabText: {
     fontSize: 10,
-    color: "#717171",
+    color: "white",
     textTransform: "capitalize",
     fontWeight: "400",
     textAlign: "center",
-    marginTop: 2,
+    marginTop: 4,
+  },
+  activeTab: {
+    transform: [{ scale: 1.2 }],
+  },
+  activeTabIcon: {
+    color: "#FFFFFF",
   },
   activeTabText: {
     color: "#FFFFFF",
-    fontWeight: "600",
+    fontWeight: "bold",
   },
   contentContainer: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#F1EFEF",
+    padding: 7,
+    backgroundColor: "#e0e0e0",
     borderRadius: 10,
     overflow: "hidden",
     shadowColor: "#000",
@@ -746,7 +832,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000000",
     width: "100%",
     marginTop: 8,
-    borderRadius: 1,
+    borderRadius: 31,
   },
   navbar: {
     position: "absolute",
@@ -755,9 +841,9 @@ const styles = StyleSheet.create({
     right: 0,
   },
   postContainer: {
-    marginBottom: 24,
-    backgroundColor: "#fff",
-    borderRadius: 15,
+    marginBottom: 20,
+    backgroundColor: "#082631",
+    borderRadius: 47,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -767,7 +853,7 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: "100%",
-    height: 340,
+    height: 230,
     resizeMode: "cover",
     backgroundColor: "#f0f0f0",
     borderTopLeftRadius: 15,
@@ -775,24 +861,24 @@ const styles = StyleSheet.create({
   },
   imageOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.02)",
+    // backgroundColor: "rgba(0, 0, 0, 0.02)",
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
   },
   postDetails: {
-    padding: 16,
-    backgroundColor: "#fff",
+    padding: 12,
+    backgroundColor: "#082631",
   },
   postHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 4,
+    marginBottom: 3,
   },
   postLocation: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#222222",
+    color: "white",
     flex: 1,
   },
   ratingContainer: {
@@ -802,12 +888,12 @@ const styles = StyleSheet.create({
   rating: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#222222",
+    color: "white",
     marginLeft: 4,
   },
   title: {
     fontSize: 14,
-    color: "#717171",
+    color: "white",
     marginBottom: 8,
   },
   price: {
@@ -816,10 +902,10 @@ const styles = StyleSheet.create({
   },
   priceValue: {
     fontWeight: "600",
-    color: "#222222",
+    color: "white",
   },
   priceText: {
-    color: "#222222",
+    color: "white",
   },
   favoriteIcon: {
     position: "absolute",
@@ -827,7 +913,7 @@ const styles = StyleSheet.create({
     right: 16,
     padding: 8,
     borderRadius: 50,
-     backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
@@ -848,28 +934,6 @@ const styles = StyleSheet.create({
     color: "#717171",
     fontSize: 14,
     fontWeight: "500",
-  },
-  activeTab: {
-    // backgroundColor: "grey",
-    transform: [{ scale: 1.05 }],
-  },
-  imageGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    padding: 8,
-  },
-  largeImage: {
-    width: "100%",
-    height: 380,
-  },
-  mediumImage: {
-    width: "48%",
-    height: 280,
-  },
-  smallImage: {
-    width: "48%",
-    height: 240,
   },
   modalContainer: {
     flex: 1,
@@ -1005,6 +1069,28 @@ const styles = StyleSheet.create({
   closeIcon: {
     padding: 8,
     marginRight: -19,
+  },
+  roomConfiguration: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    marginTop: 8,
+    marginLeft: -4,
+  },
+  roomItem: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    alignItems: "center",
+    marginLeft: 28,
+    marginTop: 3,
+    color: "gold",
+  },
+  roomText: {
+    marginLeft: 5,
+    marginTop: 6,
+    marginBottom: 4,
+    color: "#FFD700",
+    alignItems: "baseline",
+    fontSize: 14,
   },
 });
 

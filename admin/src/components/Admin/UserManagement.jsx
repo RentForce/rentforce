@@ -143,9 +143,9 @@ const UserManagement = () => {
       <div className="user-management-header">
         <h2>User Management</h2>
         <div className="search-container">
-          <i className="fas fa-search"></i>
+          <i className="fas fa-search search-icon"></i>
           <input
-            type="text"
+            type="search"
             placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -169,9 +169,6 @@ const UserManagement = () => {
               <tr key={user.id}>
                 <td className="user-cell">
                   <div className="user-info">
-                    <div className="user-avatar">
-                      {user.firstName?.[0]?.toUpperCase() || 'U'}
-                    </div>
                     <span>{`${user.firstName} ${user.lastName}`}</span>
                   </div>
                 </td>

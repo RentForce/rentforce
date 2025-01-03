@@ -54,7 +54,8 @@ const validatePassword = (password) => {
 
 const signup = async (req, res) => {
   try {
-    const { firstName, lastName, email, image, password, phoneNumber } = req.body;
+    const { firstName, lastName, email, image, password, phoneNumber } =
+      req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     if (!email || !password || !firstName || !lastName || !phoneNumber) {
@@ -122,7 +123,7 @@ const login = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-console.log(isMatch , "math");
+    console.log(isMatch, "math");
 
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
@@ -158,7 +159,6 @@ console.log(isMatch , "math");
     res.status(500).send(error);
   }
 };
-
 
 const getUserData = async (req, res) => {
   console.log("Received request for userId:", req.params.userId);
@@ -282,17 +282,17 @@ const createPost = async (req, res) => {
         price: parseFloat(price),
         category,
         userId: req.user.id,
-      }
+      },
     });
 
     // Create all images if they exist
     if (images && Array.isArray(images) && images.length > 0) {
       // Use createMany for better performance with multiple images
       await prisma.image.createMany({
-        data: images.map(img => ({
+        data: images.map((img) => ({
           url: img.url,
-          postId: post.id
-        }))
+          postId: post.id,
+        })),
       });
     }
 
@@ -305,9 +305,9 @@ const createPost = async (req, res) => {
           select: {
             firstName: true,
             lastName: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     res.status(201).json(postWithImages);
@@ -388,12 +388,10 @@ const removeFromFavourites = async (req, res) => {
     res.status(200).json({ message: "Removed from favourites" });
   } catch (error) {
     console.error("Error removing from favourites:", error);
-    res
-      .status(500)
-      .json({
-        message: "Error removing from favourites",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error removing from favourites",
+      error: error.message,
+    });
   }
 };
 
@@ -428,74 +426,72 @@ const getFavouritePosts = async (req, res) => {
     res.status(200).json(posts);
   } catch (error) {
     console.error("Error retrieving favourite posts:", error);
-    res
-      .status(500)
-      .json({
-        message: "Error retrieving favourite posts",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error retrieving favourite posts",
+      error: error.message,
+    });
   }
 };
 
 const getUserHistory = async (req, res) => {
-    const { userId } = req.params;
+  const { userId } = req.params;
 
-    try {
-        const history = await prisma.history.findMany({
-            where: { userId: Number(userId) },
-            include: {
-                post: true
-            },
-            orderBy: { bookingDate: 'desc' }
-        });
+  try {
+    const history = await prisma.history.findMany({
+      where: { userId: Number(userId) },
+      include: {
+        post: true,
+      },
+      orderBy: { bookingDate: "desc" },
+    });
 
-        res.status(200).json(history);
-    } catch (error) {
-        console.error('Error fetching user history:', error);
-        res.status(500).json({ 
-            message: 'Error retrieving user history', 
-            error: error.message 
-        });
-    }
+    res.status(200).json(history);
+  } catch (error) {
+    console.error("Error fetching user history:", error);
+    res.status(500).json({
+      message: "Error retrieving user history",
+      error: error.message,
+    });
+  }
 };
 
 const createHistory = async (req, res) => {
-    try {
-        const {
-            userId,
-            postId,
-            bookingDate,
-            checkInDate,
-            checkOutDate,
-            totalPrice,
-            status,
-            numberOfGuests
-        } = req.body;
+  try {
+    const {
+      userId,
+      postId,
+      bookingDate,
+      checkInDate,
+      checkOutDate,
+      totalPrice,
+      status,
+      numberOfGuests,
+    } = req.body;
 
-        // Log the incoming request body for debugging
-        console.log("Request Body for Creating History:", req.body);
+    // Log the incoming request body for debugging
+    console.log("Request Body for Creating History:", req.body);
 
-        const history = await prisma.history.create({
-            data: {
-                userId: parseInt(userId),
-                postId: parseInt(postId),
-                bookingDate: new Date(bookingDate),
-                checkInDate: new Date(checkInDate),
-                checkOutDate: new Date(checkOutDate),
-                totalPrice: parseFloat(totalPrice),
-                status,
-                numberOfGuests: parseInt(numberOfGuests)
-            }
-        });
+    const history = await prisma.history.create({
+      data: {
+        userId: parseInt(userId),
+        postId: parseInt(postId),
+        bookingDate: new Date(bookingDate),
+        checkInDate: new Date(checkInDate),
+        checkOutDate: new Date(checkOutDate),
+        totalPrice: parseFloat(totalPrice),
+        status,
+        numberOfGuests: parseInt(numberOfGuests),
+      },
+    });
 
-        res.status(201).json(history);
-    } catch (error) {
-        console.error('Error creating history record:', error);
-        res.status(500).json({ 
-            message: 'Error creating history record', 
-            error: error.message 
-        });
-    }
+    res.status(201).json(history);
+  } catch (error) {
+    console.error("Error creating history record:", error);
+    res.status(500).json({
+      message: "Error creating history record",
+      error: error.message,
+    });
+  }
 };
 
 const getUserPaymentHistory = async (req, res) => {
@@ -503,27 +499,27 @@ const getUserPaymentHistory = async (req, res) => {
 
   try {
     const bookings = await prisma.booking.findMany({
-      where: { 
+      where: {
         userId: parseInt(userId),
         NOT: {
-          status: 'CANCELLED'
-        }
+          status: "CANCELLED",
+        },
       },
       include: {
         post: {
           select: {
             title: true,
-            location: true
-          }
-        }
+            location: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
 
     // Transform the data to include property details
-    const paymentHistory = bookings.map(booking => ({
+    const paymentHistory = bookings.map((booking) => ({
       id: booking.id,
       bookingDate: booking.createdAt,
       checkInDate: booking.startDate,
@@ -533,32 +529,32 @@ const getUserPaymentHistory = async (req, res) => {
       numberOfGuests: booking.numberOfGuests,
       propertyDetails: {
         title: booking.post.title,
-        location: booking.post.location
-      }
+        location: booking.post.location,
+      },
     }));
 
     res.status(200).json(paymentHistory);
   } catch (error) {
-    console.error('Error fetching payment history:', error);
-    res.status(500).json({ 
-      message: 'Error retrieving payment history', 
-      error: error.message 
+    console.error("Error fetching payment history:", error);
+    res.status(500).json({
+      message: "Error retrieving payment history",
+      error: error.message,
     });
   }
 };
 
 module.exports = {
-    getUserData,
-    updateUserData,
-    createPost,
-    authenticateToken, 
-    prisma,
-    signup,
-    login,
-    getFavouritePosts,
-    removeFromFavourites,
-    addToFavourites,
-    getUserHistory,
-    createHistory,
-    getUserPaymentHistory,
+  getUserData,
+  updateUserData,
+  createPost,
+  authenticateToken,
+  prisma,
+  signup,
+  login,
+  getFavouritePosts,
+  removeFromFavourites,
+  addToFavourites,
+  getUserHistory,
+  createHistory,
+  getUserPaymentHistory,
 };
