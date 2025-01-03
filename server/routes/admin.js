@@ -55,22 +55,35 @@ router.get('/notifications/recent', async (req, res) => {
   }
 });
 
-// Get all users with pagination
+// Get paginated users list with search
 router.get('/users', async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const search = req.query.search || '';
-
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const search = req.query.search || '';
     const skip = (page - 1) * limit;
-    
+
+    // Build the where clause for search
+    const whereClause = search ? {
+      OR: [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } }
+      ]
+    } : {};
+
+    // Get total count for pagination
+    const totalUsers = await prisma.user.count({
+      where: whereClause
+    });
+
+    // Get users for current page
     const users = await prisma.user.findMany({
-      where: {
-        OR: [
-          { firstName: { contains: search } },
-          { lastName: { contains: search } },
-          { email: { contains: search } }
-        ]
+      where: whereClause,
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: 'desc'
       },
       select: {
         id: true,
@@ -78,54 +91,22 @@ router.get('/users', async (req, res) => {
         lastName: true,
         email: true,
         type: true,
-        bannedUntil: true
-      },
-      orderBy: {
-        id: 'desc'
-      },
-      skip: skip,
-      take: limit
-    });
-
-    const total = await prisma.user.count({
-      where: {
-        OR: [
-          { firstName: { contains: search } },
-          { lastName: { contains: search } },
-          { email: { contains: search } }
-        ]
+        bannedUntil: true,
+        createdAt: true
       }
     });
 
-    res.json({ 
+    res.json({
       users,
       pagination: {
-        total,
-        pages: Math.ceil(total / limit),
-        currentPage: page
+        page,
+        pages: Math.ceil(totalUsers / limit),
+        total: totalUsers
       }
     });
   } catch (error) {
-    console.error('Detailed error:', {
-      message: error.message,
-      stack: error.stack,
-      query: {
-        page,
-        limit,
-        search
-      }
-    });
-    
-    res.status(500).json({ 
-      error: 'Error fetching users',
-      details: error.message,
-      users: [],
-      pagination: {
-        total: 0,
-        pages: 1,
-        currentPage: 1
-      }
-    });
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Error fetching users' });
   }
 });
 
