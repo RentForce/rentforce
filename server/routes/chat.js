@@ -37,9 +37,7 @@ router.use('/uploads', express.static('uploads'));
 //router.get('/unread/:userId', authMiddleware, getUnreadMessages);
 
 // Mark messages as read
-router.put('/:chatId/read/:userId', markMessagesAsRead);
 router.get('/unread/:userId', getUnreadMessages);
-router.put('/messages/read/:chatId/:userId', markMessagesAsRead);
 
 
 

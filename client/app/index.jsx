@@ -20,31 +20,79 @@ import pay from "./Home/payment.jsx";
 import { NotificationProvider } from "./chat/Notifications.jsx";
 import NotificationScreen from "./notifications/NotificationScreen.jsx";
 import PaymentHistory from "./profile/PaymentHistory.jsx";
-import AboutUsScreen from "./profile/AboutUsScreen";
-
+import AboutUsScreen from "./profile/AboutUsScreen.jsx";
 const Stack = createNativeStackNavigator();
 
 function App() {
   return (
     <NotificationProvider>
-   <Stack.Navigator>
-      <Stack.Screen name="signup" component={SignUpScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="login" component={Login} options={{ headerShown: false }} />
-      <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
-      <Stack.Screen name="HomeDetails" component={HomeDetails} options={{ headerShown: false }} />
-    
-      <Stack.Screen name="favourites" component={Favourites} options={{ headerShown: false }} />        
-      <Stack.Screen name="forget" component={ForgetPassword} options={{ headerShown: false }} />
-      <Stack.Screen name="reset" component={ResetPassword} options={{ headerShown: false }} />
-      <Stack.Screen name="profile" component={ProfileScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="personal" component={PersonalScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="showprofile" component={ShowProfile} options={{ headerShown: false }} />
-      <Stack.Screen name="CreatePost" component={CreatePost} options={{ headerShown: false }} />
-   
-      <Stack.Screen name="Booking" component={BookingPage} options={{ headerShown: false }}/>
-      <Stack.Screen name="payment" component={pay} options={{ headerShown: false }}/>
-      <Stack.Screen name="notifications" component={NotificationScreen} options={{ headerShown: false, title: "Notifications"}} />
-      <Stack.Screen
+      <Stack.Navigator>
+        <Stack.Screen
+          name="signup"
+          component={SignUpScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="login"
+          component={Login}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Home"
+          component={Home}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="HomeDetails"
+          component={HomeDetails}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="favourites"
+          component={Favourites}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="forget"
+          component={ForgetPassword}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="reset"
+          component={ResetPassword}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="profile"
+          component={ProfileScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="personal"
+          component={PersonalScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="showprofile"
+          component={ShowProfile}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CreatePost"
+          component={CreatePost}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Booking"
+          component={BookingPage}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="payment"
+          component={pay}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="ChatSelectionScreen"
           component={ChatSelectionScreen}
           options={{ title: "Select User" }}
@@ -56,7 +104,13 @@ function App() {
           title: `${route.params.otherUser.firstName} ${route.params.otherUser.lastName}` 
         })}
       />
-    <Stack.Screen name="PaymentHistory" component={PaymentHistory} options={{ headerShown: false }}/>
+   
+        <Stack.Screen
+          name="notifications"
+          component={NotificationScreen}
+          options={{ headerShown: false, title: "Notifications" }}
+        />
+        <Stack.Screen name="PaymentHistory" component={PaymentHistory} options={{ headerShown: false }}/>
     <Stack.Screen 
       name="AboutUs" 
       component={AboutUsScreen} 

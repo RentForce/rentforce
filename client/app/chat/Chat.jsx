@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -17,11 +17,43 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNotifications } from "./Notifications.jsx";
-import { io } from "socket.io-client";
 
 import ImageUpload from './components/ImageUpload';
 import VoiceUpload from './components/VoiceUpload';
 import VoiceMessage from './components/VoiceMessage';
+
+// Utility functions
+const formatTime = (date) => {
+  return new Date(date).toLocaleTimeString([], { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    hour12: false 
+  });
+};
+
+const useAuthToken = () => {
+  const [token, setToken] = useState(null);
+  const navigation = useNavigation();
+
+  const getToken = async () => {
+    try {
+      const storedToken = await AsyncStorage.getItem("userToken");
+      if (!storedToken) {
+        navigation.navigate("Login");
+        return null;
+      }
+      const authToken = storedToken.startsWith('Bearer ') ? storedToken : `Bearer ${storedToken}`;
+      await AsyncStorage.setItem("userToken", authToken);
+      return authToken;
+    } catch (error) {
+      console.error("Token retrieval error:", error);
+      navigation.navigate("Login");
+      return null;
+    }
+  };
+
+  return { token, getToken };
+};
 
 const Chat = () => {
   const route = useRoute();
@@ -33,111 +65,149 @@ const Chat = () => {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [chatId, setChatId] = useState(route.params.chatId);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [readStatus, setReadStatus] = useState({});
   const [lastSentMessageId, setLastSentMessageId] = useState(null);
   const flatListRef = useRef();
   const { markChatAsRead } = useNotifications();
-
+  const { getToken } = useAuthToken();
+  
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  useEffect(() => {
-    if (!isInitialized || !chatId || !currentUserId) {
-      return;
+
+  // Message fetching logic
+  const fetchMessages = useCallback(async () => {
+    if (!isInitialized || !chatId || !currentUserId) return;
+
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      const response = await axios.get(
+        `${apiUrl}/api/chat/messages/${chatId}`,
+        {
+          headers: {
+            'Authorization': token,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+        }
+      );
+
+      setMessages(response.data);
+      updateLastSentMessage(response.data);
+    } catch (error) {
+      handleApiError(error);
     }
+  }, [isInitialized, chatId, currentUserId]);
 
-    let isMounted = true;
+  // Message sending logic
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !currentUserId) return;
 
-    const fetchMessages = async () => {
-      try {
-        const token = await AsyncStorage.getItem("token");
-        if (!token) {
-          console.log("Missing auth data:", { hasToken: false });
-          navigation.navigate("Login");
-          return;
-        }
+    try {
+      const token = await getToken();
+      if (!token) return;
 
-        const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-        
-        const response = await axios.get(
-          `${apiUrl}/api/chat/messages/${chatId}`,
-          {
-            headers: {
-              'Authorization': authToken,
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-          }
-        );
-
-        if (isMounted) {
-          setMessages(response.data);
-
-          // Update read status from messages
-          const newReadStatus = {};
-          response.data.forEach(message => {
-            if (message.userId === currentUserId) {
-              newReadStatus[message.id] = { read: message.isRead || false };
-            }
-          });
-          setReadStatus(newReadStatus);
-        }
-      } catch (error) {
-        console.log("Message fetch error:", {
-          status: error.response?.status,
-          data: error.response?.data,
-          userId: currentUserId,
-          chatId
-        });
-
-        if (error.response?.status === 403) {
-          navigation.navigate("Login");
-        }
+      if (!chatId || !currentUserId || !receiverId) {
+        Alert.alert('Error', 'Missing chat information. Please try again.');
+        return;
       }
+
+      const messageData = {
+        content: newMessage.trim(),
+        chatId: parseInt(chatId),
+        userId: parseInt(currentUserId),
+        receiverId: parseInt(receiverId),
+        type: 'TEXT',
+        read: false,
+        sentAt: new Date().toISOString()
+      };
+
+      const response = await axios.post(
+        `${apiUrl}/api/chat/message`,
+        messageData,
+        {
+          headers: { 
+            'Authorization': token,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+        }
+      );
+
+      handleNewMessage(response.data);
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+  // Message rendering
+  const renderMessage = useCallback(({ item }) => {
+    if (!item) return null;
+
+    const isCurrentUser = item?.userId === currentUserId;
+    const messageTime = formatTime(item.sentAt);
+    const isRead = item.isRead || false;
+    const isLastSentMessage = item.id === lastSentMessageId;
+    const showSeen = isCurrentUser && isRead && isLastSentMessage;
+
+    return (
+      <MessageItem
+        item={item}
+        isCurrentUser={isCurrentUser}
+        messageTime={messageTime}
+        showSeen={showSeen}
+        otherUser={otherUser}
+      />
+    );
+  }, [currentUserId, lastSentMessageId, otherUser]);
+
+  // Helper functions
+  const handleApiError = (error) => {
+    if (error.response?.status === 403) {
+      navigation.navigate("Login");
+    } else {
+      Alert.alert('Error', error.response?.data?.error || 'An error occurred');
+    }
+  };
+
+  const updateLastSentMessage = (messageList) => {
+    const lastSentMessage = [...messageList]
+      .reverse()
+      .find(msg => msg.userId === currentUserId);
+    setLastSentMessageId(lastSentMessage?.id || null);
+  };
+
+  const handleNewMessage = (messageData) => {
+    const newMessageObj = {
+      ...messageData,
+      userId: currentUserId,
+      receiverId: receiverId,
+      isRead: false
     };
+    setMessages(prev => [...prev, newMessageObj]);
+    setNewMessage("");
+    flatListRef.current?.scrollToEnd();
+  };
 
-    fetchMessages();
-
-    // Set up polling for messages
-    const pollInterval = setInterval(fetchMessages, 5000);
-
-    return () => {
-      isMounted = false;
-      clearInterval(pollInterval);
-    };
-  }, [isInitialized, chatId, currentUserId, markChatAsRead, receiverId]);
-  // Initialize chat and get user ID
+  // Effects
   useEffect(() => {
     const initialize = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
-        console.log("Token format:", {
-          token: token ? `${token.substring(0, 20)}...` : null,
-          length: token?.length,
-          hasBearer: token?.startsWith('Bearer ')
-        });
-
-        if (!token) {
-          navigation.navigate("Login");
-          return;
-        }
-
-        // Ensure token has 'Bearer ' prefix
-        const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-        await AsyncStorage.setItem("userToken", authToken);
+        const token = await getToken();
+        if (!token) return;
 
         const decodedToken = JSON.parse(atob(token.split(".")[1]));
-        const userId = decodedToken.id;
-        setCurrentUserId(userId);
+        setCurrentUserId(decodedToken.id);
 
         if (!chatId && receiverId) {
           const response = await axios.post(
             `${apiUrl}/api/chat/create`,
             {
-              userId: userId,
+              userId: decodedToken.id,
               receiverId: receiverId,
             },
             {
               headers: { 
-                'Authorization': authToken,
+                'Authorization': token,
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
               },
@@ -148,13 +218,7 @@ const Chat = () => {
 
         setIsInitialized(true);
       } catch (error) {
-        console.error("Error initializing chat:", error);
-        if (error.response?.status === 403) {
-          console.log("Auth error details:", {
-            status: error.response.status,
-            data: error.response.data
-          });
-        }
+        handleApiError(error);
       } finally {
         setLoading(false);
       }
@@ -164,204 +228,11 @@ const Chat = () => {
   }, []);
 
   useEffect(() => {
-    // Find the last sent message ID whenever messages update
-    if (messages.length > 0) {
-      const lastSentMessage = [...messages]
-        .reverse()
-        .find(msg => msg.userId === currentUserId);
-      setLastSentMessageId(lastSentMessage?.id || null);
-    }
-  }, [messages, currentUserId]);
+    if (!isInitialized) return;
 
-  useEffect(() => {
-    if (!isInitialized || !chatId || !currentUserId) {
-      return;
-    }
-
-    const markAsRead = async () => {
-      try {
-        // Check if there are any unread messages from other users
-        const unreadMessages = messages.filter(
-          msg => !msg.isRead && msg.userId !== currentUserId
-        );
-
-        if (unreadMessages.length > 0) {
-          console.log('Marking messages as read in chat:', chatId);
-          const success = await markChatAsRead(chatId);
-          
-          if (success) {
-            setMessages(prevMessages =>
-              prevMessages.map(msg => 
-                msg.userId !== currentUserId ? { ...msg, isRead: true } : msg
-              )
-            );
-          } else {
-            // If marking as read failed, check if token is expired
-            const token = await AsyncStorage.getItem("token");
-            if (!token) {
-              navigation.navigate("Login");
-            }
-          }
-        }
-      } catch (error) {
-        if (error.response?.status === 403) {
-          navigation.navigate("Login");
-        }
-      }
-    };
-
-    // Mark messages as read when the chat is opened or when new messages arrive
-    markAsRead();
-  }, [isInitialized, chatId, currentUserId, messages, markChatAsRead]);
-
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !currentUserId) return;
-
-    try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        navigation.navigate("Login");
-        return;
-      }
-
-      if (!chatId || !currentUserId) {
-        console.error("Missing required data:", { chatId, currentUserId });
-        Alert.alert('Error', 'Missing chat information. Please try again.');
-        return;
-      }
-
-      const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-
-      console.log('Sending message with:', {
-        content: newMessage.trim(),
-        chatId: parseInt(chatId),
-        userId: parseInt(currentUserId),
-        type: 'TEXT'
-      });
-
-      const response = await axios.post(
-        `${apiUrl}/api/chat/message`,
-        {
-          content: newMessage.trim(),
-          chatId: parseInt(chatId),
-          userId: parseInt(currentUserId),
-          type: 'TEXT'
-        },
-        {
-          headers: { 
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': authToken
-          },
-        }
-      );
-
-      if (response.data) {
-        const newMessageObj = {
-          ...response.data,
-          type: 'TEXT'
-        };
-        setMessages(prev => [...prev, newMessageObj]);
-        setNewMessage("");
-        flatListRef.current?.scrollToEnd();
-      } else {
-        throw new Error('Invalid server response');
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-      if (error.response?.status === 403) {
-        navigation.navigate("Login");
-      } else {
-        Alert.alert('Error', error.response?.data?.error || 'Failed to send message. Please try again.');
-      }
-    }
-  };
-
-  const renderMessage = ({ item }) => {
-    if (!item) return null;
-  
-    const formatTime = (date) => {
-      const d = new Date(date);
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-    };
-  
-    const messageTime = formatTime(item.sentAt);
-    const isCurrentUser = item?.userId === currentUserId;
-    const messageContainerStyle = [
-      styles.messageContainer,
-      isCurrentUser ? styles.sentMessage : styles.receivedMessage
-    ];
-    const timeStyle = [
-      styles.messageTime,
-      isCurrentUser ? styles.sentMessageTime : styles.receivedMessageTime
-    ];
-  
-    const isRead = item.isRead || false;
-    const isLastSentMessage = item.id === lastSentMessageId;
-    const showSeen = isCurrentUser && isRead && isLastSentMessage && item.userId !== receiverId;
-  
-    const renderMessageStatus = () => (
-      <View style={styles.messageStatusContainer}>
-        <Text style={timeStyle}>{messageTime}</Text>
-        {showSeen && <Text style={styles.seenText}>Seen</Text>}
-      </View>
-    );
-  
-    const renderAvatar = () => {
-      if (isCurrentUser) return null;
-      return (
-        <View style={styles.avatarContainer}>
-          <Image
-            source={{ uri: otherUser?.image }}
-            style={styles.avatar}
-          />
-        </View>
-      );
-    };
-  
-    const messageContent = () => {
-      switch (item.type) {
-        case "IMAGE":
-          return (
-            <Image
-              source={{ uri: item.content }}
-              style={styles.messageImage}
-              resizeMode="cover"
-            />
-          );
-  
-        case "AUDIO":
-          return <VoiceMessage audioUrl={item.content} />;
-  
-        default:
-          return (
-            <Text style={[
-              styles.messageText,
-              isCurrentUser ? styles.sentMessageText : styles.receivedMessageText
-            ]}>
-              {item.content || ''}
-            </Text>
-          );
-      }
-    };
-  
-    return (
-      <View style={messageContainerStyle}>
-        <View style={styles.messageRow}>
-          {!isCurrentUser && renderAvatar()}
-          <View style={[
-            styles.messageContentContainer,
-            isCurrentUser ? styles.sentContentContainer : styles.receivedContentContainer
-          ]}>
-            {messageContent()}
-            {renderMessageStatus()}
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-
+    const pollInterval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(pollInterval);
+  }, [isInitialized, fetchMessages]);
 
   if (loading) {
     return (
@@ -381,66 +252,144 @@ const Chat = () => {
         ref={flatListRef}
         data={messages}
         renderItem={renderMessage}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={item => item.id.toString()}
         style={styles.messagesList}
         contentContainerStyle={styles.messagesContainer}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
-        inverted={false}
       />
-      <View style={styles.inputContainer}>
-        <View style={styles.mediaButtons}>
-        {chatId && currentUserId && receiverId ? (
-  <ImageUpload
-    chatId={chatId}
-    senderId={currentUserId}
-    receiverId={receiverId}
-    onImageSent={(message) => {
-      setMessages(prev => [...prev, message]);
-      console.log('New message added:', message);
-    }}
-  />
-) : (
-  console.log('Missing required values:', {
-    chatId,
-    currentUserId,
-    receiverId
-  })
-)}
-          <VoiceUpload
-            chatId={chatId}
-            senderId={currentUserId}
-            receiverId={receiverId}
-            onVoiceSent={(message) => {
-              setMessages(prev => [...prev, message]);
-            }}
-          />
-        </View>
-        <TextInput
-          value={newMessage}
-          onChangeText={setNewMessage}
-          placeholder="Type a message..."
-          style={styles.input}
-          multiline
-          maxLength={1000}
-        />
-        <TouchableOpacity
-          onPress={sendMessage}
-          style={[
-            styles.sendButton,
-            !newMessage.trim() && styles.sendButtonDisabled,
-          ]}
-          disabled={!newMessage.trim()}
-        >
-          <Ionicons
-            name="send"
-            size={24}
-            color={newMessage.trim() ? "#007AFF" : "#A8A8A8"}
-          />
-        </TouchableOpacity>
-      </View>
+      <ChatInput
+        newMessage={newMessage}
+        setNewMessage={setNewMessage}
+        sendMessage={sendMessage}
+        chatId={chatId}
+        currentUserId={currentUserId}
+        receiverId={receiverId}
+        setMessages={setMessages}
+      />
     </KeyboardAvoidingView>
   );
 };
+
+// Separated components
+const MessageItem = React.memo(({ item, isCurrentUser, messageTime, showSeen, otherUser }) => {
+  const messageContainerStyle = [
+    styles.messageContainer,
+    isCurrentUser ? styles.sentMessage : styles.receivedMessage
+  ];
+
+  const renderContent = () => {
+    switch (item.type) {
+      case "IMAGE":
+        return (
+          <Image
+            source={{ uri: item.content }}
+            style={styles.messageImage}
+            resizeMode="cover"
+          />
+        );
+      case "AUDIO":
+        return <VoiceMessage audioUrl={item.content} />;
+      default:
+        return (
+          <Text style={[
+            styles.messageText,
+            isCurrentUser ? styles.sentMessageText : styles.receivedMessageText
+          ]}>
+            {item.content}
+          </Text>
+        );
+    }
+  };
+
+  return (
+    <View style={messageContainerStyle}>
+      <View style={styles.messageRow}>
+        {!isCurrentUser && (
+          <View style={styles.avatarContainer}>
+            <Image source={{ uri: otherUser?.image }} style={styles.avatar} />
+          </View>
+        )}
+        <View style={styles.messageContent}>
+          {renderContent()}
+          <View style={styles.messageStatusContainer}>
+            <Text style={styles.messageTime}>{messageTime}</Text>
+            {showSeen && <Text style={styles.seenText}>Seen</Text>}
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+});
+
+const ChatInput = React.memo(({ 
+  newMessage, 
+  setNewMessage, 
+  sendMessage, 
+  chatId, 
+  currentUserId, 
+  receiverId, 
+  setMessages 
+}) => {
+  return (
+    <View style={styles.inputContainer}>
+      <View style={styles.mediaButtons}>
+        {chatId && currentUserId && receiverId && (
+          <>
+            <ImageUpload
+              chatId={chatId}
+              userId={currentUserId}
+              receiverId={receiverId}
+              senderId={currentUserId}
+              onImageSent={(message) => {
+                setMessages(prev => [...prev, {
+                  ...message,
+                  userId: currentUserId,
+                  receiverId: receiverId,
+                  senderId: currentUserId,
+                  read: false
+                }]);
+              }}
+            />
+            <VoiceUpload
+              chatId={chatId}
+              userId={currentUserId}
+              receiverId={receiverId}
+              senderId={currentUserId}
+              onVoiceSent={(message) => {
+                setMessages(prev => [...prev, {
+                  ...message,
+                  userId: currentUserId,
+                  receiverId: receiverId,
+                  senderId: currentUserId,
+                  read: false
+                }]);
+              }}
+            />
+          </>
+        )}
+      </View>
+      <TextInput
+        value={newMessage}
+        onChangeText={setNewMessage}
+        placeholder="Type a message..."
+        style={styles.input}
+        multiline
+        maxLength={1000}
+      />
+      <TouchableOpacity
+        onPress={sendMessage}
+        style={[styles.sendButton, !newMessage.trim() && styles.sendButtonDisabled]}
+        disabled={!newMessage.trim()}
+      >
+        <Ionicons
+          name="send"
+          size={24}
+          color={newMessage.trim() ? "#007AFF" : "#A8A8A8"}
+        />
+      </TouchableOpacity>
+    </View>
+  );
+});
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, memo } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,78 @@ import { Ionicons } from '@expo/vector-icons';
 import Navbar from '../Home/Navbar';
 import { useNotifications } from './Notifications.jsx';
 
+const formatTime = (timestamp) => {
+  if (!timestamp) return '';
+  
+  const messageDate = new Date(timestamp);
+  const now = new Date();
+  const diffInHours = (now - messageDate) / (1000 * 60 * 60);
+  
+  if (diffInHours < 24) {
+    return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else if (diffInHours < 168) {
+    return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][messageDate.getDay()];
+  }
+  return messageDate.toLocaleDateString();
+};
+
+const useAuth = () => {
+  const navigation = useNavigation();
+  
+  const getToken = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        navigation.navigate("Login");
+        return null;
+      }
+      return token;
+    } catch (error) {
+      console.error("Auth error:", error);
+      navigation.navigate("Login");
+      return null;
+    }
+  };
+
+  return { getToken };
+};
+
+const ConversationItem = memo(({ item, onPress, currentUserId }) => (
+  <TouchableOpacity style={styles.conversationItem} onPress={onPress}>
+    <Image
+      source={{ uri: item.otherUserImage || 'https://via.placeholder.com/50' }}
+      style={styles.userImage}
+    />
+    <View style={styles.conversationInfo}>
+      <View style={styles.conversationHeader}>
+        <Text style={styles.userName}>
+          {`${item.otherUserFirstName} ${item.otherUserLastName}`}
+        </Text>
+        <Text style={styles.timeStamp}>
+          {formatTime(item.lastMessageTime)}
+        </Text>
+      </View>
+      <View style={styles.lastMessageContainer}>
+        <Text style={styles.lastMessage} numberOfLines={1}>
+          {item.lastMessage || 'Start a conversation'}
+        </Text>
+        {item.unreadCount > 0 && (
+          <View style={styles.unreadBadge}>
+            <Text style={styles.unreadCount}>{item.unreadCount}</Text>
+          </View>
+        )}
+      </View>
+    </View>
+  </TouchableOpacity>
+));
+
+const EmptyConversations = memo(() => (
+  <View style={styles.emptyContainer}>
+    <Ionicons name="chatbubble-outline" size={50} color="#999" />
+    <Text style={styles.emptyText}>No conversations yet</Text>
+  </View>
+));
+
 const ChatSelectionScreen = () => {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,91 +95,63 @@ const ChatSelectionScreen = () => {
   const [currentUserId, setCurrentUserId] = useState(null);
   const navigation = useNavigation();
   const isFocused = useIsFocused();
-  const { markChatAsRead } = useNotifications(); // Move this to component level
-
+  const { markChatAsRead } = useNotifications();
+  const { getToken } = useAuth();
+  
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     try {
-      const token = await AsyncStorage.getItem("userToken");
-      if (!token) {
-        console.log("No token found in ChatSelectionScreen, navigating to login");
-        navigation.navigate("Login");
-        return;
-      }
-
-      try {
-        const userId = JSON.parse(atob(token.split('.')[1])).id;
-        setCurrentUserId(userId); // Set currentUserId from token
-        console.log("Fetching conversations for user:", userId);
-
-        const response = await axios.get(
-          `${apiUrl}/api/chat/conversations/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
+      const token = await getToken();
+      if (!token) return;
+  
+      const userId = JSON.parse(atob(token.split('.')[1])).id;
+      setCurrentUserId(userId);
+  
+      const response = await axios.get(
+        `${apiUrl}/api/chat/conversations/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
-        );
-
-        // Sort conversations by latest message
-        const sortedConversations = response.data.sort((a, b) => 
-          new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
-        );
-
-        setConversations(sortedConversations);
-      } catch (error) {
-        console.error("Token decode or fetch error:", error);
-        if (error.response?.status === 403 || error.response?.status === 401) {
-          console.log("Auth error in ChatSelectionScreen, clearing token");
-          await AsyncStorage.removeItem("userToken");
-          navigation.navigate("Login");
         }
-      }
+      );
+  
+      const sortedConversations = response.data
+        .map(conv => ({
+          ...conv,
+          senderId: conv.senderId || conv.userId // Ensure backward compatibility
+        }))
+        .sort((a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime));
+  
+      setConversations(sortedConversations);
     } catch (error) {
-      console.error("Error fetching conversations:", error);
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        await AsyncStorage.removeItem("userToken");
+        navigation.navigate("Login");
+      }
+      console.error("Fetch error:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
-  const formatMessageTime = (timestamp) => {
-    if (!timestamp) return '';
-    
-    const messageDate = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now - messageDate) / (1000 * 60 * 60);
-    
-    if (diffInHours < 24) {
-      return messageDate.toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
-    } else if (diffInHours < 168) { // 7 days
-      return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][messageDate.getDay()];
-    } else {
-      return messageDate.toLocaleDateString();
+  }, [apiUrl, navigation, getToken]);
+
+  const handleChatPress = useCallback(async(conversation) => {
+    if (conversation.unreadCount > 0) {
+      // This will immediately update the unread count in the navbar
+      await markChatAsRead(conversation.id, conversation.unreadCount);
+      // Refetch conversations to ensure everything is in sync
+      await fetchConversations();
     }
-  };
-  useEffect(() => {
-    if (isFocused) {
-      fetchConversations();
-    }
-  }, [isFocused]);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchConversations();
-  };
-
-  const handleChatPress = (conversation) => {
-    const isCurrentUserSender = conversation.userId === parseInt(currentUserId);
-    const receiverId = isCurrentUserSender ? conversation.receiverId : conversation.userId;
-
+    const isCurrentUserSender = conversation.senderId === parseInt(currentUserId);
+    const receiverId = isCurrentUserSender ? conversation.receiverId : conversation.senderId;
+  
     navigation.navigate("ChatScreen", {
       chatId: conversation.id,
       receiverId: receiverId,
+      senderId: conversation.senderId,
       otherUser: {
         id: receiverId,
         firstName: conversation.otherUserFirstName,
@@ -115,62 +159,20 @@ const ChatSelectionScreen = () => {
         image: conversation.otherUserImage || 'https://via.placeholder.com/50'
       }
     });
-  };
-
-  const formatLastMessageTime = (timestamp) => {
-    if (!timestamp) return '';
-    
-    const messageDate = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now - messageDate) / (1000 * 60 * 60);
-    
-    if (diffInHours < 24) {
-      return messageDate.toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
-    } else if (diffInHours < 168) { // 7 days
-      return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][messageDate.getDay()];
-    } else {
-      return messageDate.toLocaleDateString();
-    }
-  };
-
-  const renderConversation = ({ item }) => (
-    <TouchableOpacity
-      style={styles.conversationItem}
+  }, [currentUserId, navigation, markChatAsRead, fetchConversations]);
+  const renderConversation = useCallback(({ item }) => (
+    <ConversationItem
+      item={item}
       onPress={() => handleChatPress(item)}
-    >
-      <Image
-        source={{ 
-          uri: item.otherUserImage || 'https://via.placeholder.com/50'
-        }}
-        style={styles.userImage}
-      />
-      <View style={styles.conversationInfo}>
-        <View style={styles.conversationHeader}>
-          <Text style={styles.userName}>
-            {`${item.otherUserFirstName} ${item.otherUserLastName}`}
-          </Text>
-          <Text style={styles.timeStamp}>
-            {formatLastMessageTime(item.lastMessageTime)}
-          </Text>
-        </View>
-        <View style={styles.lastMessageContainer}>
-          <Text style={styles.lastMessage} numberOfLines={1}>
-            {item.lastMessage || 'Start a conversation'}
-          </Text>
-          {item.unreadCount > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadCount}>
-                {item.unreadCount}
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+      currentUserId={currentUserId}
+    />
+  ), [handleChatPress, currentUserId]);
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchConversations();
+    }
+  }, [isFocused, fetchConversations]);
 
   if (loading) {
     return (
@@ -189,15 +191,13 @@ const ChatSelectionScreen = () => {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={onRefresh}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchConversations();
+            }}
           />
         }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="chatbubble-outline" size={50} color="#999" />
-            <Text style={styles.emptyText}>No conversations yet</Text>
-          </View>
-        }
+        ListEmptyComponent={EmptyConversations}
       />
       <Navbar navigation={navigation} />
     </View>
@@ -282,4 +282,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChatSelectionScreen
+export default ChatSelectionScreen;

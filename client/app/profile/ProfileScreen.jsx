@@ -149,7 +149,7 @@ const ProfileScreen = ({ navigation, route }) => {
           >
             <View style={styles.settingContent}>
               <Ionicons name="create" size={20} color="#333" />
-              <Text style={styles.settingText}>Liste your space </Text>
+              <Text style={styles.settingText}>List your space </Text>
               <Ionicons name="chevron-forward" size={20} color="#333" />
             </View>
           </TouchableOpacity>
