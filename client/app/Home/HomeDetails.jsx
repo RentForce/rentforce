@@ -210,6 +210,53 @@ const HomeDetails = ({ route, navigation }) => {
     }
   };
 
+  const handleChatWithReceiver = async (receiverId, receiverDetails) => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        navigation.navigate("Login");
+        return;
+      }
+  
+      const decodedToken = JSON.parse(atob(token.split('.')[1]));
+      
+      // Don't allow chatting with yourself
+      if (decodedToken.id === receiverId) {
+        Alert.alert("Error", "You cannot chat with yourself");
+        return;
+      }
+  
+      // Create or get existing chat
+      const response = await axios.post(
+        `${apiUrl}/api/chat/create`,
+        {
+          userId: decodedToken.id,
+          receiverId: receiverId
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+  
+      // Make sure we have valid receiver details
+      const otherUser = {
+        id: receiverId,
+        firstName: receiverDetails?.firstName || 'User',
+        lastName: receiverDetails?.lastName || '',
+        image: receiverDetails?.image || null
+      };
+  
+      navigation.navigate("ChatScreen", {
+        chatId: response.data.id,
+        otherUser,
+        receiverId: receiverId
+      });
+    } catch (error) {
+      console.error("Error starting chat:", error);
+      Alert.alert("Error", "Could not start chat. Please try again.");
+    }
+  };
+
   const ImageModal = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const scrollX = new Animated.Value(0);
@@ -442,16 +489,25 @@ const HomeDetails = ({ route, navigation }) => {
             <Text style={styles.sectionTitle}>Safety & property</Text>
             <Text style={styles.detailText}>{post.safetyProperty}</Text>
           </View>
-
           <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.chatSection}
-              onPress={() => navigation.navigate("ChatSelectionScreen")}
-            >
-              <MaterialCommunityIcons name="chat" size={24} color="#666666" />
-              <Text style={styles.chatText}>Chat with the Owner</Text>
-            </TouchableOpacity>
-          </View>
+  <TouchableOpacity
+    style={styles.chatSection}
+    onPress={() => {
+      if (!post?.userId) {
+        Alert.alert("Error", "Cannot identify the property owner");
+        return;
+      }
+      handleChatWithReceiver(post.userId, {
+        firstName: post.user?.firstName || 'Property Owner',
+        lastName: post.user?.lastName || '',
+        image: post.user?.image || null
+      });
+    }}
+  >
+    <MaterialCommunityIcons name="chat" size={24} color="#666666" />
+    <Text style={styles.chatText}>Chat with the Owner</Text>
+  </TouchableOpacity>
+</View>
 
 
           <View style={styles.section}>

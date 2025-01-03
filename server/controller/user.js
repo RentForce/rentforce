@@ -109,7 +109,6 @@ const signup = async (req, res) => {
     });
   }
 };
-
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -137,7 +136,7 @@ console.log(isMatch , "math");
         email: user.email,
       },
       JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "7d" }
     );
 
     console.log("Generated Token:", token);
@@ -159,6 +158,7 @@ console.log(isMatch , "math");
     res.status(500).send(error);
   }
 };
+
 
 const getUserData = async (req, res) => {
   console.log("Received request for userId:", req.params.userId);

@@ -1,54 +1,43 @@
 const express = require('express');
 const router = express.Router();
-const {
-  createChat,
-  sendMessage,
-  getUserChats,
-  getChatMessages,
-  getAllUsers,
-//   handleImageUpload,
-//   handleVoiceMessage,
-  //translateMessage,
-//   translationLimiter,
-sendPushNotification,
-updatePushToken,
-markChatAsRead,
-  authMiddleware,
+const { 
+  getMessages, 
+  sendMessage, 
+  markMessagesAsRead, 
   handleFileUpload,
+  createChat,
+  getUserChats,
+  getAllUsers,
+  uploadImage,
+  uploadVoice,
+  sendPushNotification,
+  updatePushToken,
+  markChatAsRead,
+  authMiddleware,
   getUnreadCount,
   getUnreadMessages,
-  markMessagesAsRead,
-  getAllUsersWithChats
+  getAllUsersWithChats,
+  getConversations,
+  getChatMessages,
 } = require('../controller/chat');
 
-// Remove local upload directories since we're using Cloudinary
-// No need for fs and path modules anymore
-
-// Chat routes
 router.post('/create', authMiddleware, createChat);
 router.post('/message', authMiddleware, sendMessage);
 router.get('/user/:userId', authMiddleware, getUserChats);
 router.get('/messages/:chatId', authMiddleware, getChatMessages);
 router.get('/users', authMiddleware, getAllUsersWithChats);
-
-// File upload routes
-// router.post('/upload/image', authMiddleware, handleImageUpload);
-// router.post('/upload/voice', authMiddleware, handleVoiceMessage);
+router.get('/conversations/:userId', getConversations);
 router.post('/upload', authMiddleware, handleFileUpload);
 router.post('/push-token', authMiddleware, updatePushToken);
-//router.put('/chat/:chatId/read/:userId', authMiddleware, markChatAsRead);
-//router.get('/unread/:userId', authMiddleware, getUnreadCount);
-
-// Translation route with rate limiting
-//router.post('/translate', authMiddleware, translationLimiter, translateMessage);
+router.put('/:chatId/read/:userId', authMiddleware,markMessagesAsRead);
+router.get('/unread/:userId', getUnreadMessages);
+router.use('/uploads', express.static('uploads'));
 
 // Add this new route for unread messages
 //router.get('/unread/:userId', authMiddleware, getUnreadMessages);
 
 // Mark messages as read
-router.put('/:chatId/read/:userId', markMessagesAsRead);
 router.get('/unread/:userId', getUnreadMessages);
-router.put('/messages/read/:chatId/:userId', markMessagesAsRead);
 
 
 

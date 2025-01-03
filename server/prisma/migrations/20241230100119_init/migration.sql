@@ -11,6 +11,7 @@ CREATE TABLE `User` (
     `type` ENUM('admin', 'host', 'guest') NOT NULL DEFAULT 'guest',
     `address` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `expoPushToken` VARCHAR(191) NULL,
     `bannedUntil` DATETIME(3) NULL,
 
     UNIQUE INDEX `User_email_key`(`email`),
@@ -142,6 +143,8 @@ CREATE TABLE `Chat` (
     `userId` INTEGER NOT NULL,
     `receiverId` INTEGER NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `unreadCount` INTEGER NOT NULL DEFAULT 0,
+    `lastMessageAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -154,10 +157,12 @@ CREATE TABLE `Message` (
     `isRead` BOOLEAN NOT NULL DEFAULT false,
     `userId` INTEGER NOT NULL,
     `chatId` INTEGER NOT NULL,
+    `receiverId` INTEGER NOT NULL,
     `callStatus` VARCHAR(191) NULL,
     `duration` INTEGER NULL,
     `type` ENUM('TEXT', 'IMAGE', 'SYSTEM', 'NOTIFICATION', 'VOICE', 'VIDEO_CALL', 'AUDIO') NULL DEFAULT 'TEXT',
     `voiceMessagePath` VARCHAR(191) NULL,
+    `read` BOOLEAN NOT NULL DEFAULT false,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -260,6 +265,9 @@ ALTER TABLE `Chat` ADD CONSTRAINT `Chat_receiverId_fkey` FOREIGN KEY (`receiverI
 
 -- AddForeignKey
 ALTER TABLE `Message` ADD CONSTRAINT `Message_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Message` ADD CONSTRAINT `Message_receiverId_fkey` FOREIGN KEY (`receiverId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Message` ADD CONSTRAINT `Message_chatId_fkey` FOREIGN KEY (`chatId`) REFERENCES `Chat`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -1,5 +1,28 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './UserManagement.css';
+
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: 'http://localhost:5000',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+});
+
+// Add response interceptor for error handling
+api.interceptors.response.use(
+  response => response,
+  error => {
+    console.error('API Error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+    return Promise.reject(error);
+  }
+);
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -12,26 +35,30 @@ const UserManagement = () => {
   const [banDuration, setBanDuration] = useState(1);
   const [showBanModal, setShowBanModal] = useState(false);
   const [userToBan, setUserToBan] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchUsers = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch(
-        `http://localhost:5000/admin/users?page=${page}&search=${encodeURIComponent(search)}`
-      );
-      const data = await response.json();
+      const response = await api.get(`/admin/users`, {
+        params: {
+          page,
+          search: search || undefined
+        }
+      });
       
-      if (!response.ok) {
-        console.error('Server error details:', data);
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
-      }
-      
-      setUsers(data.users || []);
-      setTotalPages(data.pagination?.pages || 1);
+      setUsers(response.data.users || []);
+      setTotalPages(response.data.pagination?.pages || 1);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to load users';
+      console.error('Error fetching users:', errorMessage);
+      setError(errorMessage);
       setUsers([]);
       setTotalPages(1);
-      alert(`Failed to load users: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,31 +68,22 @@ const UserManagement = () => {
 
   const handleBanUser = async (userId, duration) => {
     try {
-      await fetch(`http://localhost:5000/admin/users/${userId}/ban`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ duration }),
-      });
-      fetchUsers();
+      await api.post(`/admin/users/${userId}/ban`, { duration });
+      await fetchUsers();
     } catch (error) {
-      console.error('Error banning user:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to ban user';
+      console.error('Error banning user:', errorMessage);
+      alert(errorMessage);
     }
   };
 
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user? This action cannot be undone and will delete all associated data.')) {
       try {
-        const response = await fetch(`http://localhost:5000/admin/users/${userId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await api.delete(`/admin/users/${userId}`);
 
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.data;
           throw new Error(errorData.error || 'Failed to delete user');
         }
 
@@ -73,30 +91,26 @@ const UserManagement = () => {
         await fetchUsers();
         alert('User deleted successfully');
       } catch (error) {
-        console.error('Error deleting user:', error);
-        alert(`Failed to delete user: ${error.message}`);
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to delete user';
+        console.error('Error deleting user:', errorMessage);
+        alert(errorMessage);
       }
     }
   };
 
   const handleEditUser = async (userId, updatedData) => {
     try {
-      const response = await fetch(`http://localhost:5000/admin/users/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedData),
-      });
+      const response = await api.put(`/admin/users/${userId}`, updatedData);
 
       if (!response.ok) throw new Error('Failed to update user');
       
-      fetchUsers();
+      await fetchUsers();
       setIsEditing(false);
       setSelectedUser(null);
     } catch (error) {
-      console.error('Error updating user:', error);
-      alert('Failed to update user');
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update user';
+      console.error('Error updating user:', errorMessage);
+      alert(errorMessage);
     }
   };
 
@@ -360,4 +374,4 @@ const UserManagement = () => {
   );
 };
 
-export default UserManagement; 
+export default UserManagement;
