@@ -1,64 +1,78 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key";
 
 const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
 
-    console.log('Received Authorization Header:', authHeader);
-    console.log('Extracted Token:', token);
+  console.log("Received Authorization Header:", authHeader);
+  console.log("Extracted Token:", token);
 
-    if (token == null) {
-        return res.status(401).json({ 
-            message: 'No token provided', 
-            details: 'Authorization header is missing or incorrectly formatted' 
-        });
-    }
-
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) {
-            console.error('Token Verification Error:', err);
-            return res.status(403).json({ 
-                message: 'Invalid or expired token', 
-                error: err.message 
-            });
-        }
-        req.user = user; 
-        next();
+  if (token == null) {
+    return res.status(401).json({
+      message: "No token provided",
+      details: "Authorization header is missing or incorrectly formatted",
     });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      console.error("Token Verification Error:", err);
+      return res.status(403).json({
+        message: "Invalid or expired token",
+        error: err.message,
+      });
+    }
+    req.user = user;
+    next();
+  });
 };
 const { createNotification } = require("./notification");
-require('dotenv').config();
+require("dotenv").config();
 const createBooking = async (req, res) => {
   try {
-    const { 
-      userId, 
-      postId, 
-      startDate, 
-      endDate, 
-      numberOfGuests, 
-      totalPrice,
-      guestName,
-      guestCountry,
-      propertyDetails 
-    } = req.body;
-
-    console.log('Received booking request:', {
+    const {
       userId,
       postId,
       startDate,
       endDate,
       numberOfGuests,
-      totalPrice
+      totalPrice,
+      guestName,
+      guestCountry,
+      propertyDetails,
+    } = req.body;
+
+    console.log("Received booking request:", {
+      userId,
+      postId,
+      startDate,
+      endDate,
+      numberOfGuests,
+      totalPrice,
     });
 
     // Validate required fields
-    if (!userId || !postId || !startDate || !endDate || !numberOfGuests || !totalPrice) {
+    if (
+      !userId ||
+      !postId ||
+      !startDate ||
+      !endDate ||
+      !numberOfGuests ||
+      !totalPrice
+    ) {
       return res.status(400).json({
         message: "Missing required fields",
-        received: { userId, postId, startDate, endDate, numberOfGuests, totalPrice }
+        received: {
+          userId,
+          postId,
+          startDate,
+          endDate,
+          numberOfGuests,
+          totalPrice,
+        },
       });
     }
 
@@ -115,7 +129,9 @@ const createBooking = async (req, res) => {
         status: "PENDING",
         guestName,
         guestCountry,
-        propertyDetails: propertyDetails ? JSON.stringify(propertyDetails) : null
+        propertyDetails: propertyDetails
+          ? JSON.stringify(propertyDetails)
+          : null,
       },
       include: {
         user: true,
@@ -155,10 +171,10 @@ const createBooking = async (req, res) => {
     res.status(201).json(booking);
   } catch (error) {
     console.error("Detailed booking error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Error creating booking",
       error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 };
@@ -207,7 +223,7 @@ const getPostsByCategory = async (req, res) => {
     const posts = await prisma.post.findMany({
       where: {
         ...(category && { category }),
-        status: 'APPROVED',
+        status: "APPROVED",
         ...(search && {
           OR: [
             { title: { contains: search } },
@@ -361,11 +377,12 @@ const saveLocation = async (req, res) => {
   } catch (error) {
     console.error("Error saving location:", error);
     res.status(500).json({ message: "Error saving location" });
-  }}
+  }
+};
 const getPostComments = async (req, res) => {
   try {
     const { postId } = req.params;
-    
+
     const comments = await prisma.comment.findMany({
       where: {
         postId: parseInt(postId),
@@ -380,14 +397,14 @@ const getPostComments = async (req, res) => {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
     res.json(comments);
   } catch (error) {
-    console.error('Error fetching comments:', error);
-    res.status(500).json({ message: 'Error fetching comments' });
+    console.error("Error fetching comments:", error);
+    res.status(500).json({ message: "Error fetching comments" });
   }
 };
 
@@ -395,10 +412,10 @@ const addComment = async (req, res) => {
   try {
     const { content, rating } = req.body;
     const { postId } = req.params;
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({ message: 'Authentication required' });
+      return res.status(401).json({ message: "Authentication required" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -424,10 +441,10 @@ const addComment = async (req, res) => {
 
     res.status(201).json(comment);
   } catch (error) {
-    console.error('Error adding comment:', error);
-    res.status(500).json({ 
-      message: 'Failed to add comment', 
-      error: error.message 
+    console.error("Error adding comment:", error);
+    res.status(500).json({
+      message: "Failed to add comment",
+      error: error.message,
     });
   }
 };
@@ -439,19 +456,18 @@ const checkUserBooking = async (req, res) => {
       where: {
         postId: parseInt(postId),
         userId: parseInt(userId),
-        status: 'CONFIRMED', // Only consider confirmed bookings
-
-      }
+        status: "CONFIRMED", // Only consider confirmed bookings
+      },
     });
 
     res.json({
-      hasBooked: !!booking
+      hasBooked: !!booking,
     });
   } catch (error) {
-    console.error('Error checking user booking:', error);
-    res.status(500).json({ 
-      message: 'Failed to check booking status', 
-      error: error.message 
+    console.error("Error checking user booking:", error);
+    res.status(500).json({
+      message: "Failed to check booking status",
+      error: error.message,
     });
   }
 };

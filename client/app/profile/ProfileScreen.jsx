@@ -65,16 +65,14 @@ const ProfileScreen = ({ navigation, route }) => {
 
   const handleLogout = async () => {
     try {
-      // Clear AsyncStorage
-      await AsyncStorage.removeItem("userToken");
-      await AsyncStorage.removeItem("userId");
-      await AsyncStorage.removeItem("currentUser");
-      console.log("cleared");
+      // Clear all AsyncStorage
+      await AsyncStorage.clear();
+      console.log("All storage cleared");
 
-      // Navigate back to the sign-up page
+      // Navigate back to the welcome page
       navigation.reset({
         index: 0,
-        routes: [{ name: "signup" }], // Change to "signup"
+        routes: [{ name: "Welcome" }],
       });
     } catch (error) {
       console.error("Error during logout:", error);

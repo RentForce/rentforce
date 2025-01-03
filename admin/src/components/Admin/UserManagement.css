@@ -1,18 +1,18 @@
 .user-management {
-  padding: 2rem;
+  padding: 20px;
   background-color: var(--background);
   border-radius: 8px;
 }
 
 .user-management-header {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  gap: 12rem;
+  margin-bottom: 20px;
 }
 
 .user-management-header h2 {
+  margin: 0;
   color: var(--primary);
   font-size: 1.8rem;
   font-weight: 600;
@@ -20,32 +20,35 @@
 
 .search-container {
   position: relative;
-  width: 200px;
-}
-
-.search-container i {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary);
+  width: 300px;
 }
 
 .search-container input {
   width: 100%;
-  padding: 12px 16px 12px 42px;
-  border: 1px solid rgba(8, 38, 49, 0.2);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
+  padding: 10px 15px 10px 40px;
+  border: 2px solid var(--primary);
+  border-radius: 4px;
+  background: var(--background);
+  color: var(--primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .search-container input:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(8, 38, 49, 0.1);
+}
+
+.search-container .fa-search {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #95a5a6;
+  font-size: 16px;
+  pointer-events: none;
 }
 
 /* Table Styles */
@@ -76,24 +79,18 @@ td {
   color: var(--primary);
 }
 
-.user-cell {
+.user-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 10px;
 }
 
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  background-color: var(--primary);
-  color: var(--background);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
+.user-info span {
+  color: var(--primary);
+  font-weight: 500;
 }
 
+/* Status Badges */
 .user-status {
   padding: 0.4rem 0.8rem;
   border-radius: 4px;
@@ -218,8 +215,15 @@ td {
   color: var(--primary);
 }
 
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .form-group {
   margin-bottom: 1rem;
+  text-align: center;
 }
 
 .form-group label {
@@ -227,23 +231,28 @@ td {
   margin-bottom: 0.5rem;
   color: var(--primary);
   font-weight: 500;
+  text-align: left;
 }
 
 .form-group input,
 .form-group select {
-  width: 100%;
+  display: block;
+  width: 350px;
+  box-sizing: border-box;
   padding: 0.8rem;
   border: 2px solid var(--primary);
   border-radius: 4px;
   background: var(--background);
   color: var(--primary);
+  margin: 0 auto;
 }
 
 .modal-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 1rem;
   margin-top: 1.5rem;
+  width: 350px;
 }
 
 .save-btn,

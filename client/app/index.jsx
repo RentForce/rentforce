@@ -1,5 +1,6 @@
 import * as React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { LogBox } from 'react-native';
 import ProfileScreen from "./profile/ProfileScreen.jsx";
 import PersonalScreen from "./profile/PersonalScreen.jsx";
 import ShowProfile from "./profile/showprofile";
@@ -21,12 +22,31 @@ import { NotificationProvider } from "./chat/Notifications.jsx";
 import NotificationScreen from "./notifications/NotificationScreen.jsx";
 import PaymentHistory from "./profile/PaymentHistory.jsx";
 import AboutUsScreen from "./profile/AboutUsScreen.jsx";
+import Welcome from "./LandingPage/Welcome.jsx";
+import LogoPage from "./LandingPage/LogoPage.jsx";
+
+// Ignore navigation warnings
+LogBox.ignoreLogs([
+  'The action "NAVIGATE" with payload {"name":"Login"} was not handled by any navigator.',
+  'Non-serializable values were found in the navigation state',
+]);
+
 const Stack = createNativeStackNavigator();
 
 function App() {
   return (
     <NotificationProvider>
       <Stack.Navigator>
+        <Stack.Screen
+          name="LogoPage"
+          component={LogoPage}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Welcome"
+          component={Welcome}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="signup"
           component={SignUpScreen}

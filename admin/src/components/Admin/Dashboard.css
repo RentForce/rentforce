@@ -147,6 +147,38 @@
   display: none;
 }
 
+/* Add styles for logout option */
+.logout {
+  margin-top: auto !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 15px !important;
+}
+
+.logout a {
+  color: inherit !important;
+}
+
+.logout a:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.logout i {
+  color: inherit !important;
+}
+
+/* Make sure the sidebar nav takes full height */
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 80px);
+}
+
+.sidebar ul {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
 /* Main Content */
 .main-content {
   flex: 1;
