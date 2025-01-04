@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import UserManagement from './UserManagement';
 import PostManagement from './PostManagement';
 import PostView from './PostView';
+import ReportsManagement from './ReportsManagement';
 import './Dashboard.css';
 import logo from '../../assets/logo.svg';
 
@@ -81,6 +82,8 @@ function Dashboard() {
           postId={selectedPostId}
           onBack={() => setCurrentPage('posts')} 
         />;
+        case 'reports':
+          return <ReportsManagement />; 
       case 'dashboard':
         return (
           <section className="dashboard-stats">
