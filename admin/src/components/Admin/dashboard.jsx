@@ -4,6 +4,7 @@ import UserManagement from './UserManagement';
 import PostManagement from './PostManagement';
 import BookingManagement from './BookingManagement';
 import PostView from './PostView';
+import ReportsManagement from './ReportsManagement';
 import Settings from './Settings';
 import './Dashboard.css';
 import logo from '../../assets/logo.svg';
@@ -95,6 +96,8 @@ function Dashboard() {
           postId={selectedPostId}
           onBack={() => setCurrentPage('posts')} 
         />;
+        case 'reports':
+          return <ReportsManagement />; 
       case 'dashboard':
         return (
           <section className="dashboard-stats">
