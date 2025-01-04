@@ -4,6 +4,7 @@ import UserManagement from './UserManagement';
 import PostManagement from './PostManagement';
 import BookingManagement from './BookingManagement';
 import PostView from './PostView';
+import Settings from './Settings';
 import './Dashboard.css';
 import logo from '../../assets/logo.svg';
 
@@ -115,6 +116,8 @@ function Dashboard() {
             </div>
           </section>
         );
+      case 'settings':
+        return <Settings />;
       default:
         return <div>Page under construction</div>;
     }
