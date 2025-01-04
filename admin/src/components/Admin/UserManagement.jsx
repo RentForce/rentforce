@@ -143,9 +143,9 @@ const UserManagement = () => {
       <div className="user-management-header">
         <h2>User Management</h2>
         <div className="search-container">
-          <i className="fas fa-search"></i>
+          <i className="fas fa-search search-icon"></i>
           <input
-            type="text"
+            type="search"
             placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -169,9 +169,6 @@ const UserManagement = () => {
               <tr key={user.id}>
                 <td className="user-cell">
                   <div className="user-info">
-                    <div className="user-avatar">
-                      {user.firstName?.[0]?.toUpperCase() || 'U'}
-                    </div>
                     <span>{`${user.firstName} ${user.lastName}`}</span>
                   </div>
                 </td>
@@ -190,23 +187,36 @@ const UserManagement = () => {
                 </td>
                 <td>
                   <div className="action-buttons">
-                    <button className="action-btn view" onClick={() => setSelectedUser(user)}>
-                      <span>View</span>
-                    </button>
-                    <button className="action-btn edit" onClick={() => {
-                      setSelectedUser(user);
-                      setIsEditing(true);
-                    }}>
-                      <span>Edit</span>
+                    <button 
+                      className="action-icon view-icon" 
+                      data-tooltip="View Details"
+                      onClick={() => setSelectedUser(user)}
+                    >
+                      <i className="fas fa-eye"></i>
                     </button>
                     <button 
-                      className="action-btn ban"
+                      className="action-icon edit-icon" 
+                      data-tooltip="Edit User"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setIsEditing(true);
+                      }}
+                    >
+                      <i className="fas fa-edit"></i>
+                    </button>
+                    <button 
+                      className="action-icon ban-icon" 
+                      data-tooltip="Ban User"
                       onClick={() => handleBanModalOpen(user)}
                     >
-                      <span>Ban</span>
+                      <i className="fas fa-ban"></i>
                     </button>
-                    <button className="action-btn delete" onClick={() => handleDeleteUser(user.id)}>
-                      <span>Delete</span>
+                    <button 
+                      className="action-icon delete-icon" 
+                      data-tooltip="Delete User"
+                      onClick={() => handleDeleteUser(user.id)}
+                    >
+                      <i className="fas fa-trash-alt"></i>
                     </button>
                   </div>
                 </td>
@@ -281,10 +291,6 @@ const UserManagement = () => {
                 </div>
                 <div className="modal-actions">
                   <button type="submit" className="save-btn">Save Changes</button>
-                  <button type="button" className="cancel-btn" onClick={() => {
-                    setSelectedUser(null);
-                    setIsEditing(false);
-                  }}>Cancel</button>
                 </div>
               </form>
             ) : (
@@ -314,13 +320,8 @@ const UserManagement = () => {
             </div>
             <div className="ban-form">
               <div className="user-to-ban">
-                <div className="user-avatar">
-                  {userToBan?.firstName?.[0]?.toUpperCase() || 'U'}
-                </div>
-                <div className="user-info">
-                  <h4>{`${userToBan?.firstName} ${userToBan?.lastName}`}</h4>
-                  <p>{userToBan?.email}</p>
-                </div>
+                <h4>{`${userToBan?.firstName} ${userToBan?.lastName}`}</h4>
+                <p>{userToBan?.email}</p>
               </div>
               
               <div className="duration-selector">
@@ -352,18 +353,9 @@ const UserManagement = () => {
               <div className="modal-actions">
                 <button 
                   className="ban-confirm-btn"
-                  onClick={() => {
-                    handleBanUser(userToBan.id, banDuration);
-                    setShowBanModal(false);
-                  }}
+                  onClick={() => handleBanUser(userToBan.id, banDuration)}
                 >
-                  Confirm Ban
-                </button>
-                <button 
-                  className="cancel-btn"
-                  onClick={() => setShowBanModal(false)}
-                >
-                  Cancel
+                  Ban User
                 </button>
               </div>
             </div>

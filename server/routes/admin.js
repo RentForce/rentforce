@@ -2,6 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const bodyParser = require('body-parser');
+
+// Add body parser middleware
+router.use(bodyParser.json());
+router.use(bodyParser.urlencoded({ extended: true }));
+
 // fetch('http://localhost:5000/admin/user/count'),
 // fetch('http://localhost:5000/admin/bookings/count'),
 // fetch('http://localhost:5000/admin/posts/count'),
@@ -437,7 +443,40 @@ router.delete('/posts/:id', async (req, res) => {
 router.put('/posts/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('Received request to update post status:');
+    console.log('Post ID:', id);
+    console.log('Raw body:', req.body);
+    console.log('Content-Type:', req.headers['content-type']);
+    
+    // Check if body is completely empty
+    if (!req.body || Object.keys(req.body).length === 0) {
+      console.log('Empty request body received');
+      return res.status(400).json({
+        success: false,
+        error: 'Empty request body'
+      });
+    }
+
+    // Check if status exists
+    if (!req.body.status) {
+      console.log('No status in request body');
+      return res.status(400).json({
+        success: false,
+        error: 'Status is required in request body'
+      });
+    }
+
     const { status, rejectionReason } = req.body;
+    console.log('Extracted status:', status);
+    
+    // Validate status value
+    if (!['APPROVED', 'REJECTED', 'PENDING'].includes(status)) {
+      console.log('Invalid status value:', status);
+      return res.status(400).json({
+        success: false,
+        error: `Invalid status value: ${status}`
+      });
+    }
 
     const post = await prisma.post.update({
       where: { id: parseInt(id) },
@@ -449,31 +488,123 @@ router.put('/posts/:id/status', async (req, res) => {
         user: {
           select: {
             id: true,
+            email: true,
             firstName: true,
-            email: true
+            lastName: true
           }
         }
       }
     });
 
-    // Create notification for the user
+    // Create notification
     await prisma.notification.create({
       data: {
         userId: post.user.id,
         type: status === 'APPROVED' ? 'POST_APPROVED' : 'POST_REJECTED',
         message: status === 'APPROVED' 
           ? `Your post "${post.title}" has been approved`
-          : `Your post "${post.title}" has been rejected: ${rejectionReason}`,
+          : `Your post "${post.title}" has been rejected${rejectionReason ? ': ' + rejectionReason : ''}`,
         isRead: false
       }
     });
 
-    res.json(post);
+    res.json({
+      success: true,
+      post
+    });
   } catch (error) {
     console.error('Error updating post status:', error);
-    res.status(500).json({ 
-      error: 'Error updating post status',
-      details: error.message 
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+// Get all bookings with pagination and search
+router.get('/bookings', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
+    const skip = (page - 1) * limit;
+
+    // Build the where clause for search
+    const whereClause = search
+      ? {
+          OR: [
+            { post: { title: { contains: search, mode: 'insensitive' } } },
+            { user: { 
+              OR: [
+                { firstName: { contains: search, mode: 'insensitive' } },
+                { lastName: { contains: search, mode: 'insensitive' } }
+              ]
+            } }
+          ]
+        }
+      : {};
+
+    // Get total count for pagination
+    const totalCount = await prisma.booking.count({
+      where: whereClause
+    });
+
+    // Get bookings with related data
+    const bookings = await prisma.booking.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        startDate: true,
+        endDate: true,
+        totalPrice: true,
+        status: true,
+        post: {
+          select: {
+            id: true,
+            title: true,
+            price: true
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      skip,
+      take: limit
+    });
+
+    // Format dates to YYYY-MM-DD format
+    const formattedBookings = bookings.map(booking => ({
+      ...booking,
+      startDate: booking.startDate.toISOString().split('T')[0],
+      endDate: booking.endDate.toISOString().split('T')[0],
+      totalAmount: booking.totalPrice // Map totalPrice to totalAmount for frontend consistency
+    }));
+
+    res.json({
+      success: true,
+      bookings: formattedBookings,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        pages: Math.ceil(totalCount / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch bookings'
     });
   }
 });

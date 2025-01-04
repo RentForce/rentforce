@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import UserManagement from './UserManagement';
 import PostManagement from './PostManagement';
+import BookingManagement from './BookingManagement';
 import PostView from './PostView';
 import ReportsManagement from './ReportsManagement';
+import Settings from './Settings';
 import './Dashboard.css';
 import logo from '../../assets/logo.svg';
 
@@ -17,6 +20,7 @@ function Dashboard() {
     pendingPosts: 0,
     notifications: []
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardData();
@@ -68,6 +72,14 @@ function Dashboard() {
     setCurrentPage('post-view');
   };
 
+  const handleLogout = () => {
+    // Clear all localStorage
+    localStorage.clear();
+    
+    // Redirect to home page
+    navigate('/');
+  };
+
   const renderContent = () => {
     switch(currentPage) {
       case 'users':
@@ -77,6 +89,8 @@ function Dashboard() {
           onPageChange={setCurrentPage}
           onViewPost={handleViewPost}
         />;
+      case 'bookings':
+        return <BookingManagement />;
       case 'post-view':
         return <PostView 
           postId={selectedPostId}
@@ -105,6 +119,8 @@ function Dashboard() {
             </div>
           </section>
         );
+      case 'settings':
+        return <Settings />;
       default:
         return <div>Page under construction</div>;
     }
@@ -140,7 +156,7 @@ function Dashboard() {
                 <span>Posts</span>
               </a>
             </li>
-            <li>
+            <li className={currentPage === 'bookings' ? 'active' : ''}>
               <a onClick={() => setCurrentPage('bookings')}>
                 <i className="fas fa-calendar-check"></i>
                 <span>Bookings</span>
@@ -156,6 +172,12 @@ function Dashboard() {
               <a onClick={() => setCurrentPage('settings')}>
                 <i className="fas fa-cog"></i>
                 <span>Settings</span>
+              </a>
+            </li>
+            <li className="logout">
+              <a onClick={handleLogout}>
+                <i className="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
               </a>
             </li>
           </ul>
