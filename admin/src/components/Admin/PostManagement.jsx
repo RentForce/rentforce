@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './PostManagement.css';
+import Swal from 'sweetalert2';
 
 const API_URL = 'http://localhost:5000';
 const api = axios.create({ baseURL: API_URL });
@@ -83,39 +84,161 @@ function PostManagement({ onPageChange, onViewPost }) {
   };
 
   const handleDelete = async (postId) => {
-    if (!window.confirm('Are you sure you want to delete this post?')) {
-      return;
-    }
-
     try {
-      await api.delete(`/admin/posts/${postId}`);
-      refreshData();
-      alert('Post deleted successfully');
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e53e3e',
+        cancelButtonColor: '#718096',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+        background: '#ffffff',
+        borderRadius: '12px',
+        customClass: {
+          title: 'swal-title',
+          content: 'swal-text',
+          confirmButton: 'swal-button',
+          cancelButton: 'swal-button'
+        }
+      });
+
+      if (result.isConfirmed) {
+        await api.delete(`/admin/posts/${postId}`);
+        
+        await Swal.fire({
+          title: 'Deleted!',
+          text: 'Post has been deleted successfully.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+          background: '#ffffff',
+          borderRadius: '12px'
+        });
+
+        refreshData();
+      }
     } catch (error) {
       console.error('Error deleting post:', error);
-      alert('Error deleting post. Please try again.');
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to delete the post. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#3182ce',
+        background: '#ffffff',
+        borderRadius: '12px'
+      });
     }
   };
 
   const handleApprovePost = async (postId) => {
     try {
-      await api.put(`/admin/posts/${postId}/status`, { status: 'APPROVED' });
-      refreshData();
-      alert('Post approved successfully');
+      const result = await Swal.fire({
+        title: 'Approve Post',
+        text: 'Are you sure you want to approve this post?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#48bb78',
+        cancelButtonColor: '#718096',
+        confirmButtonText: 'Yes, approve it!',
+        cancelButtonText: 'Cancel',
+        background: '#ffffff',
+        borderRadius: '12px',
+        customClass: {
+          title: 'swal-title',
+          content: 'swal-text',
+          confirmButton: 'swal-button',
+          cancelButton: 'swal-button'
+        }
+      });
+
+      if (result.isConfirmed) {
+        await api.put(`/admin/posts/${postId}/status`, { status: 'APPROVED' });
+        
+        await Swal.fire({
+          title: 'Approved!',
+          text: 'Post has been approved successfully.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+          background: '#ffffff',
+          borderRadius: '12px'
+        });
+
+        refreshData();
+      }
     } catch (error) {
       console.error('Error approving post:', error);
-      alert(`Failed to approve post: ${error.response?.data?.error || error.message}`);
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to approve the post. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#3182ce',
+        background: '#ffffff',
+        borderRadius: '12px'
+      });
     }
   };
 
   const handleRejectPost = async (postId) => {
     try {
-      await api.put(`/admin/posts/${postId}/status`, { status: 'REJECTED' });
-      refreshData();
-      alert('Post rejected successfully');
+      const { value: rejectReason, isConfirmed } = await Swal.fire({
+        title: 'Reject Post',
+        input: 'textarea',
+        inputLabel: 'Rejection Reason',
+        inputPlaceholder: 'Enter the reason for rejection...',
+        inputAttributes: {
+          'aria-label': 'Rejection reason'
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#e53e3e',
+        cancelButtonColor: '#718096',
+        confirmButtonText: 'Reject',
+        cancelButtonText: 'Cancel',
+        background: '#ffffff',
+        borderRadius: '12px',
+        customClass: {
+          title: 'swal-title',
+          content: 'swal-text',
+          confirmButton: 'swal-button',
+          cancelButton: 'swal-button'
+        },
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Please enter a reason for rejection';
+          }
+        }
+      });
+
+      if (isConfirmed) {
+        await api.put(`/admin/posts/${postId}/status`, { 
+          status: 'REJECTED',
+          reason: rejectReason 
+        });
+        
+        await Swal.fire({
+          title: 'Rejected!',
+          text: 'Post has been rejected successfully.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+          background: '#ffffff',
+          borderRadius: '12px'
+        });
+
+        refreshData();
+      }
     } catch (error) {
       console.error('Error rejecting post:', error);
-      alert('Failed to reject post. Please try again.');
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to reject the post. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#3182ce',
+        background: '#ffffff',
+        borderRadius: '12px'
+      });
     }
   };
 
@@ -221,7 +344,7 @@ function PostManagement({ onPageChange, onViewPost }) {
                       <button 
                         className="action-button view-button"
                         onClick={() => handleView(post.id)}
-                        data-tooltip="View Details"
+                        title="View Details"
                       >
                         <i className="fas fa-eye"></i>
                       </button>
@@ -230,14 +353,14 @@ function PostManagement({ onPageChange, onViewPost }) {
                           <button 
                             className="action-button approve-button"
                             onClick={() => handleApprovePost(post.id)}
-                            data-tooltip="Approve Post"
+                            title="Approve Post"
                           >
                             <i className="fas fa-check"></i>
                           </button>
                           <button 
                             className="action-button reject-button"
                             onClick={() => handleRejectPost(post.id)}
-                            data-tooltip="Reject Post"
+                            title="Reject Post"
                           >
                             <i className="fas fa-times"></i>
                           </button>
@@ -246,7 +369,7 @@ function PostManagement({ onPageChange, onViewPost }) {
                       <button 
                         className="action-button delete-button"
                         onClick={() => handleDelete(post.id)}
-                        data-tooltip="Delete Post"
+                        title="Delete Post"
                       >
                         <i className="fas fa-trash"></i>
                       </button>

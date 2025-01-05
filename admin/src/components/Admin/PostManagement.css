@@ -385,3 +385,61 @@ table {
   display: block;
   margin-top: 0.25rem;
 }
+
+/* SweetAlert2 Custom Styles */
+.swal2-popup {
+  padding: 2rem;
+  border-radius: 12px !important;
+}
+
+.swal2-title {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  color: #2d3748 !important;
+}
+
+.swal2-text, .swal2-textarea {
+  font-size: 1rem !important;
+  color: #4a5568 !important;
+}
+
+.swal2-input-label {
+  font-weight: 500 !important;
+  color: #2d3748 !important;
+}
+
+.swal2-textarea {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 0.75rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.swal2-textarea:focus {
+  border-color: #4299e1 !important;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15) !important;
+}
+
+.swal2-confirm {
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  transition: all 0.2s !important;
+}
+
+.swal2-cancel {
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  transition: all 0.2s !important;
+}
+
+.swal2-icon {
+  border-width: 3px !important;
+}
+
+.swal2-success-circular-line-left,
+.swal2-success-circular-line-right,
+.swal2-success-fix {
+  background-color: transparent !important;
+}
