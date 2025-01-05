@@ -263,32 +263,32 @@ const UserManagement = () => {
                   <div className="action-buttons">
                     <button 
                       className="action-button view-button"
-                      data-tooltip="View Details"
                       onClick={() => setSelectedUser(user)}
+                      title="View Details"
                     >
                       <i className="fas fa-eye"></i>
                     </button>
                     <button 
                       className="action-button edit-button"
-                      data-tooltip="Edit User"
                       onClick={() => {
                         setSelectedUser(user);
                         setIsEditing(true);
                       }}
+                      title="Edit User"
                     >
                       <i className="fas fa-pen"></i>
                     </button>
                     <button 
                       className="action-button ban-button"
-                      data-tooltip="Ban User"
                       onClick={() => handleBanModalOpen(user)}
+                      title="Ban User"
                     >
                       <i className="fas fa-ban"></i>
                     </button>
                     <button 
                       className="action-button delete-button"
-                      data-tooltip="Delete User"
                       onClick={() => handleDeleteUser(user.id)}
+                      title="Delete User"
                     >
                       <i className="fas fa-trash"></i>
                     </button>
