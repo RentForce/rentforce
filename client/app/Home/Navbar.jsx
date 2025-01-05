@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NotificationIcon from "../../components/NotificationIcon";
+import { useNotifications } from "../chat/Notifications.jsx";
+import { NotificationBadge } from "../chat/NotificationBadge.jsx";
 
 const Navbar = ({ navigation, userId }) => {
+  const { unreadCount } = useNotifications();
   const [pressedIcon, setPressedIcon] = useState(null);
   const token = AsyncStorage.getItem("userToken");
 
@@ -12,7 +15,9 @@ const Navbar = ({ navigation, userId }) => {
     console.log("Navigating to Home");
     navigation.navigate("Home");
   };
-
+  useEffect(() => {
+    console.log("Navbar unread count:", unreadCount);
+  }, [unreadCount]);
   const handleProfileNavigation = async () => {
     try {
       const userData = await AsyncStorage.getItem("userData");
@@ -34,20 +39,25 @@ const Navbar = ({ navigation, userId }) => {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.iconContainer}
-        onPress={() => {
-          if (token) {
-            navigation.navigate("ChatSelectionScreen");
-          } else {
-            navigation.navigate("signup");
-          }
-        }}
+        onPress={() => navigation.navigate("ChatSelectionScreen")}
         onPressIn={() => setPressedIcon("chat")}
         onPressOut={() => setPressedIcon(null)}
       >
-        <Ionicons name="chatbubble-outline" size={24} style={styles.icon} />
-        <View style={styles.notificationDot} />
+        <View style={styles.iconWrapper}>
+          <Ionicons 
+            name="chatbubble-outline" 
+            size={24} 
+            style={styles.icon} 
+          />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unreadCount}</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.text}>Inbox</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
         style={[styles.iconContainer, styles.spacedIcon]}
         onPress={() => {

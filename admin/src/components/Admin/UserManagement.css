@@ -1,7 +1,8 @@
 .user-management {
-  padding: 20px;
-  background-color: var(--background);
-  border-radius: 8px;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .user-management-header {
@@ -90,24 +91,6 @@ td {
   font-weight: 500;
 }
 
-/* Status Badges */
-.user-status {
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.user-status.active {
-  background-color: rgba(8, 38, 49, 0.1);
-  color: var(--primary);
-}
-
-.user-status.banned {
-  background-color: var(--primary);
-  color: var(--background);
-}
-
 /* User Actions Menu */
 .user-actions {
   display: flex;
@@ -115,122 +98,144 @@ td {
   align-items: center;
 }
 
-.action-icon {
-  width: 36px;
-  height: 36px;
+.action-button {
+  width: 38px;
+  height: 38px;
   border: none;
-  border-radius: 50%;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  color: white;
   position: relative;
-  color: white;
 }
 
-.action-icon i {
-  font-size: 1rem;
-  transition: transform 0.2s ease;
-}
-
-.action-icon:hover i {
-  transform: scale(1.1);
-}
-
-.edit-icon {
-  background: var(--primary);
-}
-
-.edit-icon:hover {
-  background: #0a3142;
-  box-shadow: 0 2px 8px rgba(8, 38, 49, 0.2);
-}
-
-.delete-icon {
-  background: #dc3545;
-}
-
-.delete-icon:hover {
-  background: #c82333;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
-}
-
-.view-icon {
-  background: #17a2b8;
-}
-
-.view-icon:hover {
-  background: #138496;
-  box-shadow: 0 2px 8px rgba(23, 162, 184, 0.2);
-}
-
-/* Tooltip for icons */
-.action-icon::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%) scale(0.8);
-  padding: 0.4rem 0.8rem;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  font-size: 0.75rem;
-  border-radius: 4px;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
-  pointer-events: none;
-}
-
-.action-icon:hover::after {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) scale(1);
-  bottom: calc(100% + 8px);
-}
-
-/* Add a small arrow to tooltip */
-.action-icon::before {
-  content: '';
-  position: absolute;
-  bottom: calc(100% + 3px);
-  left: 50%;
-  transform: translateX(-50%) scale(0.8);
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid rgba(0, 0, 0, 0.8);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
-  pointer-events: none;
-}
-
-.action-icon:hover::before {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) scale(1);
-}
-
-/* Ripple effect */
-.action-icon::after {
+.action-button::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
   transform: scale(0);
-  opacity: 0;
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease;
 }
 
-.action-icon:active::after {
-  transform: scale(1.5);
+.action-button:hover::before {
+  transform: scale(1);
+}
+
+.action-button i {
+  font-size: 1rem;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.2s ease;
+}
+
+.action-button:hover i {
+  transform: scale(1.1);
+}
+
+.action-button:active i {
+  transform: scale(0.95);
+}
+
+.view-button {
+  background: #4a5568;
+  box-shadow: 0 2px 4px rgba(74, 85, 104, 0.1);
+}
+
+.view-button:hover {
+  background: #2d3748;
+  box-shadow: 0 4px 6px rgba(74, 85, 104, 0.2);
+}
+
+.edit-button {
+  background: #48bb78;
+  box-shadow: 0 2px 4px rgba(72, 187, 120, 0.1);
+}
+
+.edit-button:hover {
+  background: #38a169;
+  box-shadow: 0 4px 6px rgba(72, 187, 120, 0.2);
+}
+
+.delete-button {
+  background: #718096;
+  box-shadow: 0 2px 4px rgba(113, 128, 150, 0.1);
+}
+
+.delete-button:hover {
+  background: #4a5568;
+  box-shadow: 0 4px 6px rgba(113, 128, 150, 0.2);
+}
+
+.ban-button {
+  background: #f56565;
+  box-shadow: 0 2px 4px rgba(245, 101, 101, 0.1);
+}
+
+.ban-button:hover {
+  background: #e53e3e;
+  box-shadow: 0 4px 6px rgba(245, 101, 101, 0.2);
+}
+
+/* Tooltips */
+.action-button::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  padding: 0.6rem 1rem;
+  background: #2d3748;
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  white-space: nowrap;
   opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(45, 55, 72, 0.15);
+}
+
+.action-button:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: inline-block;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+
+.status-active {
+  background-color: #f0fff4;
+  color: #276749;
+  border: 1px solid #c6f6d5;
+}
+
+.status-inactive {
+  background-color: #fff5f5;
+  color: #9b2c2c;
+  border: 1px solid #fed7d7;
+}
+
+.status-pending {
+  background-color: #faf5ff;
+  color: #553c9a;
+  border: 1px solid #e9d8fd;
 }
 
 /* Responsive adjustments */
@@ -239,12 +244,12 @@ td {
     gap: 0.5rem;
   }
 
-  .action-icon {
+  .action-button {
     width: 32px;
     height: 32px;
   }
 
-  .action-icon i {
+  .action-button i {
     font-size: 0.9rem;
   }
 }
@@ -535,4 +540,63 @@ form {
   opacity: 0.9;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Stats Box Styling */
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-box {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #edf2f7;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7fafc;
+  color: #4a5568;
+}
+
+.stat-icon i {
+  font-size: 1.5rem;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-content h3 {
+  color: #718096;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+}
+
+.stat-content p {
+  color: #2d3748;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.stat-period {
+  color: #a0aec0;
+  font-size: 0.75rem;
+  display: block;
+  margin-top: 0.25rem;
 }

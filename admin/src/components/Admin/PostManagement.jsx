@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import './PostManagement.css';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './PostManagement.css';
 
 const API_URL = 'http://localhost:5000';
+const api = axios.create({ baseURL: API_URL });
 
 function PostManagement({ onPageChange, onViewPost }) {
   const [posts, setPosts] = useState([]);
@@ -11,24 +12,28 @@ function PostManagement({ onPageChange, onViewPost }) {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
   const [error, setError] = useState(null);
+  const [stats, setStats] = useState({
+    totalPosts: 0,
+    pendingPosts: 0,
+    approvedPosts: 0,
+    rejectedPosts: 0
+  });
 
   const fetchPosts = async (page = 1, searchTerm = '') => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(
-        `http://localhost:5000/admin/posts?page=${page}&limit=10&search=${searchTerm}`
+      const response = await api.get(
+        `/admin/posts?page=${page}&limit=10&search=${searchTerm}`
       );
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (response.status === 200) {
+        setPosts(response.data.posts || []);
+        setTotalPages(response.data.pagination?.pages || 1);
+      } else {
+        console.error('Failed to fetch posts:', response.statusText);
       }
-      
-      const data = await response.json();
-      
-      setPosts(data.posts || []);
-      setTotalPages(data.pagination?.pages || 1);
     } catch (error) {
       console.error('Error fetching posts:', error);
       setError('Failed to load posts');
@@ -39,9 +44,30 @@ function PostManagement({ onPageChange, onViewPost }) {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const response = await api.get('/admin/post-stats');
+      if (response.status === 200) {
+        setStats(response.data);
+      } else {
+        console.error('Failed to fetch post stats:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching post stats:', error);
+    }
+  };
+
   useEffect(() => {
-    fetchPosts(currentPage, search);
-  }, [currentPage, search]);
+    fetchPosts();
+    fetchStats();
+  }, []);
+
+  const refreshData = async () => {
+    await Promise.all([
+      fetchPosts(currentPage, search),
+      fetchStats()
+    ]);
+  };
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
@@ -62,18 +88,9 @@ function PostManagement({ onPageChange, onViewPost }) {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/admin/posts/${postId}`, {
-        method: 'DELETE',
-      });
-      const data = await response.json();
-      
-      if (response.ok && data.success) {
-        setPosts(posts.filter(post => post.id !== postId));
-        alert('Post deleted successfully');
-      } else {
-        console.error('Failed to delete post:', data.error);
-        alert(`Failed to delete post: ${data.error}`);
-      }
+      await api.delete(`/admin/posts/${postId}`);
+      refreshData();
+      alert('Post deleted successfully');
     } catch (error) {
       console.error('Error deleting post:', error);
       alert('Error deleting post. Please try again.');
@@ -82,74 +99,20 @@ function PostManagement({ onPageChange, onViewPost }) {
 
   const handleApprovePost = async (postId) => {
     try {
-      const token = localStorage.getItem('token');
-      console.log('Token:', token);
-      console.log('PostId:', postId);
-      
-      const data = { status: 'APPROVED' };
-      console.log('Sending data:', data);
-
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      };
-
-      const response = await axios.put(
-        `${API_URL}/admin/posts/${postId}/status`,
-        data,
-        config
-      );
-      
-      console.log('Response:', response.data);
-      
-      if (response.data.success) {
-        setPosts(posts.map(post => 
-          post.id === postId 
-            ? { ...post, status: 'APPROVED' }
-            : post
-        ));
-        alert('Post approved successfully');
-        fetchPosts(currentPage, search);
-      }
+      await api.put(`/admin/posts/${postId}/status`, { status: 'APPROVED' });
+      refreshData();
+      alert('Post approved successfully');
     } catch (error) {
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
+      console.error('Error approving post:', error);
       alert(`Failed to approve post: ${error.response?.data?.error || error.message}`);
     }
   };
 
-  const handleRejectPost = async (postId, rejectionReason) => {
+  const handleRejectPost = async (postId) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.put(
-        `${API_URL}/admin/posts/${postId}/status`,
-        { 
-          status: 'REJECTED',
-          rejectionReason 
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      
-      if (response.status === 200) {
-        setPosts(posts.map(post => 
-          post.id === postId 
-            ? { ...post, status: 'REJECTED' }
-            : post
-        ));
-        alert('Post rejected successfully');
-        // Refresh the posts list
-        fetchPosts(currentPage, search);
-      }
+      await api.put(`/admin/posts/${postId}/status`, { status: 'REJECTED' });
+      refreshData();
+      alert('Post rejected successfully');
     } catch (error) {
       console.error('Error rejecting post:', error);
       alert('Failed to reject post. Please try again.');
@@ -157,7 +120,7 @@ function PostManagement({ onPageChange, onViewPost }) {
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return <div className="loading">Loading posts...</div>;
   }
 
   if (error) {
@@ -166,15 +129,64 @@ function PostManagement({ onPageChange, onViewPost }) {
 
   return (
     <div className="post-management">
+      <div className="dashboard-header">
+        <h2>Post Management</h2>
+      </div>
+
+      <div className="stats-container">
+        <div className="stat-box">
+          <div className="stat-icon">
+            <i className="fas fa-file-alt"></i>
+          </div>
+          <div className="stat-content">
+            <h3>Total Posts</h3>
+            <p>{stats.totalPosts}</p>
+          </div>
+        </div>
+
+        <div className="stat-box">
+          <div className="stat-icon">
+            <i className="fas fa-clock"></i>
+          </div>
+          <div className="stat-content">
+            <h3>Pending Posts</h3>
+            <p>{stats.pendingPosts}</p>
+          </div>
+        </div>
+
+        <div className="stat-box">
+          <div className="stat-icon">
+            <i className="fas fa-check-circle"></i>
+          </div>
+          <div className="stat-content">
+            <h3>Approved Posts</h3>
+            <p>{stats.approvedPosts}</p>
+          </div>
+        </div>
+
+        <div className="stat-box">
+          <div className="stat-icon">
+            <i className="fas fa-times-circle"></i>
+          </div>
+          <div className="stat-content">
+            <h3>Rejected Posts</h3>
+            <p>{stats.rejectedPosts}</p>
+          </div>
+        </div>
+      </div>
+
       <div className="post-management-header">
         <h2>Posts Management</h2>
-        <input
-          type="search"
-          placeholder="Search posts..."
-          value={search}
-          onChange={handleSearch}
-          className="search-input"
-        />
+        <div className="search-container">
+          <i className="fas fa-search"></i>
+          <input
+            type="search"
+            placeholder="Search posts..."
+            value={search}
+            onChange={handleSearch}
+            className="search-input"
+          />
+        </div>
       </div>
 
       <div className="posts-table">
@@ -199,16 +211,46 @@ function PostManagement({ onPageChange, onViewPost }) {
                   <td>{post.location}</td>
                   <td>${post.price}</td>
                   <td>{post.category}</td>
-                  <td>{post.status}</td>
                   <td>
-                    <button className="view-btn" onClick={() => handleView(post.id)}>View</button>
-                    {post.status === 'PENDING' && (
-                      <>
-                        <button className="approve-btn" onClick={() => handleApprovePost(post.id)}>Approve</button>
-                        <button className="reject-btn" onClick={() => handleRejectPost(post.id)}>Reject</button>
-                      </>
-                    )}
-                    <button className="delete-btn" onClick={() => handleDelete(post.id)}>Delete</button>
+                    <span className={`status-badge status-${post.status.toLowerCase()}`}>
+                      {post.status}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="post-actions">
+                      <button 
+                        className="action-button view-button"
+                        onClick={() => handleView(post.id)}
+                        data-tooltip="View Details"
+                      >
+                        <i className="fas fa-eye"></i>
+                      </button>
+                      {post.status === 'PENDING' && (
+                        <>
+                          <button 
+                            className="action-button approve-button"
+                            onClick={() => handleApprovePost(post.id)}
+                            data-tooltip="Approve Post"
+                          >
+                            <i className="fas fa-check"></i>
+                          </button>
+                          <button 
+                            className="action-button reject-button"
+                            onClick={() => handleRejectPost(post.id)}
+                            data-tooltip="Reject Post"
+                          >
+                            <i className="fas fa-times"></i>
+                          </button>
+                        </>
+                      )}
+                      <button 
+                        className="action-button delete-button"
+                        onClick={() => handleDelete(post.id)}
+                        data-tooltip="Delete Post"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -236,4 +278,4 @@ function PostManagement({ onPageChange, onViewPost }) {
   );
 }
 
-export default PostManagement; 
+export default PostManagement;

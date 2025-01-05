@@ -37,6 +37,12 @@ const UserManagement = () => {
   const [userToBan, setUserToBan] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeUsers: 0,
+    bannedUsers: 0,
+    newUsersThisMonth: 0
+  });
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -62,14 +68,35 @@ const UserManagement = () => {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const response = await api.get('/admin/user-stats');
+      if (response.status === 200) {
+        setStats(response.data);
+      } else {
+        console.error('Failed to fetch user stats:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    }
+  };
+
+  const refreshData = async () => {
+    await Promise.all([
+      fetchUsers(),
+      fetchStats()
+    ]);
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchStats();
   }, [page, search]);
 
   const handleBanUser = async (userId, duration) => {
     try {
       await api.post(`/admin/users/${userId}/ban`, { duration });
-      await fetchUsers();
+      refreshData();
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to ban user';
       console.error('Error banning user:', errorMessage);
@@ -88,7 +115,7 @@ const UserManagement = () => {
         }
 
         // Refresh the user list
-        await fetchUsers();
+        refreshData();
         alert('User deleted successfully');
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Failed to delete user';
@@ -140,6 +167,53 @@ const UserManagement = () => {
 
   return (
     <div className="user-management">
+      <div className="dashboard-header">
+        <h2>User Management</h2>
+      </div>
+
+      <div className="stats-container">
+        <div className="stat-box">
+          <div className="stat-icon">
+            <i className="fas fa-users"></i>
+          </div>
+          <div className="stat-content">
+            <h3>Total Users</h3>
+            <p>{stats.totalUsers}</p>
+          </div>
+        </div>
+
+        <div className="stat-box">
+          <div className="stat-icon">
+            <i className="fas fa-user-check"></i>
+          </div>
+          <div className="stat-content">
+            <h3>Active Users</h3>
+            <p>{stats.activeUsers}</p>
+          </div>
+        </div>
+
+        <div className="stat-box">
+          <div className="stat-icon">
+            <i className="fas fa-user-slash"></i>
+          </div>
+          <div className="stat-content">
+            <h3>Banned Users</h3>
+            <p>{stats.bannedUsers}</p>
+          </div>
+        </div>
+
+        <div className="stat-box">
+          <div className="stat-icon">
+            <i className="fas fa-user-plus"></i>
+          </div>
+          <div className="stat-content">
+            <h3>New Users</h3>
+            <p>{stats.newUsersThisMonth}</p>
+            <span className="stat-period">This Month</span>
+          </div>
+        </div>
+      </div>
+
       <div className="user-management-header">
         <h2>User Management</h2>
         <div className="search-container">
@@ -188,35 +262,35 @@ const UserManagement = () => {
                 <td>
                   <div className="action-buttons">
                     <button 
-                      className="action-icon view-icon" 
+                      className="action-button view-button"
                       data-tooltip="View Details"
                       onClick={() => setSelectedUser(user)}
                     >
                       <i className="fas fa-eye"></i>
                     </button>
                     <button 
-                      className="action-icon edit-icon" 
+                      className="action-button edit-button"
                       data-tooltip="Edit User"
                       onClick={() => {
                         setSelectedUser(user);
                         setIsEditing(true);
                       }}
                     >
-                      <i className="fas fa-edit"></i>
+                      <i className="fas fa-pen"></i>
                     </button>
                     <button 
-                      className="action-icon ban-icon" 
+                      className="action-button ban-button"
                       data-tooltip="Ban User"
                       onClick={() => handleBanModalOpen(user)}
                     >
                       <i className="fas fa-ban"></i>
                     </button>
                     <button 
-                      className="action-icon delete-icon" 
+                      className="action-button delete-button"
                       data-tooltip="Delete User"
                       onClick={() => handleDeleteUser(user.id)}
                     >
-                      <i className="fas fa-trash-alt"></i>
+                      <i className="fas fa-trash"></i>
                     </button>
                   </div>
                 </td>
