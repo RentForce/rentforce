@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const userRoutes = require("./routes/user");
 const postsRouter = require("./routes/posts");
+const adminRoutes = require("./routes/admin");
 const nodemailer = require('nodemailer');
 const http = require('http');
 const socketIO = require('socket.io');
@@ -11,7 +12,6 @@ const { PrismaClient } = require('@prisma/client');
 const path = require('path');
 const socketHandler = require('./socket');
 const reportsRouter = require("./routes/report");
-const adminRoutes = require("./routes/admin");
 const { Server } = require("socket.io");
 
 dotenv.config();
@@ -87,21 +87,8 @@ if (!fs.existsSync("./uploads/images")) {
 app.use(bodyParser.json());
 
 app.use("/user", userRoutes);
-// const io = new Server(server, {
-//   cors: {
-//     origin: "*",
-//     methods: ["GET", "POST", "PUT", "DELETE"],
-//     credentials: true,
-//   },
-// });
-
-// app.use((req, res, next) => {
-//   req.io = io;
-//   next();
-// });
-
-// app.use("/user", userRoutes);
 app.use("/posts", postsRouter);
+app.use("/admin", adminRoutes);
 app.use("/reports", reportsRouter);
 
 // Stripe Payment Intent Route
