@@ -96,7 +96,9 @@ const HomeDetails = ({ route, navigation }) => {
           setUserCanComment(bookingResponse.data.hasBooked);
           setUserCanReport(bookingResponse.data.hasBooked);
         }
-
+        const data = await response.json();
+        setImages(data.images || []);
+        // Update other state variables with the fetched data
         setLoading(false);
       } catch (err) {
         console.error("Error fetching data:", err);

@@ -88,4 +88,8 @@ const styles = StyleSheet.create({
   },
 });
 
+<<<<<<< HEAD
 export default Welcome;
+=======
+export default Welcome;
+>>>>>>> fbcd25425e219a1705d0fa2b06a8e12af458abff

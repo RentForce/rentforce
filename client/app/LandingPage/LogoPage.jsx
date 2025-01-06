@@ -60,4 +60,8 @@ const styles = StyleSheet.create({
     marginTop: 5 }
 });
 
+<<<<<<< HEAD
 export default LogoPage;
+=======
+export default LogoPage;
+>>>>>>> fbcd25425e219a1705d0fa2b06a8e12af458abff

@@ -411,6 +411,20 @@ const Home = ({ navigation }) => {
           <Text style={styles.roomText}>
             {count} {type}
           </Text>
+          <View style={styles.roomConfiguration}>
+            <View style={styles.roomItem}>
+              <FontAwesome5 name="bed" size={16} color="#FFD700" />
+              <Text style={styles.roomText}>{post.beds} Beds</Text>
+            </View>
+            <View style={styles.roomItem}>
+              <FontAwesome5 name="bath" size={16} color="#FFD700" />
+              <Text style={styles.roomText}>{post.baths} Baths</Text>
+            </View>
+            <View style={styles.roomItem}>
+              <FontAwesome5 name="warehouse" size={16} color="#FFD700" />
+              <Text style={styles.roomText}>{post.garage} Garage</Text>
+            </View>
+          </View>
         </View>
       );
     })}
