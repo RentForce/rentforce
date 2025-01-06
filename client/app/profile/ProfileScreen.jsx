@@ -65,16 +65,14 @@ const ProfileScreen = ({ navigation, route }) => {
 
   const handleLogout = async () => {
     try {
-      // Clear AsyncStorage
-      await AsyncStorage.removeItem("userToken");
-      await AsyncStorage.removeItem("userId");
-      await AsyncStorage.removeItem("currentUser");
-      console.log("cleared");
+      // Clear all AsyncStorage
+      await AsyncStorage.clear();
+      console.log("All storage cleared");
 
-      // Navigate back to the sign-up page
+      // Navigate back to the welcome page
       navigation.reset({
         index: 0,
-        routes: [{ name: "signup" }], // Change to "signup"
+        routes: [{ name: "Welcome" }],
       });
     } catch (error) {
       console.error("Error during logout:", error);
@@ -149,7 +147,7 @@ const ProfileScreen = ({ navigation, route }) => {
           >
             <View style={styles.settingContent}>
               <Ionicons name="create" size={20} color="#333" />
-              <Text style={styles.settingText}>Liste your space </Text>
+              <Text style={styles.settingText}>List your space </Text>
               <Ionicons name="chevron-forward" size={20} color="#333" />
             </View>
           </TouchableOpacity>

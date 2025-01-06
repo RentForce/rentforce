@@ -169,9 +169,6 @@ const UserManagement = () => {
               <tr key={user.id}>
                 <td className="user-cell">
                   <div className="user-info">
-                    <div className="user-avatar">
-                      {user.firstName?.[0]?.toUpperCase() || 'U'}
-                    </div>
                     <span>{`${user.firstName} ${user.lastName}`}</span>
                   </div>
                 </td>

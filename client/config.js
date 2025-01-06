@@ -10,7 +10,6 @@ export const configureAxios = (axios) => {
   axios.defaults.baseURL = getBaseUrl();
   axios.defaults.headers.common['Accept'] = 'application/json';
   axios.defaults.headers.post['Content-Type'] = 'application/json';
-
   // Add response interceptor to handle errors
   axios.interceptors.response.use(
     (response) => response,

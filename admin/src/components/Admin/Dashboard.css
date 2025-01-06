@@ -1,24 +1,33 @@
 :root {
   --primary: #082631;
-  --background: #F1EFEF;
+  --background: #f8f9fa;
+  --text-primary: #082631;
+  --text-secondary: rgba(8, 38, 49, 0.7);
+  --hover-bg: rgba(8, 38, 49, 0.1);
 }
 
 .dashboard-container {
   display: flex;
   min-height: 100vh;
   background-color: var(--background);
+  background-image: url('https://img.freepik.com/free-photo/armchair-green-living-room-with-copy-space_43614-910.jpg?t=st=1735828039~exp=1735831639~hmac=a3349d1792a7afab5cacd4772256703f18789d5101bb597f3eec8521c1adb631&w=996');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 /* Sidebar Styles */
 .sidebar {
-  background: var(--primary);
+  background: rgba(8, 38, 49, 0.95);
+  backdrop-filter: blur(10px);
   color: var(--background);
   width: 280px;
   transition: all 0.3s ease;
   height: 100vh;
   position: fixed;
   z-index: 1000;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar.closed {
@@ -30,36 +39,71 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(241, 239, 239, 0.1);
-  height: 80px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  height: 70px;
 }
 
-.sidebar-header h2 {
-  font-size: 1.5rem;
+.sidebar-header img {
+  height: 30px;
+  width: auto;
+  filter: brightness(0) invert(1);
+  transition: all 0.3s ease;
+}
+
+.sidebar.closed .sidebar-header img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  object-position: left;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-text {
+  color: white;
+  font-size: 1.2rem;
   font-weight: 600;
-  color: var(--background);
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.closed .logo-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
 }
 
 .toggle-btn {
-  background: rgba(241, 239, 239, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   border: none;
   color: var(--background);
   cursor: pointer;
   width: 32px;
   height: 32px;
-  border-radius: 4px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
 }
 
 .toggle-btn:hover {
-  background: rgba(241, 239, 239, 0.2);
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.toggle-btn:active {
+  transform: translateY(0);
 }
 
 .sidebar-nav {
   padding: 1rem 0;
+  flex: 1;
 }
 
 .sidebar-nav ul {
@@ -76,17 +120,63 @@
   color: var(--background);
   text-decoration: none;
   padding: 0.8rem 1rem;
-  border-radius: 4px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 1rem;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+.sidebar-nav a i {
+  width: 20px;
+  font-size: 1.1rem;
+  text-align: center;
 }
 
 .sidebar-nav li:hover a,
 .sidebar-nav li.active a {
-  background: rgba(241, 239, 239, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
+  opacity: 1;
+}
+
+.sidebar.closed .sidebar-nav a span {
+  display: none;
+}
+
+/* Add styles for logout option */
+.logout {
+  margin-top: auto !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 15px !important;
+}
+
+.logout a {
+  color: inherit !important;
+}
+
+.logout a:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.logout i {
+  color: inherit !important;
+}
+
+/* Make sure the sidebar nav takes full height */
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 80px);
+}
+
+.sidebar ul {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 /* Main Content */
@@ -94,7 +184,10 @@
   flex: 1;
   margin-left: 280px;
   padding: 2rem;
-  transition: margin-left 0.3s;
+  transition: all 0.3s ease;
+  min-height: 100vh;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .sidebar.closed + .main-content {
@@ -103,57 +196,181 @@
 
 /* Header */
 .header {
-  background: var(--background);
-  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1.25rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(8, 38, 49, 0.1);
 }
 
-.header-search input {
-  padding: 0.8rem 1rem;
-  border: 2px solid var(--primary);
-  border-radius: 4px;
-  background: var(--background);
-  color: var(--primary);
+.header-search {
+  position: relative;
   width: 300px;
 }
 
-.header-profile {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
+.header-search i {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
 }
 
-/* Dashboard Stats */
-.dashboard-stats {
+.header-search input {
+  width: 100%;
+  padding: 12px 16px 12px 42px;
+  border: 1px solid rgba(8, 38, 49, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.header-search input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 2px 4px rgba(8, 38, 49, 0.1);
+  background: rgba(255, 255, 255, 1);
+}
+
+.header-search input::placeholder {
+  color: var(--text-secondary);
+}
+
+/* Cards */
+.dashboard-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(8, 38, 49, 0.1);
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(8, 38, 49, 0.15);
+}
+
+.card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
+  gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .stat-card {
-  background: var(--background);
+  background: rgba(255, 255, 255, 0.9);
   padding: 1.5rem;
-  border-radius: 8px;
-  border: 2px solid var(--primary);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(8, 38, 49, 0.15);
 }
 
 .stat-card h3 {
-  color: var(--primary);
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
 }
 
-.stat-card p {
-  color: var(--primary);
+.stat-card .value {
+  color: var(--text-primary);
   font-size: 2rem;
   font-weight: 600;
+}
+
+/* Buttons */
+.dashboard-button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary);
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dashboard-button i {
+  font-size: 1rem;
+}
+
+.dashboard-button:hover {
+  background: #0a3242;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(8, 38, 49, 0.2);
+}
+
+.dashboard-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Tables */
+.table-container {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(8, 38, 49, 0.1);
+}
+
+th {
+  background: rgba(8, 38, 49, 0.05);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+tr:hover {
+  background: rgba(8, 38, 49, 0.02);
+}
+
+/* Status badges */
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-active {
+  background: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+}
+
+.status-pending {
+  background: rgba(255, 152, 0, 0.1);
+  color: #ef6c00;
+}
+
+.status-inactive {
+  background: rgba(244, 67, 54, 0.1);
+  color: #d32f2f;
 }
 
 /* Action Buttons */
@@ -162,40 +379,94 @@
   gap: 0.5rem;
 }
 
-.btn {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  border: none;
+/* Dashboard Stats */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+}
+
+/* Admin Profile */
+.admin-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+.admin-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--background);
+}
+
+.notifications {
+  position: relative;
+  display: flex;
+  align-items: center;
   cursor: pointer;
-  font-weight: 500;
-  transition: opacity 0.2s;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
 }
 
-.btn:hover {
-  opacity: 0.8;
+.notifications:hover {
+  background-color: rgba(8, 38, 49, 0.05);
 }
 
-.btn-view {
-  background-color: #2196F3;
+.notifications i {
+  font-size: 18px;
+  color: rgba(8, 38, 49, 0.7);
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #e74c3c;
   color: white;
+  font-size: 11px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  font-weight: 600;
+  transform: translate(25%, -25%);
+  border: 2px solid white;
 }
 
-.btn-edit {
-  background-color: #4CAF50;
-  color: white;
+.sidebar.closed .admin-avatar {
+  width: 35px;
+  height: 35px;
 }
 
-.btn-delete {
-  background-color: #F44336;
-  color: white;
+.sidebar.closed .notification-badge {
+  left: 20px;
+  top: -3px;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
 }
 
-.btn-ban {
-  background-color: #9C27B0;
-  color: white;
+.sidebar.closed .hidden {
+  display: none;
 }
 
-/* Add this if you want a disabled state for banned users */
-.btn-ban.active {
-  background-color: #666;
+@media (max-width: 1400px) {
+  .dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+  }
 }

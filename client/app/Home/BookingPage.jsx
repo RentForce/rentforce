@@ -10,6 +10,8 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons, AntDesign } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
@@ -457,8 +459,15 @@ const BookingPage = ({ navigation, route }) => {
   );
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -500} // Adjust this value as needed
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollViewContent}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Property Preview */}
         {post?.images && post.images.length > 0 && (
           <View style={styles.propertyPreview}>
@@ -920,8 +929,10 @@ const BookingPage = ({ navigation, route }) => {
 
       <ConfirmationModal />
       <SuccessModal />
-      <Navbar navigation={navigation} />
-    </View>
+      <View style={styles.navbarContainer}>
+        <Navbar navigation={navigation} />
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -931,7 +942,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F1EFEF",
   },
   scrollViewContent: {
-    paddingBottom: 30,
+    paddingBottom: 80,
     paddingHorizontal: 15,
   },
   propertyPreview: {
@@ -1037,7 +1048,7 @@ const styles = StyleSheet.create({
   calendarSection: {
     backgroundColor: "#e0e0e0",
     borderRadius: 10,
-    padding: 10,
+    padding: 12,
     marginBottom: 20,
   },
   sectionTitle: {
@@ -1241,11 +1252,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 5,
   },
-  navbar: {
-    position: "absolute",
+  navbarContainer: {
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    backgroundColor: '#F1EFEF',
+    zIndex: 999, // Ensure navbar stays on top
   },
   detailText: {
     fontSize: 14,

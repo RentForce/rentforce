@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import './login.css';
 import axios from 'axios';
 import { CloudinaryFile } from '@cloudinary/url-gen/index';
+import logo from '../../assets/logo.svg';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   const navigate = useNavigate();
 
@@ -44,23 +46,43 @@ export default function Login() {
     }
   };
 
-  return (
-    <div>
-      <div className="loginContainer">
-       
-        <form
-          className="loginForm"
-          onSubmit={passwordVisible ? handleLogin : handleEmailSubmit}
-        >
-          <h2 className="loginTitle">Sign In</h2>
-          <div className="login-link">
-            <p>
-              <span className="admin-text">
-                Admin Portal Access Only
-              </span>
-            </p>
-          </div>
+  const handleSubmit = (e) => {
+    if (passwordVisible) {
+      handleLogin(e);
+    } else {
+      handleEmailSubmit(e);
+    }
+  };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  return (
+    <div style={{
+      backgroundImage: `url('https://img.freepik.com/free-photo/armchair-green-living-room-with-copy-space_43614-910.jpg?t=st=1735931481~exp=1735935081~hmac=3d554be8404483188f6d7ccd804821a8a61893569fdb77fb156913c944137197&w=900')`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      minHeight: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
+    }}>
+      <div className="loginContainer">
+        <div className="logo-container">
+          <img src={logo} alt="RentForce Logo" className="logo-image" />
+        </div>
+        <h2 className="loginTitle">Sign In</h2>
+        <div className="login-link">
+          <p>
+            <span className="admin-text">
+              Admin Portal Access Only
+            </span>
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
           {!passwordVisible && (
             <div className="form-group">
               <input
@@ -71,24 +93,33 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email Address"
                 required
-                className="formInput"
               />
             </div>
           )}
 
           {passwordVisible && (
-            <div className="form-group visible">
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                required
-                className="formInput passwordInput"
-              />
-            </div>
+            <>
+              <div className="form-group">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  required
+                />
+                <button 
+                  type="button"
+                  className="password-toggle"
+                  onClick={togglePasswordVisibility}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                </button>
+              </div>
+              <a href="#" className="forgot-password">Forgot Password?</a>
+            </>
           )}
 
           {error && (
