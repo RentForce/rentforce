@@ -201,8 +201,8 @@ const getPostBookings = async (req, res) => {
 
 const getPostsByCategory = async (req, res) => {
   try {
-    const { category, search, price, location, title, status } = req.query;
-    console.log("Search query:", search);
+    const { category, search, price, location, title, status } = req.params;
+    console.log("Search query:", category);
 
     const posts = await prisma.post.findMany({
       where: {

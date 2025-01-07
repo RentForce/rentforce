@@ -236,21 +236,32 @@ const Home = ({ navigation }) => {
     setLoading(true);
     try {
       const baseUrl = `${apiUrl}`;
-      const endpoint = searchQuery
-        ? `${baseUrl}/posts/all`
-        : `${baseUrl}/posts/posts/${category}`;
+      let endpoint = `${baseUrl}/posts/all`;
+      let params = {
+        status: "APPROVED"
+      };
 
-      console.log("Fetching from:", endpoint);
+      // Add search query if exists
+      if (searchQuery) {
+        params.search = searchQuery;
+      }
+      
+      // Add category if not searching
+      if (!searchQuery && category) {
+        endpoint = `${baseUrl}/posts/posts/${category}`;
+      }
 
-      const response = await axios.get(endpoint, {
-        params: {
-          search: searchQuery,
-          status: "APPROVED",
-        },
-      });
+      console.log("Fetching from:", endpoint, "with params:", params);
 
-      console.log("Response data:", response.data);
-      setPosts(response.data);
+      const response = await axios.get(endpoint, { params });
+
+      // If searching and category is selected, filter results by category
+      let filteredPosts = response.data;
+      if (searchQuery && category) {
+        filteredPosts = response.data.filter(post => post.category.toLowerCase() === category.toLowerCase());
+      }
+
+      setPosts(filteredPosts);
     } catch (error) {
       console.error("Failed to fetch posts:", error);
       // Handle error appropriately
@@ -380,40 +391,43 @@ const Home = ({ navigation }) => {
           <Text style={styles.title} numberOfLines={1}>
             {post.title}
           </Text>
+          <View style={styles.priceContainer}>
+            <Text style={styles.priceValue}>
+              ${parseFloat(post.price).toFixed(2)}
+            </Text>
+            <Text style={styles.priceLabel}>/night</Text>
+          </View>
           <View style={styles.roomConfiguration}>
-  {post.roomConfiguration &&
-    post.roomConfiguration.split(", ").map((item, index) => {
-      const parts = item.split(" ");
-      const count = parts[0];
-      const type = parts[1];
+            {post.roomConfiguration &&
+              post.roomConfiguration.split(", ").map((item, index) => {
+                const parts = item.split(" ");
+                const count = parts[0];
+                const type = parts[1];
 
-      if (!type) return null;
+                if (!type) return null;
 
-      let iconComponent;
-      
-      switch (type.toLowerCase()) {
-        case "beds":
-          iconComponent = <FontAwesome5 name="bed" size={16} color="#FFD700" />;
-          break;
-        case "baths":
-          iconComponent = <FontAwesome5 name="bath" size={16} color="#FFD700" />;
-          break;
-        case "garage":
-          iconComponent = <FontAwesome name="car" size={16} color="#FFD700" />;
-          break;
-        default:
-          iconComponent = <FontAwesome5 name="home" size={16} color="#FFD700" />;
-      }
+                let iconComponent;
+                switch (type.toLowerCase()) {
+                  case "beds":
+                    iconComponent = <FontAwesome5 name="bed" size={14} color="#FFFFFF" />;
+                    break;
+                  case "baths":
+                    iconComponent = <FontAwesome5 name="bath" size={14} color="#FFFFFF" />;
+                    break;
+                  case "garage":
+                    iconComponent = <FontAwesome name="car" size={14} color="#FFFFFF" />;
+                    break;
+                  default:
+                    return null;
+                }
 
-      return (
-        <View key={index} style={styles.roomItem}>
-          {iconComponent}
-          <Text style={styles.roomText}>
-            {count} {type}
-          </Text>
-        </View>
-      );
-    })}
+                return (
+                  <View key={index} style={styles.roomItem}>
+                    {iconComponent}
+                    <Text style={styles.roomText}>{count}</Text>
+                  </View>
+                );
+              })}
           </View>
         </View>
       </View>
@@ -705,36 +719,34 @@ const Home = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: "#F1EFEF",
-    backgroundColor: "#E0E0E0",
+    backgroundColor: '#FFFFFF',
   },
   scrollView: {
     flex: 1,
     padding: 2,
+    backgroundColor: '#f5f5f5',
   },
   searchBarContainer: {
-    paddingHorizontal: 3,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     marginTop: 12,
     marginBottom: 5,
+    backgroundColor: '#FFFFFF',
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F7F7F7",
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: "#DDDDDD",
+    borderColor: '#EEEEEE',
     borderRadius: 40,
-    padding: 10,
+    padding: 12,
     marginHorizontal: 4,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
   searchIconContainer: {
     marginRight: 12,
@@ -776,56 +788,59 @@ const styles = StyleSheet.create({
   },
   categoryTabs: {
     flexDirection: "row",
-    marginTop: 8,
+    marginTop: 6,
     paddingLeft: 2,
   },
   tabContainer: {
     alignItems: "center",
-    marginRight: 8, // hethiiii
-    marginTop: 10,
+    marginRight: 10,
+    marginTop: 6,
     marginLeft: 10,
   },
   tab: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#1A3A4F",
-    borderRadius: 30,
-    width: 60,
-    height: 60,
-    marginBottom: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    width: 58,
+    height: 58,
+    marginBottom: 5,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   tabIcon: {
-    color: "#FFFFFF",
+    color: '#666666',
+    transform: [{ scale: 0.85 }],
   },
   tabText: {
     fontSize: 10,
-    color: "white",
-    textTransform: "capitalize",
+    color: '#666666',
+    textTransform: 'capitalize',
     fontWeight: "400",
     textAlign: "center",
-    marginTop: 4,
+    marginTop: 2,
   },
   activeTab: {
-    transform: [{ scale: 1.2 }],
+    backgroundColor: '#F7F7F7',
+    transform: [{ scale: 1.01 }],
+    borderColor: '#2C3E50',
   },
   activeTabIcon: {
-    color: "#FFFFFF",
+    color: '#2C3E50',
   },
   activeTabText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
+    color: '#2C3E50',
+    fontWeight: "600",
   },
   contentContainer: {
     flex: 1,
-    padding: 7,
-    backgroundColor: "#e0e0e0",
-    borderRadius: 10,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
   },
   scrollBar: {
     height: 2,
@@ -841,23 +856,26 @@ const styles = StyleSheet.create({
     right: 0,
   },
   postContainer: {
-    marginBottom: 20,
-    backgroundColor: "#082631",
-    borderRadius: 47,
+    marginBottom: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 3,
     overflow: "hidden",
+    marginHorizontal: 4,
+    width: '97%',
+    alignSelf: 'center',
   },
   postImage: {
     width: "100%",
-    height: 230,
+    height: 200,
     resizeMode: "cover",
     backgroundColor: "#f0f0f0",
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   imageOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -866,34 +884,41 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 15,
   },
   postDetails: {
-    padding: 12,
-    backgroundColor: "#082631",
+    padding: 14,
+    backgroundColor: '#082631',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    gap: 6,
   },
   postHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 3,
+    marginBottom: 4,
   },
   postLocation: {
     fontSize: 15,
     fontWeight: "600",
-    color: "white",
+    color: '#FFFFFF',
     flex: 1,
   },
   ratingContainer: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
   },
   rating: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "white",
+    fontWeight: "600",
+    color: '#FFFFFF',
     marginLeft: 4,
   },
   title: {
     fontSize: 14,
-    color: "white",
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   price: {
@@ -901,25 +926,30 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   priceValue: {
-    fontWeight: "600",
-    color: "white",
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  priceLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'gold',
   },
   priceText: {
     color: "white",
   },
   favoriteIcon: {
     position: "absolute",
-    top: 16,
-    right: 16,
-    padding: 8,
+    top: 12,
+    right: 12,
+    padding: 6,
     borderRadius: 50,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 4,
-    zIndex: 1,
   },
   noImageContainer: {
     width: "100%",
@@ -937,15 +967,8 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#F1EFEF",
-    borderRadius: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-    justifyContent: "center",
+    padding: 24,
+    backgroundColor: '#FFFFFF',
   },
   modalTitle: {
     fontSize: 28,
@@ -955,9 +978,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   filterLabel: {
-    fontSize: 18,
-    marginVertical: 10,
-    color: "#007BFF",
+    fontSize: 16,
+    marginVertical: 12,
+    color: '#333333',
     fontWeight: "600",
   },
   input: {
@@ -982,16 +1005,15 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   submitButton: {
-    backgroundColor: "#2C3E50",
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 12,
     alignItems: "center",
-    marginTop: 15,
-    elevation: 2,
+    marginTop: 24,
   },
   submitButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
+    color: '#FFFFFF',
+    fontWeight: "600",
     fontSize: 16,
   },
   closeButton: {
@@ -1007,19 +1029,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   priceContainer: {
-    padding: 10,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 3,
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginTop: 2,
   },
   priceText: {
     fontSize: 16,
@@ -1071,26 +1083,27 @@ const styles = StyleSheet.create({
     marginRight: -19,
   },
   roomConfiguration: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    marginTop: 8,
-    marginLeft: -4,
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 6,
+    paddingTop: 8,
+    borderTopWidth: 0.5,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
   },
   roomItem: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    alignItems: "center",
-    marginLeft: 28,
-    marginTop: 3,
-    color: "gold",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    minWidth: 45,
   },
   roomText: {
-    marginLeft: 5,
-    marginTop: 6,
-    marginBottom: 4,
-    color: "#FFD700",
-    alignItems: "baseline",
-    fontSize: 14,
+    marginLeft: 6,
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
 
