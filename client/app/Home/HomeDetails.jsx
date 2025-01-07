@@ -65,49 +65,96 @@ const HomeDetails = ({ route, navigation }) => {
     icon: "",
   });
 
+  const refreshUserToken = async () => {
+    try {
+      const refreshToken = await AsyncStorage.getItem("refreshToken");
+      console.log("Refresh token found:", !!refreshToken);
+      
+      if (!refreshToken) {
+        throw new Error("No refresh token available");
+      }
+
+      console.log("Attempting to refresh token...");
+      const response = await axios.post(`${apiUrl}/auth/refresh-token`, {
+        refreshToken: refreshToken
+      });
+
+      console.log("Refresh response:", response.data);
+
+      if (response.data?.token) {
+        await AsyncStorage.setItem("userToken", response.data.token);
+        if (response.data.refreshToken) {
+          await AsyncStorage.setItem("refreshToken", response.data.refreshToken);
+        }
+        return response.data.token;
+      } else {
+        throw new Error("No token in refresh response");
+      }
+    } catch (error) {
+      console.error("Token refresh failed:", error.response?.data || error.message);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch comments
+        setLoading(true);
+        setError(null);
+
+        // Fetch comments with error handling
         const commentsResponse = await axios.get(
           `${apiUrl}/posts/${post.id}/comments`
-        );
-        console.log("Comments data:", commentsResponse.data); // Debug log
+        ).catch(err => {
+          console.warn("Comments fetch failed:", err);
+          return { data: [] }; // Provide fallback data
+        });
         setComments(commentsResponse.data);
 
-        // Fetch images
+        // Fetch images with error handling
         const imagesResponse = await axios.get(
           `${apiUrl}/posts/images/${post.id}`
-        );
+        ).catch(err => {
+          console.warn("Images fetch failed:", err);
+          return { data: [] }; // Provide fallback data
+        });
         setImages(imagesResponse.data);
 
-        // Add new check for user booking status
+        // Check user booking status with error handling
         const token = await AsyncStorage.getItem("userToken");
         if (token) {
-          const decodedToken = JSON.parse(atob(token.split(".")[1]));
-          const userId = decodedToken.id;
+          try {
+            const decodedToken = JSON.parse(atob(token.split(".")[1]));
+            const userId = decodedToken.id;
 
-          const bookingResponse = await axios.get(
-            `${apiUrl}/posts/${post.id}/check-booking/${userId}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+            const bookingResponse = await axios.get(
+              `${apiUrl}/posts/${post.id}/check-booking/${userId}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
 
-          setUserCanComment(bookingResponse.data.hasBooked);
-          setUserCanReport(bookingResponse.data.hasBooked);
+            setUserCanComment(bookingResponse.data.hasBooked);
+            setUserCanReport(bookingResponse.data.hasBooked);
+          } catch (err) {
+            console.warn("Booking check failed:", err);
+            setUserCanComment(false);
+            setUserCanReport(false);
+          }
         }
 
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("Error in fetchData:", err);
         setError("Failed to load data");
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [post.id]);
+    if (post?.id) {
+      fetchData();
+    }
+  }, [post?.id]);
 
   useEffect(() => {
     console.log("showAllComments state:", showAllComments);
@@ -236,50 +283,134 @@ const HomeDetails = ({ route, navigation }) => {
 
   const handleChatWithReceiver = async (receiverId, receiverDetails) => {
     try {
+      console.log("Starting chat with receiver:", receiverId);
       const token = await AsyncStorage.getItem("userToken");
+      
       if (!token) {
-        navigation.navigate("Login");
+        navigation.navigate("signup");
         return;
       }
 
-      const decodedToken = JSON.parse(atob(token.split(".")[1]));
+      // Validate token structure
+      let decodedToken;
+      try {
+        decodedToken = JSON.parse(atob(token.split(".")[1]));
+        console.log("Token decoded successfully, user ID:", decodedToken.id);
+      } catch (error) {
+        console.error("Token decode failed:", error);
+        await AsyncStorage.multiRemove(["userToken", "refreshToken", "userId", "currentUser"]);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "signup" }],
+        });
+        return;
+      }
 
-      // Don't allow chatting with yourself
       if (decodedToken.id === receiverId) {
         Alert.alert("Error", "You cannot chat with yourself");
         return;
       }
 
-      // Create or get existing chat
-      const response = await axios.post(
-        `${apiUrl}/api/chat/create`,
-        {
-          userId: decodedToken.id,
-          receiverId: receiverId,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
+      // First try to get existing chat
+      let chatId;
+      try {
+        console.log("Checking for existing chat...");
+        const existingChatResponse = await axios.get(
+          `${apiUrl}/api/chat/find/${decodedToken.id}/${receiverId}`,
+          {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+          }
+        );
+
+        console.log("Existing chat response:", existingChatResponse.data);
+        
+        if (existingChatResponse.data?.id) {
+          chatId = existingChatResponse.data.id;
         }
-      );
+      } catch (error) {
+        if (error.response?.status === 401) {
+          throw error; // Let the outer catch block handle the 401
+        }
+        console.log("No existing chat found, will create new one");
+      }
 
-      // Make sure we have valid receiver details
-      const otherUser = {
-        id: receiverId,
-        firstName: receiverDetails?.firstName || post.user?.firstName || "Property khra",
-        lastName: receiverDetails?.lastName || post.user?.lastName || "",
-        image: receiverDetails?.image || post.user?.image || "https://www.pngkey.com/png/full/72-729716_user-avatar-png-graphic-free-download-icon.png",
-      };
-      console.log(otherUser)
+      // If no existing chat was found, create new one
+      if (!chatId) {
+        console.log("Creating new chat...");
+        const createResponse = await axios.post(
+          `${apiUrl}/api/chat/create`,
+          {
+            userId: decodedToken.id,
+            receiverId: receiverId,
+          },
+          {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+          }
+        );
 
-      navigation.navigate("ChatScreen", {
-        chatId: response.data.id,
-        otherUser,
-        receiverId: receiverId,
-      });
+        console.log("Create chat response:", createResponse.data);
+
+        if (!createResponse.data?.id) {
+          throw new Error("Failed to create chat");
+        }
+        chatId = createResponse.data.id;
+      }
+
+      console.log("Navigating to chat:", chatId);
+      navigateToChat(chatId, receiverId, receiverDetails);
+
     } catch (error) {
-      console.error("Error starting chat:", error);
-      Alert.alert("Error", "Could not start chat. Please try again.");
+      console.error("Error in handleChatWithReceiver:", error.response?.data || error.message);
+      
+      if (error.response?.status === 401) {
+        await AsyncStorage.multiRemove(["userToken", "refreshToken", "userId", "currentUser"]);
+        Alert.alert(
+          "Session Expired",
+          "Please log in again to continue.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "signup" }],
+                });
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          "Error",
+          "Failed to start chat. Please try again.",
+          [{ text: "OK" }]
+        );
+      }
     }
+  };
+
+  // Helper function to handle navigation
+  const navigateToChat = (chatId, receiverId, receiverDetails) => {
+    const otherUser = {
+      id: receiverId,
+      firstName: receiverDetails?.firstName || "Property Owner",
+      lastName: receiverDetails?.lastName || "",
+      image: receiverDetails?.image || "https://www.pngkey.com/png/full/72-729716_user-avatar-png-graphic-free-download-icon.png",
+    };
+
+    navigation.navigate("ChatScreen", {
+      chatId: chatId,
+      otherUser,
+      receiverId: receiverId,
+    });
   };
 
   const ImageModal = () => {
@@ -1761,12 +1892,20 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   chatSection: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 15,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 5,
+    backgroundColor: '#fff',
+    borderRadius: 10,
     marginVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   chatText: {
     marginLeft: 10,
