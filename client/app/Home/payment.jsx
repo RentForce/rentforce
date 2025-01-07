@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Button, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
 import { StripeProvider, useStripe } from '@stripe/stripe-react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Payment({ route, navigation }) {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
@@ -59,13 +60,60 @@ export default function Payment({ route, navigation }) {
       return;
     }
     
-    const { error } = await presentPaymentSheet();
-    if (error) {
-      Alert.alert('Payment Failed', error.message);
-    } else {
+    try {
+      // Process Stripe payment
+      const { error } = await presentPaymentSheet();
+      if (error) {
+        Alert.alert('Payment Failed', error.message);
+        return;
+      }
+
+      // Get the auth token
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      // Update the payment status in the backend
+      const response = await fetch(`${apiUrl}/posts/booking/${bookingId}/payment-status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ 
+          isPaid: true,
+          bookingId: bookingId // Add bookingId to request body
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Payment status update response:', data); // Add logging
+
+      if (!response.ok) {
+        throw new Error(data.message || `Server responded with status ${response.status}`);
+      }
+
       Alert.alert(
         'Success', 
         'Payment successful!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('notifications')
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Detailed payment error:', {
+        message: error.message,
+        stack: error.stack,
+        bookingId: bookingId
+      });
+
+      Alert.alert(
+        'Error', 
+        `Payment status update failed: ${error.message}`,
         [
           {
             text: 'OK',

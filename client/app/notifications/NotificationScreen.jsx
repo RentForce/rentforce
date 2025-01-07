@@ -250,13 +250,23 @@ const NotificationScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {item.type === "BOOKING_CONFIRMED" && item.booking && !item.booking.isPaid && (
+      {item.type === "BOOKING_CONFIRMED" && item.booking && (
         <TouchableOpacity
-          style={styles.paymentButton}
-          onPress={() => handlePaymentNavigation(item.booking)}
+          style={[
+            styles.paymentButton,
+            item.booking.isPaid ? styles.confirmedButton : styles.pendingButton
+          ]}
+          onPress={() => !item.booking.isPaid && handlePaymentNavigation(item.booking)}
+          disabled={item.booking.isPaid}
         >
-          <Ionicons name="card-outline" size={20} color="white" />
-          <Text style={styles.paymentButtonText}>Pay Now</Text>
+          <Ionicons 
+            name={item.booking.isPaid ? "checkmark-circle-outline" : "card-outline"} 
+            size={20} 
+            color="white" 
+          />
+          <Text style={styles.paymentButtonText}>
+            {item.booking.isPaid ? 'Payment Confirmed' : 'Payment Pending - Pay Now'}
+          </Text>
         </TouchableOpacity>
       )}
 
@@ -462,6 +472,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  pendingButton: {
+    backgroundColor: '#FFA500',
+  },
+  confirmedButton: {
+    backgroundColor: '#2D5A27',
   },
 });
 

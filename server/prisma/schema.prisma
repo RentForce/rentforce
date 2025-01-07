@@ -28,7 +28,6 @@ model User {
   chatsReceived  Chat[]     @relation("ReceiverChats")   
 
   messages       Message[]
-  receivedMessages Message[] @relation("MessageReceiver")
   Booking        Booking[]
   expoPushToken String?
  
@@ -78,12 +77,13 @@ model Booking {
   propertyDetails String?  // JSON string
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  totalPrice     Float
-  numberOfGuests Int
-  status         String     @default("PENDING") // "PENDING", "CONFIRMED", "REJECTED"
-  notifications Notification[]
-  user User @relation(fields: [userId], references: [id])
-  post Post @relation(fields: [postId], references: [id])
+  totalPrice      Float
+  numberOfGuests  Int
+  status          String   @default("PENDING") // "PENDING", "CONFIRMED", "REJECTED"
+  isPaid          Boolean  @default(false)
+  notifications   Notification[]
+  user            User     @relation(fields: [userId], references: [id])
+  post            Post     @relation(fields: [postId], references: [id])
 }
 
 model Image {
