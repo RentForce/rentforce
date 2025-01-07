@@ -481,12 +481,12 @@ const HomeDetails = ({ route, navigation }) => {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>House rules</Text>
+            <Text style={styles.sectionTitle}>House Rules</Text>
             <Text style={styles.detailText}>{post.houseRules}</Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Safety & property</Text>
+            <Text style={styles.sectionTitle}>Safety Information</Text>
             <Text style={styles.detailText}>{post.safetyProperty}</Text>
           </View>
           <View style={styles.section}>

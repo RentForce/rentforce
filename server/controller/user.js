@@ -262,7 +262,18 @@ const updateUserData = async (req, res) => {
 };
 
 const createPost = async (req, res) => {
-  const { title, images, description, location, price, category } = req.body;
+  const { 
+    title, 
+    images, 
+    description, 
+    location, 
+    price, 
+    category,
+    cancellationPolicy,
+    roomConfiguration,
+    houseRules,
+    safetyProperty
+  } = req.body;
 
   try {
     if (!title || !description || !price || !category) {
@@ -273,7 +284,7 @@ const createPost = async (req, res) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    // First create the post
+    // Create the post with the new fields
     const post = await prisma.post.create({
       data: {
         title,
@@ -282,6 +293,10 @@ const createPost = async (req, res) => {
         price: parseFloat(price),
         category,
         userId: req.user.id,
+        cancellationPolicy: cancellationPolicy || "",
+        roomConfiguration: roomConfiguration || "",
+        houseRules: houseRules || "",
+        safetyProperty: safetyProperty || ""
       },
     });
 

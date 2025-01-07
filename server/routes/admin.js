@@ -609,4 +609,109 @@ router.get('/bookings', async (req, res) => {
   }
 });
 
+// Get user statistics
+router.get('/user-stats', async (req, res) => {
+  try {
+    const totalUsers = await prisma.user.count();
+    const activeUsers = await prisma.user.count({
+      where: {
+        bannedUntil: null
+      }
+    });
+    const bannedUsers = await prisma.user.count({
+      where: {
+        bannedUntil: {
+          not: null
+        }
+      }
+    });
+    
+    // Get new users this month
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    const newUsersThisMonth = await prisma.user.count({
+      where: {
+        createdAt: {
+          gte: startOfMonth
+        }
+      }
+    });
+
+    res.json({
+      totalUsers,
+      activeUsers,
+      bannedUsers,
+      newUsersThisMonth
+    });
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    res.status(500).json({ error: 'Failed to fetch user statistics' });
+  }
+});
+
+// Get post statistics
+router.get('/post-stats', async (req, res) => {
+  try {
+    const totalPosts = await prisma.post.count();
+    const pendingPosts = await prisma.post.count({
+      where: {
+        status: 'PENDING'
+      }
+    });
+    const approvedPosts = await prisma.post.count({
+      where: {
+        status: 'APPROVED'
+      }
+    });
+    const rejectedPosts = await prisma.post.count({
+      where: {
+        status: 'REJECTED'
+      }
+    });
+
+    res.json({
+      totalPosts,
+      pendingPosts,
+      approvedPosts,
+      rejectedPosts
+    });
+  } catch (error) {
+    console.error('Error fetching post stats:', error);
+    res.status(500).json({ error: 'Failed to fetch post statistics' });
+  }
+});
+
+// Get booking statistics
+router.get('/booking-stats', async (req, res) => {
+  try {
+    const totalBookings = await prisma.booking.count();
+    const pendingBookings = await prisma.booking.count({
+      where: {
+        status: 'PENDING'
+      }
+    });
+    const confirmedBookings = await prisma.booking.count({
+      where: {
+        status: 'CONFIRMED'
+      }
+    });
+    const cancelledBookings = await prisma.booking.count({
+      where: {
+        status: 'CANCELLED'
+      }
+    });
+
+    res.json({
+      totalBookings,
+      pendingBookings,
+      confirmedBookings,
+      cancelledBookings
+    });
+  } catch (error) {
+    console.error('Error fetching booking stats:', error);
+    res.status(500).json({ error: 'Failed to fetch booking statistics' });
+  }
+});
+
 module.exports = router; 

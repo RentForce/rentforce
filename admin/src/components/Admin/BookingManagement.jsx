@@ -11,6 +11,12 @@ function BookingManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
+  const [stats, setStats] = useState({
+    totalBookings: 0,
+    pendingBookings: 0,
+    confirmedBookings: 0,
+    cancelledBookings: 0
+  });
 
   const fetchBookings = async (page = 1, searchTerm = '') => {
     try {
@@ -43,8 +49,25 @@ function BookingManagement() {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/admin/booking-stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.status === 200) {
+        setStats(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching booking stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchBookings(currentPage, search);
+    fetchStats();
   }, [currentPage, search]);
 
   const handleSearch = (e) => {
@@ -60,7 +83,6 @@ function BookingManagement() {
     if (!dateString) return 'N/A';
     
     try {
-      // The date is already in YYYY-MM-DD format from the server
       return dateString;
     } catch (error) {
       console.error('Error formatting date:', error);
@@ -101,6 +123,48 @@ function BookingManagement() {
             onChange={handleSearch}
             className="search-input"
           />
+        </div>
+      </div>
+
+      <div className="stats-container">
+        <div className="stat-box">
+          <div className="stat-icon">
+            <i className="fas fa-calendar-check"></i>
+          </div>
+          <div className="stat-content">
+            <h3>Total Bookings</h3>
+            <p>{stats.totalBookings}</p>
+          </div>
+        </div>
+
+        <div className="stat-box">
+          <div className="stat-icon">
+            <i className="fas fa-clock"></i>
+          </div>
+          <div className="stat-content">
+            <h3>Pending Bookings</h3>
+            <p>{stats.pendingBookings}</p>
+          </div>
+        </div>
+
+        <div className="stat-box">
+          <div className="stat-icon">
+            <i className="fas fa-check-circle"></i>
+          </div>
+          <div className="stat-content">
+            <h3>Confirmed Bookings</h3>
+            <p>{stats.confirmedBookings}</p>
+          </div>
+        </div>
+
+        <div className="stat-box">
+          <div className="stat-icon">
+            <i className="fas fa-times-circle"></i>
+          </div>
+          <div className="stat-content">
+            <h3>Cancelled Bookings</h3>
+            <p>{stats.cancelledBookings}</p>
+          </div>
         </div>
       </div>
 

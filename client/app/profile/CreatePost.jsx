@@ -6,6 +6,8 @@ import {
   Text,
   StyleSheet,
   Alert,
+  Image,
+  ScrollView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,6 +16,7 @@ import axios from "axios";
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import MapView, { Marker } from 'react-native-maps';
 
 const categories = [
   "house",
@@ -38,6 +41,12 @@ const CreatePost = () => {
   const CLOUDINARY_CLOUD_NAME = "dfbrjaxu7";
   const CLOUDINARY_UPLOAD_PRESET = "ignmh24s";
 
+  if (!apiUrl) {
+    console.error("API URL is not defined in environment variables");
+    Alert.alert("Configuration Error", "Please check your environment configuration.");
+    return null;
+  }
+
   const [formData, setFormData] = useState({
     title: "",
     images: "",
@@ -45,7 +54,14 @@ const CreatePost = () => {
     location: "",
     price: "",
     category: "",
+    cancellationPolicy: "",
+    roomConfiguration: "",
+    houseRules: "",
+    safetyProperty: ""
   });
+
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]);
 
   const handleChange = (name, value) => {
     setFormData({
@@ -58,11 +74,8 @@ const CreatePost = () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
       
-      // Parse the stored images array
-      const imagesArray = formData.images ? JSON.parse(formData.images) : [];
-      
-      // Upload all images to Cloudinary
-      const uploadPromises = imagesArray.map(async (imageUri) => {
+      // First, upload all images to Cloudinary
+      const uploadPromises = selectedImages.map(async (imageUri) => {
         const formData = new FormData();
         formData.append("file", {
           uri: imageUri,
@@ -81,21 +94,27 @@ const CreatePost = () => {
             },
           }
         );
-        return { url: response.data.secure_url };
+        return response.data.secure_url;
       });
 
-      const uploadedImages = await Promise.all(uploadPromises);
+      // Wait for all images to be uploaded
+      const imageUrls = await Promise.all(uploadPromises);
 
-      // Create the post with all images
+      // Prepare post data
       const postData = {
         title: formData.title,
         description: formData.description,
-        location: formData.location || '',
-        price: parseFloat(formData.price),
+        location: formData.location,
+        price: formData.price,
         category: formData.category,
-        images: uploadedImages
+        images: imageUrls.map(url => ({ url })),
+        cancellationPolicy: formData.cancellationPolicy,
+        roomConfiguration: formData.roomConfiguration,
+        houseRules: formData.houseRules,
+        safetyProperty: formData.safetyProperty
       };
 
+      // Create the post
       const postResponse = await axios.post(
         `${apiUrl}/user/posts`,
         postData,
@@ -122,7 +141,7 @@ const CreatePost = () => {
       console.error("Error creating post:", error);
       Alert.alert(
         "Error",
-        error.response?.data?.message || "Failed to create post. Please try again."
+        "Failed to create post. Please check your internet connection and try again."
       );
     }
   };
@@ -145,12 +164,81 @@ const CreatePost = () => {
 
     if (!result.canceled) {
       // Store the array of image URIs
-      handleChange("images", JSON.stringify(result.assets.map(asset => asset.uri)));
+      setSelectedImages(result.assets.map(asset => asset.uri));
     }
   };
 
-  const handleLocationPick = () => {
-    // Implement location picking logic here
+  const handleLocationPick = async (coordinate) => {
+    try {
+      // Input validation
+      if (!coordinate || !coordinate.latitude || !coordinate.longitude) {
+        console.error("Invalid coordinates:", coordinate);
+        Alert.alert("Error", "Invalid location selected. Please try again.");
+        return;
+      }
+
+      const { latitude, longitude } = coordinate;
+      console.log("Selected coordinates:", { latitude, longitude });
+
+      // Show loading state
+      setFormData(prev => ({
+        ...prev,
+        location: "Loading address..."
+      }));
+
+      // Add timeout to prevent hanging requests
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 10000);
+      });
+
+      const fetchPromise = axios.get("https://api.opencagedata.com/geocode/v1/json", {
+        params: {
+          q: `${latitude},${longitude}`,
+          key: "7fee1ce6642a492882b50778ff348d56",
+          language: "en", // Ensure English results
+          pretty: 1,
+          no_annotations: 1
+        }
+      });
+
+      // Race between timeout and actual request
+      const response = await Promise.race([fetchPromise, timeoutPromise]);
+
+      console.log("API Response:", response.data);
+
+      if (response.data.results && response.data.results.length > 0) {
+        const result = response.data.results[0];
+        const address = result.formatted;
+        
+        console.log("Found address:", address);
+        
+        handleChange("location", address);
+        
+        // Also store the coordinates for later use
+        setSelectedLocation({
+          latitude,
+          longitude
+        });
+      } else {
+        throw new Error("No results found");
+      }
+    } catch (error) {
+      console.error("Location pick error:", error);
+      
+      // Clear loading state
+      setFormData(prev => ({
+        ...prev,
+        location: ""
+      }));
+
+      // Show specific error message
+      Alert.alert(
+        "Location Error",
+        error.message === "Request timeout"
+          ? "Request timed out. Please check your internet connection and try again."
+          : "Could not get address for this location. Please try another spot."
+      );
+    }
   };
 
   return (
@@ -160,68 +248,128 @@ const CreatePost = () => {
       end={{ x: 0, y: 1 }}
       style={styles.container}
     >
-      <View style={styles.headerContainer}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#F1EFEF" />
-        </TouchableOpacity>
-      </View>
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        <View style={styles.headerContainer}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#F1EFEF" />
+          </TouchableOpacity>
+        </View>
 
-      <Text style={styles.title}>Create a New Post</Text>
-      <TextInput
-        placeholder="Title"
-        onChangeText={(value) => handleChange("title", value)}
-        value={formData.title}
-        style={styles.input}
-      />
-      <TouchableOpacity onPress={handleImagePick} style={styles.imagePickerButton}>
-        <Text style={styles.buttonText}>Pick Images</Text>
-      </TouchableOpacity>
-      <TextInput
-        placeholder="Description"
-        onChangeText={(value) => handleChange("description", value)}
-        value={formData.description}
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Location"
-        onChangeText={(value) => handleChange("location", value)}
-        value={formData.location}
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Price"
-        keyboardType="numeric"
-        onChangeText={(value) => handleChange("price", value)}
-        value={formData.price}
-        style={styles.input}
-      />
-      <Picker
-        selectedValue={formData.category}
-        onValueChange={(itemValue) => handleChange("category", itemValue)}
-        style={styles.picker}
-      >
-        <Picker.Item label="Select Category" value="" />
-        {categories.map((category) => (
-          <Picker.Item
-            key={category}
-            label={category.charAt(0).toUpperCase() + category.slice(1)}
-            value={category}
-          />
-        ))}
-      </Picker>
-      <LinearGradient
-        colors={["#082631", "#082631"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.buttonContainer}
-      >
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Create Post</Text>
+        <Text style={styles.title}>Create a New Post</Text>
+        <TextInput
+          placeholder="Title"
+          onChangeText={(value) => handleChange("title", value)}
+          value={formData.title}
+          style={styles.input}
+        />
+        <TouchableOpacity onPress={handleImagePick} style={styles.imagePickerButton}>
+          <Text style={styles.buttonText}>Pick Images</Text>
         </TouchableOpacity>
-      </LinearGradient>
+        
+        <View style={styles.imagePreviewContainer}>
+          {selectedImages.map((uri, index) => (
+            <Image key={index} source={{ uri }} style={styles.imagePreview} />
+          ))}
+        </View>
+
+        <TextInput
+          placeholder="Description"
+          onChangeText={(value) => handleChange("description", value)}
+          value={formData.description}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Location"
+          onChangeText={(value) => handleChange("location", value)}
+          value={formData.location}
+          style={styles.input}
+        />
+        <MapView
+          style={{ width: '100%', height: 200, marginBottom: 15 }}
+          initialRegion={{
+            latitude: 37.78825,
+            longitude: -122.4324,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+          onPress={(e) => {
+            console.log("Map pressed:", e.nativeEvent);
+            if (e.nativeEvent && e.nativeEvent.coordinate) {
+              handleLocationPick(e.nativeEvent.coordinate);
+            }
+          }}
+        >
+          {selectedLocation && (
+            <Marker 
+              coordinate={selectedLocation}
+              title="Selected Location"
+            />
+          )}
+        </MapView>
+
+        <TextInput
+          placeholder="Price"
+          keyboardType="numeric"
+          onChangeText={(value) => handleChange("price", value)}
+          value={formData.price}
+          style={styles.input}
+        />
+        <Picker
+          selectedValue={formData.category}
+          onValueChange={(itemValue) => handleChange("category", itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select Category" value="" />
+          {categories.map((category) => (
+            <Picker.Item
+              key={category}
+              label={category.charAt(0).toUpperCase() + category.slice(1)}
+              value={category}
+            />
+          ))}
+        </Picker>
+        <TextInput
+          placeholder="Cancellation Policy"
+          multiline
+          onChangeText={(value) => handleChange("cancellationPolicy", value)}
+          value={formData.cancellationPolicy}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Room Configuration (e.g., 2 beds, 1 bath)"
+          multiline
+          onChangeText={(value) => handleChange("roomConfiguration", value)}
+          value={formData.roomConfiguration}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="House Rules"
+          multiline
+          onChangeText={(value) => handleChange("houseRules", value)}
+          value={formData.houseRules}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Safety Property Information"
+          multiline
+          onChangeText={(value) => handleChange("safetyProperty", value)}
+          value={formData.safetyProperty}
+          style={styles.input}
+        />
+        <LinearGradient
+          colors={["#082631", "#082631"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.buttonContainer}
+        >
+          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+            <Text style={styles.buttonText}>Create Post</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </ScrollView>
     </LinearGradient>
   );
 };
@@ -291,6 +439,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 8,
     alignSelf: 'flex-start',
+  },
+  imagePreviewContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginVertical: 10,
+  },
+  imagePreview: {
+    width: 100,
+    height: 100,
+    margin: 5,
+    borderRadius: 8,
+  },
+  scrollView: {
+    flexGrow: 1,
   },
 });
 

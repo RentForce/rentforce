@@ -12,7 +12,6 @@ const { PrismaClient } = require('@prisma/client');
 const path = require('path');
 const socketHandler = require('./socket');
 const reportsRouter = require("./routes/report");
-
 const { Server } = require("socket.io");
 
 dotenv.config();
