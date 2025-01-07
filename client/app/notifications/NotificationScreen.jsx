@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
   acceptButton: {
-    backgroundColor: "#2ecc71",
+    backgroundColor: "#1A3C40",
   },
   rejectButton: {
     backgroundColor: "#e74c3c",

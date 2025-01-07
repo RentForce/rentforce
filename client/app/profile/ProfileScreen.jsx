@@ -69,10 +69,10 @@ const ProfileScreen = ({ navigation, route }) => {
       await AsyncStorage.clear();
       console.log("All storage cleared");
 
-      // Navigate back to the welcome page
+      // Navigate to the login page
       navigation.reset({
         index: 0,
-        routes: [{ name: "Welcome" }],
+        routes: [{ name: "login" }],
       });
     } catch (error) {
       console.error("Error during logout:", error);
