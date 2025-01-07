@@ -72,17 +72,17 @@ const Navbar = ({ navigation, userId }) => {
         <Text style={styles.text}>Saved</Text>
       </TouchableOpacity>
       <TouchableOpacity
+        style={styles.exploreContainer}
         onPress={() => navigation.navigate("Home")}
         activeOpacity={0.7}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <View style={styles.exploreContainer}>
-          <Ionicons
-            name="search-outline"
-            size={24}
-            style={styles.exploreIcon}
-          />
-          <Text style={styles.exploreText}>Explore</Text>
-        </View>
+        <Ionicons
+          name="search-outline"
+          size={24}
+          style={styles.exploreIcon}
+        />
+        <Text style={styles.exploreText}>Explore</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.iconContainer, styles.spacedIcon]}
@@ -156,14 +156,15 @@ const styles = StyleSheet.create({
   exploreContainer: {
     position: "absolute",
     top: -55,
-    // left: 10,
-    right: -25,
+    left: "51%",
+    transform: [{ translateX: -25 }],
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#082631",
     borderRadius: 50,
     width: 51,
     height: 51,
+    marginTop: 32,
   },
   exploreIcon: {
     color: "#fff",
