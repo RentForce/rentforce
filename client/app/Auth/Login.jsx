@@ -126,35 +126,10 @@ const Login = ({ navigation }) => {
               <Text style={styles.buttonText}>Sign In</Text>
             </TouchableOpacity>
 
-            <View style={styles.socialLoginContainer}>
-              <Text style={styles.socialLoginText}>Or continue with</Text>
-              <View style={styles.socialIcons}>
-                <View style={styles.iconBox}>
-                  <FontAwesome
-                    name="google"
-                    size={screenWidth * 0.075}
-                    color="white"
-                    style={styles.socialIcon}
-                  />
-                </View>
-                <View style={styles.iconBox}>
-                  <FontAwesome
-                    name="apple"
-                    size={screenWidth * 0.075}
-                    color="white"
-                    style={styles.socialIcon}
-                  />
-                </View>
-                <View style={styles.iconBox}>
-                  <FontAwesome
-                    name="facebook"
-                    size={screenWidth * 0.075}
-                    color="white"
-                    style={styles.socialIcon}
-                  />
-                </View>
-              </View>
-            </View>
+            <TouchableOpacity onPress={() => navigation.navigate("signup")}>
+              <Text style={styles.signupText}>Don't have an account? Sign Up</Text>
+            </TouchableOpacity>
+
           </View>
         </View>
       </ScrollView>
@@ -296,6 +271,14 @@ const styles = StyleSheet.create({
   },
   socialIcon: {
     color: "#fff",
+  },
+  signupText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "500",
+    textAlign: "center",
+    marginTop: '4%',
+    textDecorationLine: "underline",
   },
 });
 

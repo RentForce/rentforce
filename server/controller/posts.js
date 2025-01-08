@@ -201,37 +201,64 @@ const getPostBookings = async (req, res) => {
 
 const getPostsByCategory = async (req, res) => {
   try {
-    const { category, search, price, location, title, status } = req.params;
-    console.log("Search query:", category);
+    const { category, search, price, location, title } = req.query;
+    
+    // Add logging to debug the query parameters
+    console.log("Query parameters:", { category, search, price, location, title });
+
+    // Validate and parse price if provided
+    let parsedPrice = null;
+    if (price) {
+      parsedPrice = parseFloat(price);
+      if (isNaN(parsedPrice)) {
+        return res.status(400).json({ message: "Invalid price parameter" });
+      }
+    }
+
+    const whereClause = {
+      status: 'APPROVED',
+      ...(category && { category }),
+      ...(search && {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { location: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+        ],
+      }),
+      ...(parsedPrice && { price: { lte: parsedPrice } }),
+      ...(location && { location: { contains: location, mode: 'insensitive' } }),
+      ...(title && { title: { contains: title, mode: 'insensitive' } }),
+    };
+
+    // Log the where clause for debugging
+    console.log("Where clause:", whereClause);
 
     const posts = await prisma.post.findMany({
-      where: {
-        ...(category && { category }),
-        status: 'APPROVED',
-        ...(search && {
-          OR: [
-            { title: { contains: search } },
-            { location: { contains: search } },
-            { description: { contains: search } },
-          ],
-        }),
-        ...(price && { price: { lte: parseFloat(price) } }),
-        ...(location && { location: { contains: location } }),
-        ...(title && { title: { contains: title } }),
-      },
+      where: whereClause,
       include: {
         images: true,
         map: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            image: true
+          }
+        }
       },
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
 
-    console.log("Found posts:", posts.length);
+    console.log(`Found ${posts.length} posts`);
     res.json(posts);
   } catch (error) {
-    console.error("Server error:", error);
+    console.error("Detailed error:", error);
     res.status(500).json({
       message: "Error fetching posts",
       error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

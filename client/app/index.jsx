@@ -22,6 +22,7 @@ import PaymentHistory from "./profile/PaymentHistory.jsx";
 import AboutUsScreen from "./profile/AboutUsScreen.jsx";
 import Welcome from "./LandingPage/Welcome.jsx";
 import LogoPage from "./LandingPage/LogoPage.jsx";
+import PostsHistory from "./profile/PostsHistory.jsx";
 
 // Ignore navigation warnings
 LogBox.ignoreLogs([
@@ -98,7 +99,10 @@ function App() {
         <Stack.Screen
           name="CreatePost"
           component={CreatePost}
-          options={{ headerShown: false }}
+          options={{ 
+            headerShown: false,
+            presentation: 'modal'
+          }}
         />
         <Stack.Screen
           name="Booking"
@@ -135,6 +139,11 @@ function App() {
       options={{ 
         headerShown: false 
       }} 
+      />
+      <Stack.Screen
+        name="PostsHistory"
+        component={PostsHistory}
+        options={{ headerShown: false }}
       />
       </Stack.Navigator>
     </NotificationProvider>

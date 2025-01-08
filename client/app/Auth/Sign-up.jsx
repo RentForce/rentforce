@@ -199,36 +199,10 @@ console.log(Apiurl , "url");
             <Text style={styles.buttonText}>Sign Up</Text>
           </TouchableOpacity>
 
-          <Text style={styles.orText}>Or continue with</Text>
-          <View style={styles.socialContainer}>
-            <View style={styles.iconBox}>
-              <FontAwesome
-                name="google"
-                size={30}
-                color="white"
-                style={styles.socialIcon}
-                onPress={() => promptAsync()}
-              />
-            </View>
-            <View style={styles.iconBox}>
-              <FontAwesome
-                name="apple"
-                size={30}
-                color="white"
-                style={styles.socialIcon}
-              />
-            </View>
-            <View style={styles.iconBox}>
-              <FontAwesome
-                name="facebook"
-                size={30}
-                color="white"
-                style={styles.socialIcon}
-              />
-            </View>
-          </View>
-
-          <TouchableOpacity onPress={() => navigation.navigate("login")}>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate("login")}
+            style={styles.loginLink}
+          >
             <Text style={styles.accountText}>
               Already have an account? Log in
             </Text>
@@ -263,6 +237,7 @@ const styles = StyleSheet.create({
   innerContainer: {
     width: "90%",
     alignItems: "center",
+    paddingVertical: 40,
   },
   title: {
     fontSize: 30,
@@ -309,37 +284,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     alignSelf: "center",
+    marginTop: 20,
   },
   buttonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
   },
-  orText: {
-    color: "white",
-    marginVertical: 10,
-    textAlign: "center",
-  },
-  socialContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "60%",
-    marginVertical: 10,
-  },
-  socialIcon: {
-    marginHorizontal: 10,
-  },
-  iconBox: {
-    backgroundColor: "#909296",
-    padding: 10,
-    borderRadius: 8,
-    marginHorizontal: 5,
-    borderWidth: 0.5,
-    borderColor: "white",
+  loginLink: {
+    marginTop: 30,
   },
   accountText: {
     color: "white",
-    marginTop: 20,
     textAlign: "center",
     textDecorationLine: "underline",
   },

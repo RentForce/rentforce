@@ -124,7 +124,7 @@ const PaymentHistory = ({ navigation }) => {
               <View style={styles.paymentHeader}>
                 <Text style={styles.propertyName}>{payment.propertyDetails.title}</Text>
                 <Text style={[styles.status, 
-                  { color: payment.isPaid ? '#2D5A27' : '#FFA500' }]}>
+                  { color: payment.isPaid ? '#2D5A27' : '#F76707' }]}>
                   {payment.isPaid ? 'Paid' : 'confirmed'}
                 </Text>
               </View>

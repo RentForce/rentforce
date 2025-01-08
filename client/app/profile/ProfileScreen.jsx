@@ -65,9 +65,11 @@ const ProfileScreen = ({ navigation, route }) => {
 
   const handleLogout = async () => {
     try {
-      // Clear all AsyncStorage
-      await AsyncStorage.clear();
-      console.log("All storage cleared");
+      // Clear AsyncStorage
+      await AsyncStorage.removeItem("userToken");
+      await AsyncStorage.removeItem("userId");
+      await AsyncStorage.removeItem("currentUser");
+      console.log("cleared");
 
       // Navigate to the login page
       navigation.reset({
@@ -88,9 +90,6 @@ const ProfileScreen = ({ navigation, route }) => {
     <View style={styles.container}>
       <ScrollView style={styles.mainContent}>
         <View style={styles.profileHeader}>
-          <View style={styles.headerBackground}>
-            <View style={styles.headerPattern} />
-          </View>
           <View style={styles.imageContainer}>
             <Image source={{ uri: profileImage }} style={styles.profileImage} />
             <View style={styles.statusIndicator} />
@@ -103,7 +102,6 @@ const ProfileScreen = ({ navigation, route }) => {
               }
             >{`${userData.firstName} ${userData.lastName}`}</Text>
             <Text style={styles.profileEmail}>{userData.email}</Text>
-           
           </View>
         </View>
 
@@ -143,11 +141,28 @@ const ProfileScreen = ({ navigation, route }) => {
 
           <TouchableOpacity
             style={styles.settingItem}
-            onPress={() => navigation.navigate("CreatePost")}
+            onPress={() => {
+              navigation.navigate("CreatePost", {
+                userId: userData.id,
+                refresh: refresh,
+                setRefresh: setRefresh
+              });
+            }}
           >
             <View style={styles.settingContent}>
               <Ionicons name="create" size={20} color="#333" />
-              <Text style={styles.settingText}>List your space </Text>
+              <Text style={styles.settingText}>List your space</Text>
+              <Ionicons name="chevron-forward" size={20} color="#333" />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => navigation.navigate("PostsHistory")}
+          >
+            <View style={styles.settingContent}>
+              <Ionicons name="document-text" size={20} color="#333" />
+              <Text style={styles.settingText}>My Posts</Text>
               <Ionicons name="chevron-forward" size={20} color="#333" />
             </View>
           </TouchableOpacity>
@@ -176,29 +191,8 @@ const styles = StyleSheet.create({
   },
   profileHeader: {
     alignItems: 'center',
-    paddingVertical: 30,
+    paddingVertical: 20,
     backgroundColor: '#fff',
-  },
-  headerBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    backgroundColor: '#082631',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-  },
-  headerPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#082631',
-    opacity: 0.5,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
   },
   imageContainer: {
     position: 'relative',
@@ -235,20 +229,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginTop: 5,
-  },
-  roleContainer: {
-    marginTop: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 6,
-    backgroundColor: '#082631',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#FFB5A7',
-  },
-  roleText: {
-    color: '#666',
-    fontSize: 14,
-    fontWeight: '500',
   },
   statusIndicator: {
     position: 'absolute',
