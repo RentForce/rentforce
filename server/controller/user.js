@@ -262,9 +262,21 @@ const updateUserData = async (req, res) => {
 };
 
 const createPost = async (req, res) => {
-  const { title, images, description, location, price, category } = req.body;
-
   try {
+    const { 
+      title, 
+      images, 
+      description, 
+      location, 
+      price, 
+      category,
+      cancellationPolicy,
+      roomConfiguration,
+      houseRules,
+      safetyProperty,
+      map
+    } = req.body;
+
     if (!title || !description || !price || !category) {
       return res.status(400).json({ message: "Missing required fields" });
     }
@@ -273,7 +285,7 @@ const createPost = async (req, res) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    // First create the post
+    // Create the post with the new fields
     const post = await prisma.post.create({
       data: {
         title,
@@ -282,12 +294,15 @@ const createPost = async (req, res) => {
         price: parseFloat(price),
         category,
         userId: req.user.id,
+        cancellationPolicy: cancellationPolicy || "",
+        roomConfiguration: roomConfiguration || "",
+        houseRules: houseRules || "",
+        safetyProperty: safetyProperty || ""
       },
     });
 
     // Create all images if they exist
     if (images && Array.isArray(images) && images.length > 0) {
-      // Use createMany for better performance with multiple images
       await prisma.image.createMany({
         data: images.map((img) => ({
           url: img.url,
@@ -296,11 +311,23 @@ const createPost = async (req, res) => {
       });
     }
 
-    // Fetch the complete post with all images
-    const postWithImages = await prisma.post.findUnique({
+    // Create map entry if coordinates exist
+    if (map && map.create && map.create.latitude && map.create.longitude) {
+      await prisma.map.create({
+        data: {
+          latitude: parseFloat(map.create.latitude),
+          longitude: parseFloat(map.create.longitude),
+          postId: post.id,
+        },
+      });
+    }
+
+    // Fetch the complete post with all images and map
+    const postWithDetails = await prisma.post.findUnique({
       where: { id: post.id },
       include: {
         images: true,
+        map: true,
         user: {
           select: {
             firstName: true,
@@ -310,12 +337,12 @@ const createPost = async (req, res) => {
       },
     });
 
-    res.status(201).json(postWithImages);
+    res.status(201).json(postWithDetails);
   } catch (error) {
     console.error("Error creating post:", error);
-    res.status(500).json({
-      message: "Error creating post",
-      error: error.message,
+    res.status(500).json({ 
+      message: "Failed to create post", 
+      error: error.message 
     });
   }
 };

@@ -81,7 +81,7 @@ const Login = ({ navigation }) => {
           />
           
           <View style={[styles.welcomeContainer, { top: screenHeight * 0.34 }]}>
-            <Text style={[styles.welcome, { fontSize: screenWidth * 0.11 }]}>
+            <Text style={[styles.welcome, { fontSize: screenWidth * 0.12 }]}>
               Welcome Back!
             </Text>
           </View>

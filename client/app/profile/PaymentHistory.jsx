@@ -21,8 +21,23 @@ const PaymentHistory = ({ navigation }) => {
   const fetchPaymentHistory = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
-      const response = await axios.get(`${apiUrl}/user/${userId}/payment-history`);
-      setPayments(response.data);
+      const token = await AsyncStorage.getItem('userToken');
+      
+      const response = await axios.get(
+        `${apiUrl}/user/${userId}/payment-history`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      // Sort payments by date, with most recent first
+      const sortedPayments = response.data.sort((a, b) => 
+        new Date(b.bookingDate) - new Date(a.bookingDate)
+      );
+      
+      setPayments(sortedPayments);
     } catch (error) {
       console.error('Error fetching payment history:', error);
     } finally {
@@ -35,6 +50,16 @@ const PaymentHistory = ({ navigation }) => {
     fetchPaymentHistory();
   }, []);
 
+  // Add a focus listener to refresh data when screen is focused
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchPaymentHistory();
+    });
+
+    // Cleanup subscription on unmount
+    return unsubscribe;
+  }, [navigation]);
+
   const onRefresh = () => {
     setRefreshing(true);
     fetchPaymentHistory();
@@ -46,6 +71,21 @@ const PaymentHistory = ({ navigation }) => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const updatePaymentStatus = async (bookingId) => {
+    try {
+      const response = await axios.put(`${apiUrl}/posts/booking/${bookingId}/payment-status`, {
+        isPaid: true
+      });
+      
+      // Refresh the payment history after successful update
+      await fetchPaymentHistory();
+      
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      // Handle error appropriately in your UI
+    }
   };
 
   if (loading) {
@@ -84,8 +124,8 @@ const PaymentHistory = ({ navigation }) => {
               <View style={styles.paymentHeader}>
                 <Text style={styles.propertyName}>{payment.propertyDetails.title}</Text>
                 <Text style={[styles.status, 
-                  { color: payment.status === 'completed' ? '#2D5A27' : '#FFA500' }]}>
-                  {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                  { color: payment.isPaid ? '#2D5A27' : '#FFA500' }]}>
+                  {payment.isPaid ? 'Paid' : 'confirmed'}
                 </Text>
               </View>
               
