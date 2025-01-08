@@ -556,9 +556,9 @@ const Home = ({ navigation }) => {
           />
 
           <Text style={styles.filterLabel}>Price Range</Text>
-          <View style={styles.priceContainer}>
-            <Text style={styles.priceText}>
-              Price: ${priceRange.min} - ${priceRange.max}
+          <View style={styles.priceRangeContainer}>
+            <Text style={styles.priceRangeText}>
+              ${priceRange.min} - ${priceRange.max}
             </Text>
             <MultiSlider
               values={[priceRange.min, priceRange.max]}
@@ -569,12 +569,6 @@ const Home = ({ navigation }) => {
               onValuesChange={(values) =>
                 setPriceRange({ min: values[0], max: values[1] })
               }
-              enabledOne={true}
-              enabledTwo={true}
-              smoothSnapped={true}
-              snapped={false}
-              allowOverlap={false}
-              minMarkerOverlapDistance={10}
               selectedStyle={{
                 backgroundColor: "#007BFF",
                 height: 3,
@@ -585,39 +579,39 @@ const Home = ({ navigation }) => {
               }}
               containerStyle={{
                 height: 40,
+                marginBottom: 20,
               }}
               trackStyle={{
                 height: 3,
-                borderRadius: 2,
+                backgroundColor: "#DDDDDD",
               }}
               markerStyle={{
-                height: 20,
-                width: 20,
-                borderRadius: 10,
+                height: 16,
+                width: 16,
+                borderRadius: 8,
                 backgroundColor: "#007BFF",
                 borderWidth: 2,
                 borderColor: "#FFFFFF",
                 shadowColor: "#000",
                 shadowOffset: {
                   width: 0,
-                  height: 10,
+                  height: 2,
                 },
-                shadowOpacity: 0.2,
-                shadowRadius: 1,
-                elevation: 2,
+                shadowOpacity: 0.25,
+                shadowRadius: 2,
+                elevation: 3,
               }}
               pressedMarkerStyle={{
-                height: 24,
-                width: 24,
-                borderRadius: 12,
+                height: 20,
+                width: 20,
+                borderRadius: 10,
               }}
             />
-            <View style={styles.markersContainer}>
+            <View style={styles.priceMarkersContainer}>
               {[0, 300, 600, 900, 1200].map((value) => (
-                <View key={value} style={styles.markerContainer}>
-                  <View style={styles.marker} />
-                  <Text style={styles.markerText}>${value}</Text>
-                </View>
+                <Text key={value} style={styles.priceMarkerText}>
+                  ${value}
+                </Text>
               ))}
             </View>
           </View>
@@ -1104,6 +1098,30 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '500',
+  },
+  priceRangeContainer: {
+    padding: 10,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  priceRangeText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#007BFF",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  priceMarkersContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
+    marginTop: 8,
+  },
+  priceMarkerText: {
+    fontSize: 12,
+    color: "#666666",
+    textAlign: "center",
   },
 });
 
