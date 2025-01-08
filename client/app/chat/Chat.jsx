@@ -17,10 +17,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNotifications } from "./Notifications.jsx";
+import { initSocket, getSocket, disconnectSocket } from './Socket';
 
 import ImageUpload from './components/ImageUpload';
 import VoiceUpload from './components/VoiceUpload';
 import VoiceMessage from './components/VoiceMessage';
+import AudioCall from './components/AudioCall';
 
 // Utility functions
 const formatTime = (date) => {
@@ -58,19 +60,264 @@ const useAuthToken = () => {
 const Chat = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { receiverId, otherUser } = route.params;
+  const { receiverId, otherUser: initialOtherUser, chatId: initialChatId } = route.params;
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [chatId, setChatId] = useState(route.params.chatId);
+  const [currentUserName, setCurrentUserName] = useState(null);
+  const [otherUser, setOtherUser] = useState(initialOtherUser || null);
+  const [chatId, setChatId] = useState(initialChatId);
   const [isInitialized, setIsInitialized] = useState(false);
   const [lastSentMessageId, setLastSentMessageId] = useState(null);
+  const [socketConnected, setSocketConnected] = useState(false);
   const flatListRef = useRef();
   const { markChatAsRead } = useNotifications();
   const { getToken } = useAuthToken();
   
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+  // Debug IDs
+  useEffect(() => {
+    console.log('User IDs:', {
+      currentUserId,
+      receiverId,
+      otherUserId: otherUser?.id,
+      initialOtherUserId: initialOtherUser?.id
+    });
+  }, [currentUserId, receiverId, otherUser, initialOtherUser]);
+
+  // Load current user data first
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      try {
+        const [userId, userName, userEmail, userToken] = await Promise.all([
+          AsyncStorage.getItem('userId'),
+          AsyncStorage.getItem('userName'),
+          AsyncStorage.getItem('userEmail'),
+          AsyncStorage.getItem('userToken')
+        ]);
+
+        console.log('Loaded current user data:', { userId, userName, userEmail });
+
+        if (!userId) {
+          console.error('Missing current user ID');
+          return;
+        }
+
+        // Store the current user ID
+        const currentId = userId.toString();
+        setCurrentUserId(currentId);
+
+        // If we don't have the userName, try to fetch it
+        if (!userName && userToken) {
+          try {
+            const response = await axios.get(`${apiUrl}/api/users/me`, {
+              headers: { Authorization: userToken }
+            });
+
+            const userData = response.data;
+            const fullName = [userData.firstName, userData.lastName].filter(Boolean).join(' ');
+            
+            console.log('Fetched current user data:', userData);
+            
+            await AsyncStorage.setItem('userName', fullName);
+            setCurrentUserName(fullName);
+          } catch (error) {
+            console.error('Error fetching current user data:', error);
+            // Use a fallback name if fetch fails
+            const fallbackName = `User ${currentId}`;
+            await AsyncStorage.setItem('userName', fallbackName);
+            setCurrentUserName(fallbackName);
+          }
+        } else {
+          setCurrentUserName(userName || `User ${currentId}`);
+        }
+
+      } catch (error) {
+        console.error('Error loading current user data:', error);
+      }
+    };
+
+    loadCurrentUser();
+  }, [apiUrl]);
+
+  // Load other user data after current user is loaded
+  useEffect(() => {
+    const loadOtherUser = async () => {
+      try {
+        if (!currentUserId) {
+          console.log('Waiting for current user ID');
+          return;
+        }
+
+        const otherUserId = receiverId.toString();
+
+        // Ensure receiverId is different from currentUserId
+        if (otherUserId === currentUserId) {
+          console.error('Receiver ID matches current user ID');
+          return;
+        }
+
+        // Set other user data from route params if available
+        if (initialOtherUser?.id && initialOtherUser.id.toString() === otherUserId) {
+          const fullName = [initialOtherUser.firstName, initialOtherUser.lastName]
+            .filter(Boolean)
+            .join(' ');
+            
+          const otherUserData = {
+            ...initialOtherUser,
+            id: otherUserId,
+            name: fullName || `User ${otherUserId}`
+          };
+
+          console.log('Using initial other user data:', otherUserData);
+          setOtherUser(otherUserData);
+          await AsyncStorage.setItem('otherUserData', JSON.stringify(otherUserData));
+        } else {
+          // Try to get from storage as fallback
+          try {
+            const storedOtherUser = await AsyncStorage.getItem('otherUserData');
+            if (storedOtherUser) {
+              const parsedUser = JSON.parse(storedOtherUser);
+              if (parsedUser.id.toString() === otherUserId) {
+                console.log('Using stored other user data:', parsedUser);
+                setOtherUser(parsedUser);
+              } else {
+                console.log('Using minimal receiver data (ID mismatch)');
+                setOtherUser({
+                  id: otherUserId,
+                  name: `User ${otherUserId}`
+                });
+              }
+            } else {
+              console.log('Using minimal receiver data (no stored data)');
+              setOtherUser({
+                id: otherUserId,
+                name: `User ${otherUserId}`
+              });
+            }
+          } catch (error) {
+            console.error('Error reading stored user data:', error);
+            setOtherUser({
+              id: otherUserId,
+              name: `User ${otherUserId}`
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading other user data:', error);
+      }
+    };
+
+    loadOtherUser();
+  }, [currentUserId, receiverId, initialOtherUser]);
+
+  // Debug current state
+  useEffect(() => {
+    console.log('Current chat state:', {
+      currentUserId,
+      currentUserName,
+      receiverId,
+      otherUser,
+      chatId,
+      socketConnected,
+      apiUrl
+    });
+  }, [currentUserId, currentUserName, receiverId, otherUser, chatId, socketConnected]);
+
+  // Initialize socket connection
+  useEffect(() => {
+    let socketInitialized = false;
+
+    const setupSocket = async () => {
+      try {
+        if (!currentUserId || !currentUserName || !otherUser?.id || !otherUser?.name) {
+          console.error('Missing user data:', {
+            currentUserId,
+            currentUserName,
+            otherUserId: otherUser?.id,
+            otherUserName: otherUser?.name
+          });
+          return;
+        }
+
+        if (!apiUrl) {
+          console.error('Missing API URL');
+          return;
+        }
+
+        console.log('Initializing socket with data:', {
+          currentUser: {
+            id: currentUserId,
+            name: currentUserName
+          },
+          otherUser: {
+            id: otherUser.id,
+            name: otherUser.name
+          },
+          apiUrl
+        });
+
+        // Initialize socket with retry logic
+        let retryCount = 0;
+        const maxRetries = 3;
+
+        while (retryCount < maxRetries && !socketInitialized) {
+          try {
+            console.log(`Attempting to initialize socket (attempt ${retryCount + 1}/${maxRetries})`);
+            const socket = await initSocket(apiUrl, currentUserId);
+            
+            if (socket) {
+              socketInitialized = true;
+              setSocketConnected(true);
+              console.log('Socket successfully initialized');
+
+              // Test socket connection
+              socket.emit('test', {
+                userId: currentUserId,
+                userName: currentUserName,
+                receiverId: otherUser.id,
+                receiverName: otherUser.name,
+                chatId,
+                message: 'Testing connection'
+              });
+
+              break;
+            }
+          } catch (error) {
+            console.error(`Socket initialization attempt ${retryCount + 1} failed:`, error);
+            retryCount++;
+            if (retryCount < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+          }
+        }
+
+        if (!socketInitialized) {
+          console.error('Failed to initialize socket after multiple attempts');
+          Alert.alert(
+            'Connection Error',
+            'Failed to establish call connection. Please try again.'
+          );
+        }
+      } catch (error) {
+        console.error('Error in socket setup:', error);
+      }
+    };
+
+    if (currentUserId && currentUserName && otherUser?.id && otherUser?.name) {
+      setupSocket();
+    }
+
+    return () => {
+      if (socketInitialized) {
+        console.log('Cleaning up socket connection');
+        disconnectSocket();
+        setSocketConnected(false);
+      }
+    };
+  }, [currentUserId, currentUserName, otherUser, apiUrl]);
 
   // Message fetching logic
   const fetchMessages = useCallback(async () => {
@@ -248,6 +495,19 @@ const Chat = () => {
       style={styles.container}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
+      <AudioCall
+        chatId={chatId}
+        receiverId={receiverId.toString()}
+        onEndCall={() => console.log('Call ended')}
+        otherUser={otherUser || {
+          id: receiverId.toString(),
+          name: `User ${receiverId}`
+        }}
+        currentUser={{
+          id: currentUserId?.toString(),
+          name: currentUserName || `User ${currentUserId}`
+        }}
+      />
       <FlatList
         ref={flatListRef}
         data={messages}

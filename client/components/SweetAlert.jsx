@@ -19,7 +19,7 @@ const SweetAlert = ({ visible, title, message, type, onConfirm, onCancel, showCa
   const getIconColor = () => {
     switch (type) {
       case 'success':
-        return '#4CAF50';
+        return '#1A3C40';
       case 'error':
         return '#F44336';
       case 'warning':
@@ -114,13 +114,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   confirmButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#1A3C40',
   },
   cancelButton: {
     backgroundColor: '#F44336',
   },
   confirmButtonText: {
-    color: 'white',
+    color: '#ffffff',
     textAlign: 'center',
     fontWeight: 'bold',
   },
