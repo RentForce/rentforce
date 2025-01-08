@@ -558,6 +558,38 @@ const getUserPaymentHistory = async (req, res) => {
   }
 };
 
+const getUserPosts = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const posts = await prisma.post.findMany({
+      where: {
+        userId: parseInt(userId)
+      },
+      include: {
+        images: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    res.json(posts);
+  } catch (error) {
+    console.error("Error fetching user posts:", error);
+    res.status(500).json({
+      message: "Error fetching posts",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getUserData,
   updateUserData,
@@ -572,4 +604,5 @@ module.exports = {
   getUserHistory,
   createHistory,
   getUserPaymentHistory,
+  getUserPosts,
 };

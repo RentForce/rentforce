@@ -262,9 +262,12 @@ const NotificationScreen = ({ navigation }) => {
           <Ionicons 
             name={item.booking.isPaid ? "checkmark-circle-outline" : "card-outline"} 
             size={20} 
-            color="white" 
+            color={item.booking.isPaid ? "#2D5A27" : "white"} 
           />
-          <Text style={styles.paymentButtonText}>
+          <Text style={[
+            styles.paymentButtonText,
+            item.booking.isPaid && styles.confirmedPaymentText
+          ]}>
             {item.booking.isPaid ? 'Payment Confirmed' : 'Payment Pending - Pay Now'}
           </Text>
         </TouchableOpacity>
@@ -461,23 +464,25 @@ const styles = StyleSheet.create({
   paymentButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#082631',
     padding: 12,
     borderRadius: 8,
     marginTop: 10,
     justifyContent: 'center',
     gap: 8,
   },
+  pendingButton: {
+    backgroundColor: '#082631',
+  },
+  confirmedButton: {
+    backgroundColor: '#F1F1F1',
+  },
   paymentButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
-  pendingButton: {
-    backgroundColor: '#FFA500',
-  },
-  confirmedButton: {
-    backgroundColor: '#2D5A27',
+  confirmedPaymentText: {
+    color: '#2D5A27',
   },
 });
 

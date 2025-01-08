@@ -12,6 +12,7 @@ const {
   getUserHistory,
   createHistory,
   getUserPaymentHistory,
+  getUserPosts,
 } = require("../controller/user");
 const {
   sendCode,
@@ -35,5 +36,6 @@ router.get("/favourites/:userId", getFavouritePosts);
 router.get("/:userId/history", getUserHistory);
 router.post("/history", createHistory);
 router.get("/:userId/payment-history", getUserPaymentHistory);
+router.get("/posts/:userId", getUserPosts);
 
 module.exports = router;

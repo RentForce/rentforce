@@ -72,52 +72,63 @@ const CreatePost = () => {
 
   const handleSubmit = async () => {
     try {
-      const token = await AsyncStorage.getItem("userToken");
-      
-      // First, upload all images to Cloudinary
-      const uploadPromises = selectedImages.map(async (imageUri) => {
-        const formData = new FormData();
-        formData.append("file", {
-          uri: imageUri,
-          type: 'image/jpeg',
-          name: `upload_${Date.now()}.jpg`,
-        });
-        formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-        formData.append("cloud_name", CLOUDINARY_CLOUD_NAME);
-
-        const response = await axios.post(
-          `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
+      // Validate required fields
+      if (!formData.title || !formData.price || !formData.category) {
+        Alert.alert(
+          "Missing Information",
+          "Please fill in all required fields (title, price, and category)"
         );
-        return response.data.secure_url;
-      });
+        return;
+      }
 
-      // Wait for all images to be uploaded
-      const imageUrls = await Promise.all(uploadPromises);
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        Alert.alert("Authentication Error", "Please log in again");
+        navigation.navigate("login");
+        return;
+      }
 
-      // Prepare post data
-      const postData = {
-        title: formData.title,
-        description: formData.description,
-        location: formData.location,
-        price: formData.price,
-        category: formData.category,
-        images: imageUrls.map(url => ({ url })),
-        cancellationPolicy: formData.cancellationPolicy,
-        roomConfiguration: formData.roomConfiguration,
-        houseRules: formData.houseRules,
-        safetyProperty: formData.safetyProperty
-      };
+      // First, upload all images to Cloudinary
+      const uploadedImageUrls = await Promise.all(
+        selectedImages.map(async (imageUri) => {
+          const formData = new FormData();
+          formData.append("file", {
+            uri: imageUri,
+            type: 'image/jpeg',
+            name: `upload_${Date.now()}.jpg`,
+          });
+          formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+          formData.append("cloud_name", CLOUDINARY_CLOUD_NAME);
 
-      // Create the post
+          try {
+            const response = await axios.post(
+              `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+              formData,
+              {
+                headers: {
+                  "Content-Type": "multipart/form-data",
+                },
+              }
+            );
+            return response.data.secure_url;
+          } catch (error) {
+            console.error("Image upload error:", error);
+            throw new Error("Failed to upload image");
+          }
+        })
+      );
+
+      // Create post with uploaded images
       const postResponse = await axios.post(
         `${apiUrl}/user/posts`,
-        postData,
+        {
+          ...formData,
+          images: uploadedImageUrls,
+          location: selectedLocation ? {
+            latitude: selectedLocation.latitude,
+            longitude: selectedLocation.longitude
+          } : null
+        },
         {
           headers: {
             "Content-Type": "application/json",
@@ -138,10 +149,10 @@ const CreatePost = () => {
         ]
       );
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error("Detailed error:", error.response?.data || error.message);
       Alert.alert(
         "Error",
-        "Failed to create post. Please check your internet connection and try again."
+        error.response?.data?.message || "Failed to create post. Please try again."
       );
     }
   };
@@ -241,6 +252,12 @@ const CreatePost = () => {
     }
   };
 
+  const handleDeleteImage = (indexToDelete) => {
+    setSelectedImages(prevImages => 
+      prevImages.filter((_, index) => index !== indexToDelete)
+    );
+  };
+
   return (
     <LinearGradient
       colors={["#F1EFEF", "#F1EFEF"]}
@@ -269,11 +286,21 @@ const CreatePost = () => {
           <Text style={styles.buttonText}>Pick Images</Text>
         </TouchableOpacity>
         
-        <View style={styles.imagePreviewContainer}>
-          {selectedImages.map((uri, index) => (
-            <Image key={index} source={{ uri }} style={styles.imagePreview} />
-          ))}
-        </View>
+        {selectedImages.length > 0 && (
+          <View style={styles.selectedImagesContainer}>
+            {selectedImages.map((uri, index) => (
+              <View key={index} style={styles.imageWrapper}>
+                <Image source={{ uri }} style={styles.selectedImage} />
+                <TouchableOpacity 
+                  style={styles.deleteButton}
+                  onPress={() => handleDeleteImage(index)}
+                >
+                  <Ionicons name="close-circle" size={24} color="#FF0000" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
 
         <TextInput
           placeholder="Description"
@@ -453,6 +480,30 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flexGrow: 1,
+  },
+  selectedImagesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    padding: 10,
+  },
+  imageWrapper: {
+    position: 'relative',
+    width: 100,
+    height: 100,
+  },
+  selectedImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 0,
   },
 });
 

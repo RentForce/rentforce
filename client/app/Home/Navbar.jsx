@@ -72,17 +72,18 @@ const Navbar = ({ navigation, userId }) => {
         <Text style={styles.text}>Saved</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={styles.exploreContainer}
+        style={[styles.iconContainer, styles.exploreIcon]}
         onPress={() => navigation.navigate("Home")}
         activeOpacity={0.7}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Ionicons
-          name="search-outline"
-          size={24}
-          style={styles.exploreIcon}
-        />
-        <Text style={styles.exploreText}>Explore</Text>
+        <View style={styles.exploreCircle}>
+          <Ionicons
+            name="search"
+            size={30}
+            style={[styles.icon, { color: '#082631'}]}
+          />
+        </View>
+        <Text style={styles.text}></Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.iconContainer, styles.spacedIcon]}
@@ -118,63 +119,82 @@ const Navbar = ({ navigation, userId }) => {
 const styles = StyleSheet.create({
   container: {
     borderRadius: 10,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     alignItems: "center",
-    padding: 5,
+    padding: 10,
+    paddingBottom: 15,
     backgroundColor: "#082631",
+    position: 'relative',
   },
   iconContainer: {
-    alignItems: "baseline",
-    marginBottom: 6,
-    transform: [{ scale: 1 }],
-    padding: 3,
+    alignItems: "center",
+    justifyContent: "center",
+    width: '18%',
+    marginBottom: 0,
+    padding: 5,
   },
   pressedIcon: {
     transform: [{ scale: 1.2 }],
   },
   icon: {
-    marginLeft: 5,
-    marginRight: 4,
+    marginLeft: 0,
+    marginRight: 0,
     color: "#fff",
-    margin: 5,
+    marginBottom: 4,
     transform: [{ scale: 1 }],
   },
   text: {
-    fontSize: 13,
-    color: "#888",
-    marginLeft: 2,
-    marginRight: 4,
-    alignItems: "baseline",
-  },
-  textSpacing: {
-    marginBottom: -6,
-    marginTop: 5,
-    marginLeft: 4,
-    marginRight: 4,
-  },
-  exploreContainer: {
-    position: "absolute",
-    top: -55,
-    left: "51%",
-    transform: [{ translateX: -25 }],
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#082631",
-    borderRadius: 50,
-    width: 51,
-    height: 51,
-    marginTop: 32,
-  },
-  exploreIcon: {
-    color: "#fff",
-    transform: [{ scale: 1.3 }],
-    marginTop: 16,
-    marginBottom: 15,
-  },
-  exploreText: {
     fontSize: 12,
     color: "#fff",
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  spacedIcon: {
+    marginLeft: 10,
+  },
+  badge: {
+    backgroundColor: "#ff0000",
+    borderRadius: 10,
+    padding: 2,
+    position: "absolute",
+    top: -5,
+    right: -5,
+  },
+  badgeText: {
+    fontSize: 10,
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  textSpacing: {
+    marginTop: 5,
+  },
+  exploreIcon: {
+    marginTop: -30,
+    marginRight: -16,
+  },
+  exploreCircle: {
+    backgroundColor: '#fff',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: '#fff',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    marginRight: 6,
   },
 });
 

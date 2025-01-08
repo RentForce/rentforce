@@ -17,8 +17,20 @@ const { createNotification } = require("../controller/notification");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const router = express.Router();
-// Add this new route
-router.get("/all", getPostsByCategory);
+
+router.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
+router.get("/all", async (req, res, next) => {
+  try {
+    await getPostsByCategory(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/posts/:category", getPostsByCategory);
 // router.get("/:category", getPostsByCategory);
 router.get("/images/:postId", getImagesByPostId);
@@ -136,6 +148,46 @@ router.put("/booking/:bookingId/payment-status", authenticateToken, async (req, 
       success: false,
       message: "Error updating payment status",
       error: error.message
+    });
+  }
+});
+
+// Add this route to handle post updates
+router.put("/:id", authenticateToken, async (req, res) => {
+  try {
+    const postId = parseInt(req.params.id);
+    const updatedData = req.body;
+
+    const post = await prisma.post.update({
+      where: { id: postId },
+      data: {
+        title: updatedData.title,
+        description: updatedData.description,
+        price: parseFloat(updatedData.price),
+        location: updatedData.location,
+        category: updatedData.category,
+        cancellationPolicy: updatedData.cancellationPolicy,
+        roomConfiguration: updatedData.roomConfiguration,
+        houseRules: updatedData.houseRules,
+        safetyProperty: updatedData.safetyProperty
+      },
+      include: {
+        images: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
+    });
+
+    res.json(post);
+  } catch (error) {
+    console.error("Error updating post:", error);
+    res.status(500).json({ 
+      message: "Error updating post", 
+      error: error.message 
     });
   }
 });

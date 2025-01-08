@@ -884,11 +884,11 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 15,
   },
   postDetails: {
-    padding: 14,
+    padding: 12,
     backgroundColor: '#082631',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    gap: 6,
+    gap: 0,
   },
   postHeader: {
     flexDirection: "row",
@@ -933,7 +933,7 @@ const styles = StyleSheet.create({
   priceLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: 'gold',
+    color: '#FFFFFF',
   },
   priceText: {
     color: "white",
