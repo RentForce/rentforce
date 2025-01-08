@@ -71,10 +71,10 @@ const ProfileScreen = ({ navigation, route }) => {
       await AsyncStorage.removeItem("currentUser");
       console.log("cleared");
 
-      // Navigate back to the sign-up page
+      // Navigate to the login page
       navigation.reset({
         index: 0,
-        routes: [{ name: "signup" }], // Change to "signup"
+        routes: [{ name: "login" }],
       });
     } catch (error) {
       console.error("Error during logout:", error);

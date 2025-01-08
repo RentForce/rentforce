@@ -9,7 +9,6 @@ import {
 import React, { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome } from "@expo/vector-icons"; // Import if you want to use icons
-import SweetAlert from "../../components/SweetAlert";
 
 function ResetPassword({ route, navigation }) {
   const { email, phoneNumber } = route.params;
@@ -17,6 +16,8 @@ function ResetPassword({ route, navigation }) {
   const [isCodeVerified, setIsCodeVerified] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [ShowAlert, setShowAlert] = useState(false);
+
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   console.log("Email:", email);
@@ -25,12 +26,7 @@ function ResetPassword({ route, navigation }) {
   const handleCodeSubmit = async () => {
     console.log(phoneNumber)
     if (!recoveryCode.trim()) {
-      setAlertConfig({
-        title: 'Error',
-        message: 'Please enter the recovery code',
-        type: 'error'
-      });
-      setShowAlert(true);
+      Alert.alert('Error', 'Please enter the recovery code');
       return;
     }
 
@@ -59,23 +55,13 @@ function ResetPassword({ route, navigation }) {
       setIsCodeVerified(true);
     } catch (error) {
       console.error("Error:", error);
-      setAlertConfig({
-        title: 'Error',
-        message: error.message || "Failed to verify code",
-        type: 'error'
-      });
-      setShowAlert(true);
+      Alert.alert('Error', error.message || "Failed to verify code");
     }
   };
 
   const handlePasswordUpdate = async () => {
     if (!newPassword.trim()) {
-      setAlertConfig({
-        title: 'Error',
-        message: 'Please enter a new password',
-        type: 'error'
-      });
-      setShowAlert(true);
+      Alert.alert('Error', 'Please enter a new password');
       return;
     }
 
@@ -103,20 +89,15 @@ function ResetPassword({ route, navigation }) {
         throw new Error(data.message || "Failed to update password");
       }
 
-      setAlertConfig({
-        title: 'Success',
-        message: 'Password updated successfully',
-        type: 'success'
-      });
-      setShowAlert(true);
+      Alert.alert('Success', 'Password updated successfully', [
+        {
+          text: 'OK',
+          onPress: () => navigation.navigate("login")
+        }
+      ]);
     } catch (error) {
       console.error("Error:", error);
-      setAlertConfig({
-        title: 'Error',
-        message: error.message || "Failed to update password",
-        type: 'error'
-      });
-      setShowAlert(true);
+      Alert.alert('Error', error.message || "Failed to update password");
     }
   };
 
@@ -178,19 +159,6 @@ function ResetPassword({ route, navigation }) {
           </TouchableOpacity>
         </View>
       )}
-
-      <SweetAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onConfirm={() => {
-          setShowAlert(false);
-          if (alertConfig.type === 'success' && alertConfig.message === 'Password updated successfully') {
-            navigation.navigate("login");
-          }
-        }}
-      />
     </LinearGradient>
   );
 }
