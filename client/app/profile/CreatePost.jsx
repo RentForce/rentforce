@@ -19,20 +19,9 @@ import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 
 const categories = [
-  "house",
-  "apartment",
-  "villa",
-  "hotel",
-  "historical",
-  "lake",
-  "beachfront",
-  "countryside",
-  "castles",
-  "experiences",
-  "camping",
-  "desert",
-  "luxe",
-  "islands",
+  "house", "apartment", "villa", "hotel", "historical",
+  "lake", "beachfront", "countryside", "castles",
+  "experiences", "camping", "desert", "luxe", "islands",
 ];
 
 const CreatePost = () => {
@@ -41,12 +30,7 @@ const CreatePost = () => {
   const CLOUDINARY_CLOUD_NAME = "dfbrjaxu7";
   const CLOUDINARY_UPLOAD_PRESET = "ignmh24s";
 
-  if (!apiUrl) {
-    console.error("API URL is not defined in environment variables");
-    Alert.alert("Configuration Error", "Please check your environment configuration.");
-    return null;
-  }
-
+  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     title: "",
     images: "",
@@ -57,11 +41,14 @@ const CreatePost = () => {
     cancellationPolicy: "",
     roomConfiguration: "",
     houseRules: "",
-    safetyProperty: ""
+    safetyProperty: "",
+    latitude: "",
+    longitude: ""
   });
 
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
+  const [mapReady, setMapReady] = useState(false);
 
   const handleChange = (name, value) => {
     setFormData({
@@ -70,11 +57,95 @@ const CreatePost = () => {
     });
   };
 
+  const handleNext = () => {
+    if (!formData.title || !formData.description || selectedImages.length === 0) {
+      Alert.alert("Required Fields", "Please fill in all required fields (Title, Description, and Images)");
+      return;
+    }
+    setCurrentStep(2);
+  };
+
+  const handleBack = () => {
+    setCurrentStep(1);
+  };
+
+  const handleImagePick = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert("Permission Required", "Permission to access camera roll is required!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      selectionLimit: 4,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setSelectedImages(result.assets.map(asset => asset.uri));
+    }
+  };
+
+  const handleLocationPick = async (coordinate) => {
+    if (!mapReady) return;
+
+    try {
+      const lat = Number(coordinate.latitude.toFixed(6));
+      const lng = Number(coordinate.longitude.toFixed(6));
+
+      setFormData(prev => ({
+        ...prev,
+        latitude: lat.toString(),
+        longitude: lng.toString()
+      }));
+
+      setSelectedLocation({
+        latitude: lat,
+        longitude: lng
+      });
+
+      try {
+        const response = await axios.get("https://api.opencagedata.com/geocode/v1/json", {
+          params: {
+            q: `${lat},${lng}`,
+            key: "7fee1ce6642a492882b50778ff348d56",
+            language: "en",
+            pretty: 1,
+            no_annotations: 1
+          }
+        });
+
+        if (response.data.results && response.data.results.length > 0) {
+          const address = response.data.results[0].formatted;
+          setFormData(prev => ({
+            ...prev,
+            location: address
+          }));
+        }
+      } catch (error) {
+        console.error("Geocoding error:", error);
+        Alert.alert("Error", "Could not get address for selected location.");
+      }
+    } catch (error) {
+      console.error("Location pick error:", error);
+      Alert.alert("Error", "Could not set location. Please try again.");
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
       
-      // First, upload all images to Cloudinary
+      if (!token) {
+        Alert.alert("Error", "You must be logged in to create a post");
+        return;
+      }
+
+      // Upload images to Cloudinary
       const uploadPromises = selectedImages.map(async (imageUri) => {
         const formData = new FormData();
         formData.append("file", {
@@ -97,24 +168,27 @@ const CreatePost = () => {
         return response.data.secure_url;
       });
 
-      // Wait for all images to be uploaded
       const imageUrls = await Promise.all(uploadPromises);
 
-      // Prepare post data
       const postData = {
         title: formData.title,
         description: formData.description,
         location: formData.location,
-        price: formData.price,
+        price: parseFloat(formData.price),
         category: formData.category,
         images: imageUrls.map(url => ({ url })),
         cancellationPolicy: formData.cancellationPolicy,
         roomConfiguration: formData.roomConfiguration,
         houseRules: formData.houseRules,
-        safetyProperty: formData.safetyProperty
+        safetyProperty: formData.safetyProperty,
+        map: selectedLocation ? {
+          create: {
+            latitude: selectedLocation.latitude,
+            longitude: selectedLocation.longitude
+          }
+        } : undefined
       };
 
-      // Create the post
       const postResponse = await axios.post(
         `${apiUrl}/user/posts`,
         postData,
@@ -126,7 +200,6 @@ const CreatePost = () => {
         }
       );
 
-      console.log("Post created successfully:", postResponse.data);
       Alert.alert(
         "Success", 
         "Post created successfully!",
@@ -141,117 +214,143 @@ const CreatePost = () => {
       console.error("Error creating post:", error);
       Alert.alert(
         "Error",
-        "Failed to create post. Please check your internet connection and try again."
+        "Failed to create post. Please try again."
       );
     }
   };
 
-  const handleImagePick = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (permissionResult.granted === false) {
-      alert("Permission to access camera roll is required!");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true, // Enable multiple selection
-      selectionLimit: 4, // Limit to 4 images
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      // Store the array of image URIs
-      setSelectedImages(result.assets.map(asset => asset.uri));
-    }
-  };
-
-  const handleLocationPick = async (coordinate) => {
-    try {
-      // Input validation
-      if (!coordinate || !coordinate.latitude || !coordinate.longitude) {
-        console.error("Invalid coordinates:", coordinate);
-        Alert.alert("Error", "Invalid location selected. Please try again.");
-        return;
-      }
-
-      const { latitude, longitude } = coordinate;
-      console.log("Selected coordinates:", { latitude, longitude });
-
-      // Show loading state
-      setFormData(prev => ({
-        ...prev,
-        location: "Loading address..."
-      }));
-
-      // Add timeout to prevent hanging requests
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout')), 10000);
-      });
-
-      const fetchPromise = axios.get("https://api.opencagedata.com/geocode/v1/json", {
-        params: {
-          q: `${latitude},${longitude}`,
-          key: "7fee1ce6642a492882b50778ff348d56",
-          language: "en", // Ensure English results
-          pretty: 1,
-          no_annotations: 1
-        }
-      });
-
-      // Race between timeout and actual request
-      const response = await Promise.race([fetchPromise, timeoutPromise]);
-
-      console.log("API Response:", response.data);
-
-      if (response.data.results && response.data.results.length > 0) {
-        const result = response.data.results[0];
-        const address = result.formatted;
-        
-        console.log("Found address:", address);
-        
-        handleChange("location", address);
-        
-        // Also store the coordinates for later use
-        setSelectedLocation({
-          latitude,
-          longitude
-        });
-      } else {
-        throw new Error("No results found");
-      }
-    } catch (error) {
-      console.error("Location pick error:", error);
+  const renderStepOne = () => (
+    <View>
+      <Text style={styles.stepTitle}>Step 1: Basic Information</Text>
+      <TextInput
+        placeholder="Title *"
+        onChangeText={(value) => handleChange("title", value)}
+        value={formData.title}
+        style={styles.input}
+      />
       
-      // Clear loading state
-      setFormData(prev => ({
-        ...prev,
-        location: ""
-      }));
+      <TouchableOpacity onPress={handleImagePick} style={styles.imagePickerButton}>
+        <Text style={styles.buttonText}>Pick Images *</Text>
+      </TouchableOpacity>
+      
+      <View style={styles.imagePreviewContainer}>
+        {selectedImages.map((uri, index) => (
+          <Image key={index} source={{ uri }} style={styles.imagePreview} />
+        ))}
+      </View>
 
-      // Show specific error message
-      Alert.alert(
-        "Location Error",
-        error.message === "Request timeout"
-          ? "Request timed out. Please check your internet connection and try again."
-          : "Could not get address for this location. Please try another spot."
-      );
-    }
-  };
+      <TextInput
+        placeholder="Description *"
+        onChangeText={(value) => handleChange("description", value)}
+        value={formData.description}
+        style={[styles.input, styles.multilineInput]}
+        multiline
+      />
+
+      <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+        <Text style={styles.buttonText}>Next Step</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderStepTwo = () => (
+    <View>
+      <Text style={styles.stepTitle}>Step 2: Additional Details</Text>
+      
+      <TextInput
+        placeholder="Price"
+        keyboardType="numeric"
+        onChangeText={(value) => handleChange("price", value)}
+        value={formData.price}
+        style={styles.input}
+      />
+
+      <Picker
+        selectedValue={formData.category}
+        onValueChange={(itemValue) => handleChange("category", itemValue)}
+        style={styles.picker}
+      >
+        <Picker.Item label="Select Category" value="" />
+        {categories.map((category) => (
+          <Picker.Item
+            key={category}
+            label={category.charAt(0).toUpperCase() + category.slice(1)}
+            value={category}
+          />
+        ))}
+      </Picker>
+
+      <TextInput
+        placeholder="Location"
+        value={formData.location}
+        style={styles.input}
+        editable={false}
+      />
+
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: 36.8065,
+          longitude: 10.1815,
+          latitudeDelta: 5,
+          longitudeDelta: 5,
+        }}
+        onMapReady={() => setMapReady(true)}
+        onPress={(e) => handleLocationPick(e.nativeEvent.coordinate)}
+      >
+        {selectedLocation && mapReady && (
+          <Marker
+            coordinate={selectedLocation}
+            draggable={true}
+            onDragEnd={(e) => handleLocationPick(e.nativeEvent.coordinate)}
+          />
+        )}
+      </MapView>
+
+      <TextInput
+        placeholder="Room Configuration"
+        onChangeText={(value) => handleChange("roomConfiguration", value)}
+        value={formData.roomConfiguration}
+        style={styles.input}
+      />
+
+      <TextInput
+        placeholder="House Rules"
+        multiline
+        onChangeText={(value) => handleChange("houseRules", value)}
+        value={formData.houseRules}
+        style={[styles.input, styles.multilineInput]}
+      />
+
+      <TextInput
+        placeholder="Safety Property Information"
+        multiline
+        onChangeText={(value) => handleChange("safetyProperty", value)}
+        value={formData.safetyProperty}
+        style={[styles.input, styles.multilineInput]}
+      />
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <Text style={styles.buttonText}>Back</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>Create Post</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
     <LinearGradient
       colors={["#F1EFEF", "#F1EFEF"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View style={styles.headerContainer}>
           <TouchableOpacity 
-            style={styles.backButton} 
+            style={styles.backNavButton} 
             onPress={() => navigation.goBack()}
           >
             <Ionicons name="arrow-back" size={24} color="#F1EFEF" />
@@ -259,116 +358,19 @@ const CreatePost = () => {
         </View>
 
         <Text style={styles.title}>Create a New Post</Text>
-        <TextInput
-          placeholder="Title"
-          onChangeText={(value) => handleChange("title", value)}
-          value={formData.title}
-          style={styles.input}
-        />
-        <TouchableOpacity onPress={handleImagePick} style={styles.imagePickerButton}>
-          <Text style={styles.buttonText}>Pick Images</Text>
-        </TouchableOpacity>
         
-        <View style={styles.imagePreviewContainer}>
-          {selectedImages.map((uri, index) => (
-            <Image key={index} source={{ uri }} style={styles.imagePreview} />
-          ))}
+        {/* Progress Bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View style={[styles.progress, { width: currentStep === 1 ? '50%' : '100%' }]} />
+          </View>
+          <View style={styles.stepIndicator}>
+            <Text style={[styles.stepText, currentStep === 1 && styles.activeStep]}>Basic Info</Text>
+            <Text style={[styles.stepText, currentStep === 2 && styles.activeStep]}>Details</Text>
+          </View>
         </View>
 
-        <TextInput
-          placeholder="Description"
-          onChangeText={(value) => handleChange("description", value)}
-          value={formData.description}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Location"
-          onChangeText={(value) => handleChange("location", value)}
-          value={formData.location}
-          style={styles.input}
-        />
-        <MapView
-          style={{ width: '100%', height: 200, marginBottom: 15 }}
-          initialRegion={{
-            latitude: 37.78825,
-            longitude: -122.4324,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          }}
-          onPress={(e) => {
-            console.log("Map pressed:", e.nativeEvent);
-            if (e.nativeEvent && e.nativeEvent.coordinate) {
-              handleLocationPick(e.nativeEvent.coordinate);
-            }
-          }}
-        >
-          {selectedLocation && (
-            <Marker 
-              coordinate={selectedLocation}
-              title="Selected Location"
-            />
-          )}
-        </MapView>
-
-        <TextInput
-          placeholder="Price"
-          keyboardType="numeric"
-          onChangeText={(value) => handleChange("price", value)}
-          value={formData.price}
-          style={styles.input}
-        />
-        <Picker
-          selectedValue={formData.category}
-          onValueChange={(itemValue) => handleChange("category", itemValue)}
-          style={styles.picker}
-        >
-          <Picker.Item label="Select Category" value="" />
-          {categories.map((category) => (
-            <Picker.Item
-              key={category}
-              label={category.charAt(0).toUpperCase() + category.slice(1)}
-              value={category}
-            />
-          ))}
-        </Picker>
-        <TextInput
-          placeholder="Cancellation Policy"
-          multiline
-          onChangeText={(value) => handleChange("cancellationPolicy", value)}
-          value={formData.cancellationPolicy}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Room Configuration (e.g., 2 beds, 1 bath)"
-          multiline
-          onChangeText={(value) => handleChange("roomConfiguration", value)}
-          value={formData.roomConfiguration}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="House Rules"
-          multiline
-          onChangeText={(value) => handleChange("houseRules", value)}
-          value={formData.houseRules}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Safety Property Information"
-          multiline
-          onChangeText={(value) => handleChange("safetyProperty", value)}
-          value={formData.safetyProperty}
-          style={styles.input}
-        />
-        <LinearGradient
-          colors={["#082631", "#082631"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.buttonContainer}
-        >
-          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-            <Text style={styles.buttonText}>Create Post</Text>
-          </TouchableOpacity>
-        </LinearGradient>
+        {currentStep === 1 ? renderStepOne() : renderStepTwo()}
       </ScrollView>
     </LinearGradient>
   );
@@ -377,83 +379,248 @@ const CreatePost = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: "#F1EFEF",
+  },
+  scrollView: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
+  headerContainer: {
+    paddingTop: 50,
+    paddingBottom: 20,
+    marginBottom: 10,
+  },
+  backNavButton: {
+    backgroundColor: '#082631',
+    borderRadius: 50,
+    padding: 12,
+    alignSelf: 'flex-start',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#082631",
+    marginBottom: 25,
+    textAlign: "center",
+    letterSpacing: 0.5,
+  },
+  stepTitle: {
+    fontSize: 20,
+    fontWeight: "600",
     color: "#082631",
     marginBottom: 20,
-    textAlign: "center",
+    marginTop: 10,
+  },
+  progressContainer: {
+    marginBottom: 30,
+    paddingHorizontal: 5,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progress: {
+    height: '100%',
+    backgroundColor: '#082631',
+    borderRadius: 4,
+  },
+  stepIndicator: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    paddingHorizontal: 5,
+  },
+  stepText: {
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '500',
+  },
+  activeStep: {
+    color: '#082631',
+    fontWeight: '600',
   },
   input: {
-    height: 50,
-    borderColor: "#082631",
-    borderWidth: 1,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: "#F1EFEF",
+    height: 55,
+    borderColor: "#E0E0E0",
+    borderWidth: 1.5,
+    marginBottom: 18,
+    paddingHorizontal: 15,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
     fontSize: 16,
-    color: "#082631",
+    color: "#333333",
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  picker: {
-    height: 50,
-    marginBottom: 15,
-    borderRadius: 8,
-    backgroundColor: "#F1EFEF",
-    color: "#082631",
-  },
-  buttonContainer: {
-    marginTop: 20,
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  button: {
-    paddingVertical: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    fontSize: 18,
-    color: "#F1EFEF",
-    fontWeight: "bold",
+  multilineInput: {
+    height: 100,
+    textAlignVertical: 'top',
+    paddingTop: 15,
   },
   imagePickerButton: {
     backgroundColor: "#082631",
-    padding: 10,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 15,
+    marginBottom: 18,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
+    elevation: 6,
   },
-  headerContainer: {
-    paddingTop: 20,
-    paddingHorizontal: 10,
-    paddingBottom: 0,
-    marginBottom: 10,
-  },
-  backButton: {
-    backgroundColor: '#082631',
-    borderRadius: 20,
-    padding: 8,
-    alignSelf: 'flex-start',
+  buttonText: {
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontWeight: "600",
+    letterSpacing: 0.5,
   },
   imagePreviewContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginVertical: 10,
+    marginVertical: 15,
+    justifyContent: 'space-between',
   },
   imagePreview: {
-    width: 100,
-    height: 100,
-    margin: 5,
-    borderRadius: 8,
+    width: '48%',
+    height: 120,
+    marginBottom: 15,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  scrollView: {
-    flexGrow: 1,
+  picker: {
+    height: 55,
+    marginBottom: 18,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    color: "#333333",
+    borderWidth: 1.5,
+    borderColor: "#E0E0E0",
   },
+  map: {
+    width: '100%',
+    height: 200,
+    marginBottom: 18,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  nextButton: {
+    backgroundColor: "#082631",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
+    elevation: 6,
+  },
+  backButton: {
+    backgroundColor: "#666666",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 0.48,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
+    elevation: 6,
+  },
+  submitButton: {
+    backgroundColor: "#082631",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 0.48,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
+    elevation: 6,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    marginTop: -10,
+    marginBottom: 10,
+    marginLeft: 5,
+  },
+  requiredField: {
+    color: '#FF3B30',
+    fontSize: 16,
+  },
+  locationContainer: {
+    marginBottom: 18,
+  },
+  locationText: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 5,
+  },
+  coordinatesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+  },
+  coordinateInput: {
+    width: '48%',
+    backgroundColor: '#F5F5F5',
+  }
 });
 
 export default CreatePost;

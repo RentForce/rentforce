@@ -11,7 +11,7 @@ const authenticateToken = (req, res, next) => {
   const token = authHeader && authHeader.split(" ")[1];
 
   console.log("Received Authorization Header:", authHeader);
-  console.log("Extracted Token:", token);
+  console.log("n:", token);
 
   if (token == null) {
     return res.status(401).json({
