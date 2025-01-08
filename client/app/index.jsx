@@ -7,8 +7,6 @@ import ShowProfile from "./profile/showprofile";
 import CreatePost from "./profile/CreatePost.jsx";
 import ChatSelectionScreen from "./chat/ChatSelectionScreen.jsx";
 import ChatScreen from "../app/chat/Chat.jsx";
-import ChatList from "./chat/ChatList.jsx";
-import ChatInput from "./chat/ChatInput.jsx";
 import Login from "./Auth/Login";
 import SignUpScreen from "./Auth/Sign-up";
 import ForgetPassword from "./Auth/Forget";

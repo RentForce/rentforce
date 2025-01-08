@@ -2,7 +2,7 @@ const DEV_URL = 'http://localhost:5000';
 const PROD_URL = 'http://192.168.103.9:5000'
 
 export const getBaseUrl = () => {
-    return __DEV__ ? DEV_URL : PROD_URL;
+    return DEV ? DEV_URL : PROD_URL;
   };
 
 // Add axios default configuration
@@ -10,7 +10,6 @@ export const configureAxios = (axios) => {
   axios.defaults.baseURL = getBaseUrl();
   axios.defaults.headers.common['Accept'] = 'application/json';
   axios.defaults.headers.post['Content-Type'] = 'application/json';
-  
   // Add response interceptor to handle errors
   axios.interceptors.response.use(
     (response) => response,

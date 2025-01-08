@@ -60,7 +60,7 @@ export default function Login() {
 
   return (
     <div style={{
-      backgroundImage: `url('https://img.freepik.com/free-photo/armchair-green-living-room-with-copy-space_43614-910.jpg?t=st=1735828039~exp=1735831639~hmac=a3349d1792a7afab5cacd4772256703f18789d5101bb597f3eec8521c1adb631&w=996')`,
+      backgroundImage: `url('https://img.freepik.com/free-photo/armchair-green-living-room-with-copy-space_43614-910.jpg?t=st=1735931481~exp=1735935081~hmac=3d554be8404483188f6d7ccd804821a8a61893569fdb77fb156913c944137197&w=900')`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',

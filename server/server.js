@@ -54,7 +54,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use('/admin', adminRoutes);
+
 // Initialize Socket.IO with CORS options
 const io = socketIO(server, {
   cors: corsOptions,
@@ -138,7 +138,6 @@ app.use((req, res, next) => {
 app.use("/api/chat", chatRoutes);
 app.use("/user", userRoutes);
 app.use("/notification", notificationRoutes);
-
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.handshake.query.userId);
