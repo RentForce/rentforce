@@ -55,6 +55,7 @@ CREATE TABLE `Booking` (
     `totalPrice` DOUBLE NOT NULL,
     `numberOfGuests` INTEGER NOT NULL,
     `status` VARCHAR(191) NOT NULL DEFAULT 'PENDING',
+    `isPaid` BOOLEAN NOT NULL DEFAULT false,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
