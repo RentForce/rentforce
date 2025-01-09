@@ -36,7 +36,7 @@ function App() {
   return (
     <NotificationProvider>
       <Stack.Navigator>
-        <Stack.Screen
+        {/* <Stack.Screen
           name="LogoPage"
           component={LogoPage}
           options={{ headerShown: false }}
@@ -45,7 +45,7 @@ function App() {
           name="Welcome"
           component={Welcome}
           options={{ headerShown: false }}
-        />
+        /> */}
         <Stack.Screen
           name="signup"
           component={SignUpScreen}

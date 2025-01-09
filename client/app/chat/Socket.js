@@ -14,7 +14,11 @@ const eventCallbacks = {
   incomingCall: new Set(),
   callAccepted: new Set(),
   callRejected: new Set(),
-  callEnded: new Set()
+  callEnded: new Set(),
+  incomingVideoCall: new Set(),
+  videoCallAccepted: new Set(),
+  videoCallRejected: new Set(),
+  videoCallEnded: new Set()
 };
 
 // Debug function to log all active listeners
@@ -132,23 +136,44 @@ const initializeSocket = async (serverUrl, userId, attempt = 1) => {
 
       // Call-related events
       socket.on('incomingCall', (data) => {
-        console.log('Received incoming call event:', data);
+        console.log('Received incoming audio call event:', data);
         eventCallbacks.incomingCall.forEach(callback => callback(data));
       });
 
       socket.on('callAccepted', (data) => {
-        console.log('Call accepted:', data);
+        console.log('Audio call accepted:', data);
         eventCallbacks.callAccepted.forEach(callback => callback(data));
       });
 
       socket.on('callRejected', (data) => {
-        console.log('Call rejected:', data);
+        console.log('Audio call rejected:', data);
         eventCallbacks.callRejected.forEach(callback => callback(data));
       });
 
       socket.on('callEnded', (data) => {
-        console.log('Call ended:', data);
+        console.log('Audio call ended:', data);
         eventCallbacks.callEnded.forEach(callback => callback(data));
+      });
+
+      // Video call events
+      socket.on('incomingVideoCall', (data) => {
+        console.log('Received incoming video call event:', data);
+        eventCallbacks.incomingVideoCall.forEach(callback => callback(data));
+      });
+
+      socket.on('videoCallAccepted', (data) => {
+        console.log('Video call accepted:', data);
+        eventCallbacks.videoCallAccepted.forEach(callback => callback(data));
+      });
+
+      socket.on('videoCallRejected', (data) => {
+        console.log('Video call rejected:', data);
+        eventCallbacks.videoCallRejected.forEach(callback => callback(data));
+      });
+
+      socket.on('videoCallEnded', (data) => {
+        console.log('Video call ended:', data);
+        eventCallbacks.videoCallEnded.forEach(callback => callback(data));
       });
     });
   } catch (error) {
@@ -234,12 +259,32 @@ export const initiateCall = (data) => {
     type: 'AUDIO_CALL'
   };
 
-  console.log('Initiating call with data:', callData);
+  console.log('Initiating audio call with data:', callData);
   socket.emit('initiateCall', callData);
 
   // Also try alternative event names
   socket.emit('call:initiate', callData);
   socket.emit('startCall', callData);
+};
+
+export const initiateVideoCall = (data) => {
+  if (!socket || !isConnected) {
+    console.warn('Failed to initiate video call: Socket not connected');
+    return;
+  }
+
+  if (!data.callerId || !data.receiverId) {
+    console.error('Missing required call data:', data);
+    return;
+  }
+
+  const callData = {
+    ...data,
+    timestamp: Date.now()
+  };
+
+  console.log('Initiating video call with data:', callData);
+  socket.emit('initiateVideoCall', callData);
 };
 
 export const acceptCall = (data) => {
@@ -254,9 +299,24 @@ export const acceptCall = (data) => {
     type: 'AUDIO_CALL'
   };
 
-  console.log('Accepting call with data:', callData);
+  console.log('Accepting audio call with data:', callData);
   socket.emit('acceptCall', callData);
   socket.emit('call:accept', callData);
+};
+
+export const acceptVideoCall = (data) => {
+  if (!socket || !isConnected) {
+    console.warn('Failed to accept video call: Socket not connected');
+    return;
+  }
+
+  const callData = {
+    ...data,
+    timestamp: Date.now()
+  };
+
+  console.log('Accepting video call with data:', callData);
+  socket.emit('acceptVideoCall', callData);
 };
 
 export const rejectCall = (data) => {
@@ -271,9 +331,24 @@ export const rejectCall = (data) => {
     type: 'AUDIO_CALL'
   };
 
-  console.log('Rejecting call with data:', callData);
+  console.log('Rejecting audio call with data:', callData);
   socket.emit('rejectCall', callData);
   socket.emit('call:reject', callData);
+};
+
+export const rejectVideoCall = (data) => {
+  if (!socket || !isConnected) {
+    console.warn('Failed to reject video call: Socket not connected');
+    return;
+  }
+
+  const callData = {
+    ...data,
+    timestamp: Date.now()
+  };
+
+  console.log('Rejecting video call with data:', callData);
+  socket.emit('rejectVideoCall', callData);
 };
 
 export const endCall = (data) => {
@@ -288,9 +363,24 @@ export const endCall = (data) => {
     type: 'AUDIO_CALL'
   };
 
-  console.log('Ending call with data:', callData);
+  console.log('Ending audio call with data:', callData);
   socket.emit('endCall', callData);
   socket.emit('call:end', callData);
+};
+
+export const endVideoCall = (data) => {
+  if (!socket || !isConnected) {
+    console.warn('Failed to end video call: Socket not connected');
+    return;
+  }
+
+  const callData = {
+    ...data,
+    timestamp: Date.now()
+  };
+
+  console.log('Ending video call with data:', callData);
+  socket.emit('endVideoCall', callData);
 };
 
 export const disconnectSocket = () => {

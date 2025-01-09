@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
+    "@jitsi/react-native-sdk": "^10.3.0",
     "@prisma/client": "^6.0.1",
     "@ptomasroos/react-native-multi-slider": "^2.2.2",
     "@react-native-async-storage/async-storage": "^1.24.0",
@@ -35,6 +36,7 @@
     "date-fns": "^4.1.0",
     "expo": "~52.0.20",
     "expo-auth-session": "~6.0.1",
+    "expo-av": "~15.0.1",
     "expo-blur": "~14.0.1",
     "expo-constants": "~17.0.3",
     "expo-file-system": "^18.0.6",
@@ -86,8 +88,7 @@
     "react-native-webview": "^13.12.5",
     "setprototypeof": "^1.2.0",
     "socket.io-client": "^4.8.1",
-    "sweetalert2": "^11.15.0",
-    "expo-av": "~15.0.1"
+    "sweetalert2": "^11.15.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

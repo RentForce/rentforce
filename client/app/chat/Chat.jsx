@@ -23,6 +23,7 @@ import ImageUpload from './components/ImageUpload';
 import VoiceUpload from './components/VoiceUpload';
 import VoiceMessage from './components/VoiceMessage';
 import AudioCall from './components/AudioCall';
+import VideoCall from './components/VideoCall';
 
 // Utility functions
 const formatTime = (date) => {
@@ -435,6 +436,10 @@ const Chat = () => {
     flatListRef.current?.scrollToEnd();
   };
 
+  const handleEndCall = () => {
+    console.log('Call ended');
+  };
+
   // Effects
   useEffect(() => {
     const initialize = async () => {
@@ -489,25 +494,33 @@ const Chat = () => {
     );
   }
 
+  const currentUser = {
+    id: currentUserId,
+    name: currentUserName
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
-      <AudioCall
-        chatId={chatId}
-        receiverId={receiverId.toString()}
-        onEndCall={() => console.log('Call ended')}
-        otherUser={otherUser || {
-          id: receiverId.toString(),
-          name: `User ${receiverId}`
-        }}
-        currentUser={{
-          id: currentUserId?.toString(),
-          name: currentUserName || `User ${currentUserId}`
-        }}
-      />
+      <View style={styles.callContainer}>
+        <AudioCall
+          chatId={chatId}
+          receiverId={otherUser?.id}
+          onEndCall={handleEndCall}
+          otherUser={otherUser}
+          currentUser={currentUser}
+        />
+        <VideoCall
+          chatId={chatId}
+          receiverId={otherUser?.id}
+          onEndCall={handleEndCall}
+          otherUser={otherUser}
+          currentUser={currentUser}
+        />
+      </View>
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -779,7 +792,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#007AFF',
   },
- avatar: {
+  avatar: {
     width: 30,
     height: 30,
     borderRadius: 15,
@@ -789,6 +802,15 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 10,
+  },
+  callContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    position: 'static',
+    right: 16,
+    bottom: 1000,
+    zIndex: 1000,
+    gap: 10,
   },
 });
 
