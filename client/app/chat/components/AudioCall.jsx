@@ -99,7 +99,7 @@ const AudioCall = ({
       isIncomingCall,
       isSocketReady,
       isLoading,
-      otherUserName: otherUser?.name,
+      otherUserName: otherUser?.firstName,
       currentUserName: currentUser?.name
     });
   }, [isCallActive, isIncomingCall, isSocketReady, isLoading, otherUser, currentUser]);
@@ -164,7 +164,8 @@ const AudioCall = ({
     if (data.receiverId?.toString() === currentUser?.id?.toString()) {
       setIncomingCallData({
         ...data,
-        callerName: data.callerName || otherUser?.name || `User ${data.callerId}`
+        callerName: otherUser?.firstName + ' ' + otherUser?.lastName,
+        callerImage: otherUser?.image
       });
       setIsIncomingCall(true);
       playRingtone();
@@ -364,7 +365,7 @@ const AudioCall = ({
     <View style={styles.container}>
       <IncomingCallModal
         visible={isIncomingCall}
-        callerName={incomingCallData?.callerName}
+        callerData={incomingCallData}
         onAccept={handleAcceptCall}
         onReject={handleRejectCall}
       />
@@ -444,3 +445,4 @@ const styles = StyleSheet.create({
 });
 
 export default AudioCall;
+
