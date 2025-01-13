@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+
 import {
   View,
   Text,
@@ -9,7 +10,7 @@ import {
   Image,
   TextInput,
   Modal,
-  FlatList,Alert
+  FlatList, Alert
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ChatBot from "../chatBot/ChatBot.jsx";
@@ -86,6 +87,8 @@ const Home = ({ navigation }) => {
   const [favorites, setFavorites] = useState(new Set());
   const [priceRange, setPriceRange] = useState({ min: 0, max: 1200 });
   const [isChatVisible, setIsChatVisible] = useState(false);
+  const [showChatBubble, setShowChatBubble] = useState(false);
+  const chatBubbleTimeout = useRef(null);
 
   const searchInputRef = useRef(null);
   const scrollViewRef = useRef(null);
@@ -247,7 +250,7 @@ const Home = ({ navigation }) => {
       if (searchQuery) {
         params.search = searchQuery;
       }
-      
+
       // Add category if not searching
       if (!searchQuery && category) {
         endpoint = `${baseUrl}/posts/posts/${category}`;
@@ -339,6 +342,20 @@ const Home = ({ navigation }) => {
       setSelectedCategory(newCategory);
       // Optionally, you can trigger a fetch for posts here
       fetchPostsByCategory(newCategory);
+    }
+
+    const scrollY = event.nativeEvent.contentOffset.y;
+    
+    // Show bubble when scrolled past 200 pixels
+    if (scrollY > 200 && !showChatBubble) {
+      setShowChatBubble(true);
+      // Hide bubble after 5 seconds
+      if (chatBubbleTimeout.current) {
+        clearTimeout(chatBubbleTimeout.current);
+      }
+      chatBubbleTimeout.current = setTimeout(() => {
+        setShowChatBubble(false);
+      }, 5000);
     }
   };
 
@@ -649,15 +666,17 @@ const Home = ({ navigation }) => {
         </View>
       </Modal>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView
+        style={styles.scrollView}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
         <View>
           <ScrollView
             ref={scrollViewRef}
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.categoryTabs}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
           >
             {categories.map((category) => (
               <View key={category} style={styles.tabContainer}>
@@ -708,17 +727,26 @@ const Home = ({ navigation }) => {
         </View>
       </ScrollView>
       <Navbar navigation={navigation} />
-      <TouchableOpacity 
-  style={styles.chatButton}
-  onPress={() => setIsChatVisible(true)}
->
-  <Ionicons name="chatbubble-ellipses" size={24} color="#FFFFFF" />
-</TouchableOpacity>
+      <TouchableOpacity
+        style={styles.chatButton}
+        onPress={() => setIsChatVisible(true)}
+      >
+        <MaterialCommunityIcons name="robot" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
 
-<ChatBot 
-  visible={isChatVisible}
-  onClose={() => setIsChatVisible(false)}
-/> 
+      {showChatBubble && (
+        <View style={styles.chatBubble}>
+          <Text style={styles.chatBubbleText}>
+            Need help finding the perfect place? I'm here to assist!
+          </Text>
+          <View style={styles.chatBubbleArrow} />
+        </View>
+      )}
+
+      <ChatBot
+        visible={isChatVisible}
+        onClose={() => setIsChatVisible(false)}
+      />
     </View>
   );
 };
@@ -1154,6 +1182,40 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#666666",
     textAlign: "center",
+  },
+  chatBubble: {
+    position: 'absolute',
+    right: 85,
+    bottom: 90,
+    backgroundColor: '#082631',
+    padding: 12,
+    borderRadius: 16,
+    maxWidth: 200,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  chatBubbleText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+  chatBubbleArrow: {
+    position: 'absolute',
+    right: -10,
+    bottom: 15,
+    width: 0,
+    height: 0,
+    borderTopWidth: 10,
+    borderTopColor: 'transparent',
+    borderLeftWidth: 15,
+    borderLeftColor: '#082631',
+    borderBottomWidth: 10,
+    borderBottomColor: 'transparent',
   },
 });
 
