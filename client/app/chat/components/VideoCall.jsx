@@ -319,6 +319,7 @@ const VideoCall = ({
       <IncomingCallModal
         visible={isIncomingCall}
         callerData={incomingCallData}
+        callerName={incomingCallData?.callerName}
         onAccept={handleAcceptCall}
         onReject={handleRejectCall}
         callType="video"

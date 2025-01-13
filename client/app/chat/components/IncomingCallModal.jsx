@@ -21,9 +21,11 @@ const VIBRATION_PATTERN = Platform.select({
 
 const IncomingCallModal = ({ 
   visible, 
+  callerName, 
+  callerData,
   onAccept, 
-  onReject, 
-  callerData 
+  onReject,
+  callType 
 }) => {
   const [animation] = React.useState(new Animated.Value(0));
 
@@ -64,8 +66,6 @@ const IncomingCallModal = ({
     };
   }, [visible, callerData]);
 
-  const callerName = callerData?.callerName || callerData?.name || 'Unknown Caller';
-
   const handleAccept = () => {
     console.log('Call accepted for caller:', callerName);
     Vibration.cancel();
@@ -95,7 +95,7 @@ const IncomingCallModal = ({
     >
       <BlurView
         style={styles.modalBackground}
-        intensity={80}
+        intensity={90}
         tint="dark"
       >
         <View style={styles.modalContent}>
@@ -148,10 +148,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   modalContent: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 25,
     padding: 30,
     width: Platform.OS === 'ios' ? '85%' : '90%',
@@ -189,16 +188,19 @@ const styles = StyleSheet.create({
   },
   callerName: {
     fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#000',
-    textAlign: 'center',
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+    color: '#000000',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   callStatus: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 25,
-    textAlign: 'center',
+    marginTop: 5,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   buttonContainer: {
     flexDirection: 'row',

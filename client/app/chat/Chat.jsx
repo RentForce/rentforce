@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
   mediaButtons: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
+    marginRight: 10,},
   messageStatusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
