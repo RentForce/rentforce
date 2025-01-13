@@ -13,6 +13,7 @@ const path = require('path');
 const socketHandler = require('./socket');
 const reportsRouter = require("./routes/report");
 const { Server } = require("socket.io");
+const productData = require('./data/chatbotData');
 
 dotenv.config();
 
@@ -90,6 +91,84 @@ app.use("/user", userRoutes);
 app.use("/posts", postsRouter);
 app.use("/admin", adminRoutes);
 app.use("/reports", reportsRouter);
+
+
+// Simple response generator function
+function generateResponse(userMessage) {
+  try {
+    const message = userMessage.toLowerCase();
+    console.log('Processing message:', message);
+    
+    // Check FAQs first
+    const faqMatch = productData.faqs.find(faq => 
+      faq.question.toLowerCase().includes(message) || 
+      message.includes(faq.question.toLowerCase())
+    );
+    if (faqMatch) return faqMatch.answer;
+
+    // Check for feature-related questions
+    if (message.includes('feature') || message.includes('what can') || message.includes('how to')) {
+      return "Here are RentForce's main features:\n" + productData.features.slice(0, 3).join("\n");
+    }
+
+    // Check for property types
+    if (message.includes('property') || message.includes('type') || message.includes('accommodation')) {
+      const types = productData.propertyTypes.map(t => `${t.type}: ${t.description}`).join('\n');
+      return "We offer these types of properties:\n" + types;
+    }
+
+    // Check for payment/pricing questions
+    if (message.includes('pay') || message.includes('price') || message.includes('cost')) {
+      return productData.policies.payment;
+    }
+
+    // Check for booking questions
+    if (message.includes('book') || message.includes('reserve')) {
+      return productData.policies.booking;
+    }
+
+    // Check for support questions
+    if (message.includes('help') || message.includes('support') || message.includes('contact')) {
+      return `Our support team is available ${productData.support.availableHours}. Response time: ${productData.support.responseTime}. We speak ${productData.support.languages.join(', ')}.`;
+    }
+
+    // Check for greetings
+    if (message.includes('hi') || message.includes('hello') || message.includes('hey')) {
+      return "Hello! Welcome to RentForce. I'm your virtual assistant, here to help you with property rentals. How can I assist you today?";
+    }
+
+    // Default response
+    return "I'm here to help you with RentForce! You can ask me about:\n" +
+           "- How to book properties\n" +
+           "- Available property types\n" +
+           "- Payment and pricing\n" +
+           "- Features and services\n" +
+           "- Support and contact information";
+  } catch (error) {
+    console.error('Error in generateResponse:', error);
+    return "I'm sorry, I encountered an error. Please try asking your question in a different way.";
+  }
+}
+
+app.post('/api/chatbot', async (req, res) => {
+  try {
+    const { message } = req.body;
+    console.log('Received chat message:', message);
+    
+    if (!message) {
+      console.log('No message received in request');
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const response = generateResponse(message);
+    console.log('Generated response:', response);
+    
+    res.json({ response });
+  } catch (error) {
+    console.error('Error in chatbot endpoint:', error);
+    res.status(500).json({ error: 'Failed to generate response', details: error.message });
+  }
+});
 
 // Stripe Payment Intent Route
 app.post("/create-payment-intent", async (req, res) => {

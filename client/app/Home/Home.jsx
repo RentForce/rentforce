@@ -12,6 +12,7 @@ import {
   FlatList,Alert
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ChatBot from "../chatBot/ChatBot.jsx";
 
 import {
   Ionicons,
@@ -84,6 +85,7 @@ const Home = ({ navigation }) => {
   const [title, setTitle] = useState("");
   const [favorites, setFavorites] = useState(new Set());
   const [priceRange, setPriceRange] = useState({ min: 0, max: 1200 });
+  const [isChatVisible, setIsChatVisible] = useState(false);
 
   const searchInputRef = useRef(null);
   const scrollViewRef = useRef(null);
@@ -706,11 +708,41 @@ const Home = ({ navigation }) => {
         </View>
       </ScrollView>
       <Navbar navigation={navigation} />
+      <TouchableOpacity 
+  style={styles.chatButton}
+  onPress={() => setIsChatVisible(true)}
+>
+  <Ionicons name="chatbubble-ellipses" size={24} color="#FFFFFF" />
+</TouchableOpacity>
+
+<ChatBot 
+  visible={isChatVisible}
+  onClose={() => setIsChatVisible(false)}
+/> 
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  chatButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 80, // Positioned above the navbar
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#082631',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
