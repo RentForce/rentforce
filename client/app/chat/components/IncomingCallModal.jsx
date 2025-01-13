@@ -119,16 +119,20 @@ const IncomingCallModal = ({
               style={[styles.button, styles.rejectButton]}
               onPress={handleReject}
             >
-              <Ionicons name="close-circle" size={40} color="#FF4B4B" />
-              <Text style={styles.buttonText}>Decline</Text>
+              <View style={[styles.iconContainer, styles.rejectIconContainer]}>
+                <Ionicons name="close" size={30} color="#fff" />
+              </View>
+              <Text style={[styles.buttonText, styles.rejectText]}>Decline</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
               style={[styles.button, styles.acceptButton]}
               onPress={handleAccept}
             >
-              <Ionicons name="checkmark-circle" size={40} color="#4CAF50" />
-              <Text style={styles.buttonText}>Accept</Text>
+              <View style={[styles.iconContainer, styles.acceptIconContainer]}>
+                <Ionicons name="call" size={30} color="#fff" />
+              </View>
+              <Text style={[styles.buttonText, styles.acceptText]}>Accept</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -200,33 +204,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
+    marginTop: 20,
   },
   button: {
     alignItems: 'center',
-    padding: 15,
-    borderRadius: 20,
-    width: 110,
+    padding: 10,
+    borderRadius: 15,
+    width: 100,
+  },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  acceptIconContainer: {
+    backgroundColor: '#4CAF50',
+  },
+  rejectIconContainer: {
+    backgroundColor: '#FF4B4B',
   },
   acceptButton: {
-    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
   },
   rejectButton: {
-    backgroundColor: 'rgba(255, 75, 75, 0.15)',
+    backgroundColor: 'rgba(255, 75, 75, 0.1)',
   },
   buttonText: {
-    marginTop: 8,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+  },
+  acceptText: {
+    color: '#4CAF50',
+  },
+  rejectText: {
+    color: '#FF4B4B',
   },
 });
 
