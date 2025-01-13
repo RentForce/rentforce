@@ -191,8 +191,7 @@ const ImageUpload = ({ chatId, senderId, receiverId, onImageSent }) => {
         Alert.alert('Error', `Chat information missing. Please check values:
           chatId: ${chatId || 'missing'}
           senderId: ${senderId || 'missing'}
-          receiverId: ${receiverId || 'missing'}`
-        );
+          receiverId: ${receiverId || 'missing'}`)
         return;
       }
 
@@ -232,9 +231,9 @@ const ImageUpload = ({ chatId, senderId, receiverId, onImageSent }) => {
       disabled={uploading}
     >
       {uploading ? (
-        <ActivityIndicator size="small" color="#ffffff" />
+        <ActivityIndicator size="small" color="#082631" />
       ) : (
-        <Ionicons name="image" size={24} color="#007AFF" />
+        <Ionicons name="image" size={24} color="#082631" />
       )}
     </TouchableOpacity>
   );

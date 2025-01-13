@@ -391,7 +391,7 @@ const AudioCall = ({
             />
           </TouchableOpacity>
         </View>
-      ) : (
+      ) : !isIncomingCall && (
         <TouchableOpacity
           style={styles.startCallButton}
           onPress={startCall}
@@ -400,7 +400,7 @@ const AudioCall = ({
           <Ionicons
             name="call"
             size={24}
-            color="white"
+            color="#082631"
           />
         </TouchableOpacity>
       )}
@@ -410,10 +410,9 @@ const AudioCall = ({
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    right: 16,
-    top: 16,
-    zIndex: 1000,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   activeCallContainer: {
     flexDirection: 'row',
@@ -436,12 +435,11 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '135deg' }],
   },
   startCallButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#4CAF50',
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
 });
 

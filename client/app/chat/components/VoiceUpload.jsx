@@ -303,25 +303,15 @@ const VoiceUpload = ({ chatId, senderId, receiverId, onVoiceSent }) => {
   };
 
   return (
-    <TouchableOpacity
-      style={[styles.button, isRecording && styles.recording]}
-      onPressIn={startRecording}
-      onPressOut={stopRecording}
-      disabled={uploading}
-    >
+    <TouchableOpacity onPress={isRecording ? stopRecording : startRecording} style={styles.button}>
       {uploading ? (
-        <ActivityIndicator size="small" color="#ffffff" />
+        <ActivityIndicator color="#082631" />
       ) : (
-        <View style={styles.buttonContent}>
-          <Ionicons 
-            name={isRecording ? "radio-button-on" : "mic"} 
-            size={24} 
-            color={isRecording ? "#FF0000" : "#007AFF"} 
-          />
-          {isRecording && (
-            <Text style={styles.duration}>{formatDuration(recordingDuration)}</Text>
-          )}
-        </View>
+        <Ionicons
+          name={isRecording ? "stop-circle" : "mic"}
+          size={24}
+          color="#082631"
+        />
       )}
     </TouchableOpacity>
   );
