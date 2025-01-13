@@ -307,21 +307,21 @@ const VideoCall = ({
     <View style={styles.container}>
       {!isCallActive && !isIncomingCall && (
         <TouchableOpacity
-          style={styles.callButton}
+          style={styles.startCallButton}
           onPress={startCall}
           disabled={isLoading || !isSocketReady}
         >
           <Ionicons
             name="videocam"
             size={24}
-            color={isLoading || !isSocketReady ? '#999' : '#007AFF'}
+            color="#082631"
           />
         </TouchableOpacity>
       )}
 
       {isCallActive && (
         <TouchableOpacity
-          style={[styles.callButton, styles.endCallButton]}
+          style={[styles.startCallButton, styles.endCallButton]}
           onPress={handleEndCall}
         >
           <Ionicons name="close-circle" size={24} color="#FF3B30" />
@@ -341,26 +341,16 @@ const VideoCall = ({
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    right: 16,
-    bottom: 80,
-    zIndex: 1000,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  callButton: {
-    backgroundColor: '#fff',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+  startCallButton: {
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    backgroundColor: 'transparent',
   },
   endCallButton: {
     backgroundColor: '#FFE5E5',

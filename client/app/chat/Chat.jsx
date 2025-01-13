@@ -77,7 +77,11 @@ const Chat = () => {
   const { getToken } = useAuthToken();
   
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: false
+    });
+  }, [navigation]);
   // Debug IDs
   useEffect(() => {
     console.log('User IDs:', {
@@ -505,22 +509,34 @@ const Chat = () => {
       style={styles.container}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
-      <View style={styles.callContainer}>
-        <AudioCall
-          chatId={chatId}
-          receiverId={otherUser?.id}
-          onEndCall={handleEndCall}
-          otherUser={otherUser}
-          currentUser={currentUser}
-        />
-        <VideoCall
-          chatId={chatId}
-          receiverId={otherUser?.id}
-          onEndCall={handleEndCall}
-          otherUser={otherUser}
-          currentUser={currentUser}
-        />
-      </View>
+     <View style={styles.header}>
+  <View style={styles.userInfo}>
+    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <Ionicons name="chevron-back" size={24} color="#082631" />
+    </TouchableOpacity>
+    <Image 
+      source={{ uri: otherUser?.image || 'https://via.placeholder.com/40' }}
+      style={styles.userImage}
+    />
+    <Text style={styles.userName}>{otherUser?.name || 'Chat'}</Text>
+  </View>
+  <View style={styles.callControls}>
+    <AudioCall
+      chatId={chatId}
+      receiverId={otherUser?.id}
+      onEndCall={handleEndCall}
+      otherUser={otherUser}
+      currentUser={currentUser}
+    />
+    <VideoCall
+      chatId={chatId}
+      receiverId={otherUser?.id}
+      onEndCall={handleEndCall}
+      otherUser={otherUser}
+      currentUser={currentUser}
+    />
+  </View>
+</View>
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -664,6 +680,39 @@ const ChatInput = React.memo(({
   );
 });
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+    height: 60,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  userImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+    backgroundColor: '#F0F0F0',
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000000',
+  },
+  callControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   container: {
     flex: 1,
     backgroundColor: '#F6F6F6',
@@ -711,7 +760,7 @@ const styles = StyleSheet.create({
   },
   sentMessageText: {
     color: '#FFFFFF',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#082631',
     borderRadius: 20,
     padding: 12,
   },
@@ -806,11 +855,14 @@ const styles = StyleSheet.create({
   callContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    position: 'static',
     right: 16,
     bottom: 1000,
     zIndex: 1000,
     gap: 10,
+  },
+  backButton: {
+    marginRight: 12,
+    padding: 4,
   },
 });
 
