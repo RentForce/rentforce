@@ -6,6 +6,7 @@ import {
   Alert,
   Platform,
   Vibration,
+  Text,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
@@ -368,8 +369,10 @@ const AudioCall = ({
       <IncomingCallModal
         visible={isIncomingCall}
         callerData={incomingCallData}
+        callerName={incomingCallData?.callerName}
         onAccept={handleAcceptCall}
         onReject={handleRejectCall}
+        callType="audio"
       />
       {isCallActive ? (
         <View style={styles.activeCallContainer}>

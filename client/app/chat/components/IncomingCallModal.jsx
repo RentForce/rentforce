@@ -21,9 +21,11 @@ const VIBRATION_PATTERN = Platform.select({
 
 const IncomingCallModal = ({ 
   visible, 
+  callerName, 
+  callerData,
   onAccept, 
-  onReject, 
-  callerData 
+  onReject,
+  callType 
 }) => {
   const [animation] = React.useState(new Animated.Value(0));
 
@@ -64,8 +66,6 @@ const IncomingCallModal = ({
     };
   }, [visible, callerData]);
 
-  const callerName = callerData?.callerName || callerData?.name || 'Unknown Caller';
-
   const handleAccept = () => {
     console.log('Call accepted for caller:', callerName);
     Vibration.cancel();
@@ -95,7 +95,7 @@ const IncomingCallModal = ({
     >
       <BlurView
         style={styles.modalBackground}
-        intensity={80}
+        intensity={90}
         tint="dark"
       >
         <View style={styles.modalContent}>
@@ -148,10 +148,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   modalContent: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 25,
     padding: 30,
     width: Platform.OS === 'ios' ? '85%' : '90%',
@@ -189,37 +188,40 @@ const styles = StyleSheet.create({
   },
   callerName: {
     fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#000',
-    textAlign: 'center',
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+    color: '#000000',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   callStatus: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 25,
-    textAlign: 'center',
+    marginTop: 5,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    paddingHorizontal: 20,
-    marginTop: 20,
+    paddingHorizontal: 15,
+    marginTop: 10,
   },
   button: {
     alignItems: 'center',
-    padding: 10,
-    borderRadius: 15,
-    width: 100,
+    padding: 8,
+    borderRadius: 12,
+    width: 80,
   },
   iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 45,
+    height: 45,
+    borderRadius: 23,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 5,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: {
@@ -242,8 +244,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 75, 75, 0.1)',
   },
   buttonText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
+    marginTop: 2,
   },
   acceptText: {
     color: '#4CAF50',
