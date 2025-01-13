@@ -102,7 +102,7 @@ const VideoCall = ({
   // Socket setup
   useEffect(() => {
     console.log('Setting up video call socket listeners...', { currentUser, otherUser });
-    
+    console.log(otherUser.image, "otheruserimage");
     const setupListeners = () => {
       const socket = getSocket();
       if (socket && socket.connected) {
@@ -204,32 +204,20 @@ const VideoCall = ({
     }
   };
 
-  const handleIncomingCall = async (data) => {
-    console.log('Processing incoming video call:', {
-      data,
-      currentUser,
-      receiverId: data.receiverId,
-      currentUserId: currentUser?.id
-    });
+  const handleIncomingCall = (data) => {
+    console.log('Processing incoming call:', data);
+    console.log('otherUser in handleIncomingCall:', otherUser);
 
     // Convert IDs to strings for comparison
-    const receiverId = data.receiverId?.toString();
-    const currentUserId = currentUser?.id?.toString();
-    
-    if (receiverId === currentUserId) {
-      console.log('Call is for current user, showing incoming call modal');
+    if (data.receiverId?.toString() === currentUser?.id?.toString()) {
       setRoomName(data.roomName);
       setIncomingCallData({
         ...data,
-        callerName: data.callerName || otherUser?.name || `User ${data.callerId}`
+        callerName: otherUser?.firstName + ' ' + otherUser?.lastName,
+        image: data.image || otherUser?.image // Use image from data or otherUser
       });
       setIsIncomingCall(true);
       playRingtone();
-    } else {
-      console.log('Ignoring call - IDs do not match:', {
-        receiverId,
-        currentUserId
-      });
     }
   };
 
@@ -330,7 +318,7 @@ const VideoCall = ({
 
       <IncomingCallModal
         visible={isIncomingCall}
-        callerName={incomingCallData?.callerName || 'Unknown'}
+        callerData={incomingCallData}
         onAccept={handleAcceptCall}
         onReject={handleRejectCall}
         callType="video"

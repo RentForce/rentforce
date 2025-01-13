@@ -160,12 +160,14 @@ const AudioCall = ({
 
   const handleIncomingCall = (data) => {
     console.log('Processing incoming call:', data);
+    console.log('otherUser in handleIncomingCall:', otherUser);
+
     // Only handle calls meant for this user
     if (data.receiverId?.toString() === currentUser?.id?.toString()) {
       setIncomingCallData({
         ...data,
         callerName: otherUser?.firstName + ' ' + otherUser?.lastName,
-        callerImage: otherUser?.image
+        image: data.image || otherUser?.image // Use image from data or otherUser
       });
       setIsIncomingCall(true);
       playRingtone();
@@ -445,4 +447,3 @@ const styles = StyleSheet.create({
 });
 
 export default AudioCall;
-

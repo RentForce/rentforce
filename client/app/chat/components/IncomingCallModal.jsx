@@ -9,6 +9,7 @@ import {
   Vibration,
   Platform,
   Dimensions,
+  Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -100,7 +101,14 @@ const IncomingCallModal = ({
         <View style={styles.modalContent}>
           <View style={styles.callerInfo}>
             <View style={styles.avatarContainer}>
-              <Ionicons name="person-circle" size={80} color="#fff" />
+              {callerData?.image ? (
+                <Image 
+                  source={{ uri: callerData.image }} 
+                  style={{ width: 100, height: 100, borderRadius: 50 }} 
+                />
+              ) : (
+                <Ionicons name="person-circle" size={80} color="#fff" />
+              )}
             </View>
             <Text style={styles.callerName}>{callerName}</Text>
             <Text style={styles.callStatus}>Incoming call...</Text>
