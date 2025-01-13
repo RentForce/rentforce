@@ -527,6 +527,7 @@ const Chat = () => {
       onEndCall={handleEndCall}
       otherUser={otherUser}
       currentUser={currentUser}
+
     />
     <VideoCall
       chatId={chatId}

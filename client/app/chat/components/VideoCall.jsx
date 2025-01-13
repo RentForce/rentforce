@@ -204,70 +204,77 @@ const VideoCall = ({
     }
   };
 
-  const handleIncomingCall = (data) => {
-    console.log('Processing incoming video call:', data);
-    if (data.receiverId?.toString() === currentUser?.id?.toString()) {
+  const handleIncomingCall = async (data) => {
+    console.log('Processing incoming video call:', {
+      data,
+      currentUser,
+      receiverId: data.receiverId,
+      currentUserId: currentUser?.id
+    });
+
+    // Convert IDs to strings for comparison
+    const receiverId = data.receiverId?.toString();
+    const currentUserId = currentUser?.id?.toString();
+    
+    if (receiverId === currentUserId) {
+      console.log('Call is for current user, showing incoming call modal');
+      setRoomName(data.roomName);
       setIncomingCallData({
         ...data,
-        callerName: data.callerName || `User ${data.callerId}`,
-        roomName: data.roomName
+        callerName: data.callerName || otherUser?.name || `User ${data.callerId}`
       });
       setIsIncomingCall(true);
       playRingtone();
     } else {
-      console.log('Ignoring call for different user:', data.receiverId);
+      console.log('Ignoring call - IDs do not match:', {
+        receiverId,
+        currentUserId
+      });
     }
+  };
+
+  const handleAcceptCall = async () => {
+    console.log('Accepting video call:', {
+      incomingCallData,
+      currentUser,
+      chatId
+    });
+    
+    stopRingtone();
+    setIsIncomingCall(false);
+    setIsCallActive(true);
+
+    const roomId = incomingCallData.roomName;
+    setRoomName(roomId);
+
+    const acceptData = {
+      callerId: incomingCallData.callerId,
+      receiverId: currentUser.id,
+      chatId: chatId,
+      roomName: roomId
+    };
+
+    console.log('Sending acceptVideoCall with data:', acceptData);
+    acceptVideoCall(acceptData);
+
+    // Open Jitsi Meet after accepting
+    await openJitsiMeet(roomId);
+  };
+
+  const handleRejectCall = () => {
+    stopRingtone();
+    setIsIncomingCall(false);
+    rejectVideoCall({
+      callerId: incomingCallData.callerId,
+      receiverId: currentUser.id
+    });
   };
 
   const handleCallAccepted = async (data) => {
     console.log('Video call accepted:', data);
     stopRingtone();
     setIsCallActive(true);
-    setIsIncomingCall(false);
-
-    // Join the Jitsi room
-    if (data.roomName) {
-      await openJitsiMeet(data.roomName);
-    } else {
-      console.error('No room name provided in accepted call data');
-    }
-  };
-
-  const handleAcceptCall = async () => {
-    console.log('Accepting video call with data:', incomingCallData);
-    if (!incomingCallData) return;
-
-    const acceptData = {
-      callerId: incomingCallData.callerId,
-      receiverId: currentUser.id,
-      chatId: chatId,
-      roomName: incomingCallData.roomName
-    };
-
-    acceptVideoCall(acceptData);
-    setIsCallActive(true);
-    setIsIncomingCall(false);
-    stopRingtone();
-
-    // Join the Jitsi room
-    if (incomingCallData.roomName) {
-      await openJitsiMeet(incomingCallData.roomName);
-    } else {
-      console.error('No room name in incoming call data');
-    }
-  };
-
-  const handleRejectCall = () => {
-    console.log('Rejecting video call');
-    if (!incomingCallData) return;
-
-    rejectVideoCall({
-      callerId: incomingCallData.callerId,
-      receiverId: currentUser.id,
-      chatId: chatId
-    });
-    setIsIncomingCall(false);
-    stopRingtone();
+    await openJitsiMeet(roomName);
   };
 
   const handleCallRejected = (data) => {
@@ -287,10 +294,9 @@ const VideoCall = ({
   };
 
   const handleEndCall = () => {
-    console.log('Ending video call');
     endVideoCall({
-      callerId: currentUser.id,
       receiverId: receiverId,
+      callerId: currentUser.id,
       chatId: chatId
     });
     setIsCallActive(false);
