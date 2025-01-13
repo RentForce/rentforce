@@ -83,7 +83,7 @@ const VoiceMessage = ({ audioUrl }) => {
         <Ionicons 
           name={isPlaying ? "pause" : "play"} 
           size={24} 
-          color="#007AFF" 
+          color="#082631" 
         />
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}>
