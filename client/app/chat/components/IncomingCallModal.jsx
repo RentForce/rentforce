@@ -18,11 +18,11 @@ const VIBRATION_PATTERN = Platform.select({
   android: [0, 1000, 2000, 3000],
 });
 
-const IncomingCallModal = ({ 
-  visible, 
-  onAccept, 
-  onReject, 
-  callerData 
+const IncomingCallModal = ({
+  visible,
+  onAccept,
+  onReject,
+  callerData
 }) => {
   const [animation] = React.useState(new Animated.Value(0));
 
@@ -63,7 +63,9 @@ const IncomingCallModal = ({
     };
   }, [visible, callerData]);
 
-  const callerName = callerData?.callerName || callerData?.name || 'Unknown Caller';
+  const callerName = callerData?.firstName
+    ? `${callerData.firstName} ${callerData.lastName || ''}`
+    : callerData?.name || 'Unknown Caller';
 
   const handleAccept = () => {
     console.log('Call accepted for caller:', callerName);
@@ -99,23 +101,27 @@ const IncomingCallModal = ({
       >
         <View style={styles.modalContent}>
           <View style={styles.callerInfo}>
-            <View style={styles.avatarContainer}>
+            <Animated.View
+              style={[
+                styles.avatarContainer,
+                { transform: [{ scale: animatedScale }] }
+              ]}
+            >
               <Ionicons name="person-circle" size={80} color="#fff" />
-            </View>
+            </Animated.View>
             <Text style={styles.callerName}>{callerName}</Text>
-            <Text style={styles.callStatus}>Incoming call...</Text>
+            <Text style={styles.callType}>Incoming Audio Call</Text>
           </View>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.button, styles.rejectButton]}
               onPress={handleReject}
             >
               <Ionicons name="close-circle" size={40} color="#FF4B4B" />
               <Text style={styles.buttonText}>Decline</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.button, styles.acceptButton]}
               onPress={handleAccept}
             >
@@ -182,7 +188,7 @@ const styles = StyleSheet.create({
     color: '#000',
     textAlign: 'center',
   },
-  callStatus: {
+  callType: {
     fontSize: 16,
     color: '#666',
     marginBottom: 25,

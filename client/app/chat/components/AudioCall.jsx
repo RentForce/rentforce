@@ -134,6 +134,31 @@ const AudioCall = ({
     };
   }, []);
 
+  useEffect(() => {
+    const handleIncomingCall = (data) => {
+      console.log('Incoming call data:', data);
+      setIncomingCallData({
+        ...data,
+        firstName: data.caller?.firstName || otherUser?.firstName,
+        lastName: data.caller?.lastName || otherUser?.lastName,
+        name: data.caller?.name || otherUser?.name
+      });
+      setIsIncomingCall(true);
+      playRingtone();
+    };
+
+    const socket = getSocket();
+    if (socket) {
+      addSocketListener('incomingCall', handleIncomingCall);
+    }
+
+    return () => {
+      if (socket) {
+        removeSocketListener('incomingCall', handleIncomingCall);
+      }
+    };
+  }, [otherUser]);
+
   const setupCallListeners = () => {
     console.log('Setting up call listeners');
     const socket = getSocket();
@@ -144,33 +169,16 @@ const AudioCall = ({
     }
 
     // Remove any existing listeners
-    removeSocketListener('incomingCall');
     removeSocketListener('callAccepted');
     removeSocketListener('callRejected');
     removeSocketListener('callEnded');
 
     // Add new listeners
-    addSocketListener('incomingCall', handleIncomingCall);
     addSocketListener('callAccepted', handleCallAccepted);
     addSocketListener('callRejected', handleCallRejected);
     addSocketListener('callEnded', handleCallEnded);
 
     console.log('Call listeners set up successfully');
-  };
-
-  const handleIncomingCall = (data) => {
-    console.log('Processing incoming call:', data);
-    // Only handle calls meant for this user
-    if (data.receiverId?.toString() === currentUser?.id?.toString()) {
-      setIncomingCallData({
-        ...data,
-        callerName: data.callerName || otherUser?.name || `User ${data.callerId}`
-      });
-      setIsIncomingCall(true);
-      playRingtone();
-    } else {
-      console.log('Ignoring call for different user:', data.receiverId);
-    }
   };
 
   const handleCallAccepted = (data) => {
@@ -364,9 +372,9 @@ const AudioCall = ({
     <View style={styles.container}>
       <IncomingCallModal
         visible={isIncomingCall}
-        callerName={incomingCallData?.callerName}
         onAccept={handleAcceptCall}
         onReject={handleRejectCall}
+        callerData={incomingCallData || otherUser}
       />
       {isCallActive ? (
         <View style={styles.activeCallContainer}>
