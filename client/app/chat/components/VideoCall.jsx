@@ -182,7 +182,12 @@ const VideoCall = ({
   const openJitsiMeet = async (roomId) => {
     try {
       console.log('Opening Jitsi Meet for room:', roomId);
-      const jitsiUrl = `https://meet.jit.si/${roomId}#userInfo.displayName="${encodeURIComponent(currentUser.name)}"`;
+      if (!roomId) {
+        throw new Error('No room ID provided');
+      }
+      
+      const encodedName = encodeURIComponent(currentUser?.name || '');
+      const jitsiUrl = `https://meet.jit.si/${roomId}#userInfo.displayName="${encodedName}"`;
       console.log('Opening Jitsi Meet URL:', jitsiUrl);
       
       const canOpen = await Linking.canOpenURL(jitsiUrl);
@@ -206,15 +211,17 @@ const VideoCall = ({
 
   const handleIncomingCall = (data) => {
     console.log('Processing incoming call:', data);
-    console.log('otherUser in handleIncomingCall:', otherUser);
+    console.log('Current user:', currentUser);
+    console.log('Incoming call data:', data);
 
     // Convert IDs to strings for comparison
     if (data.receiverId?.toString() === currentUser?.id?.toString()) {
+      console.log('Incoming call is for current user');
       setRoomName(data.roomName);
       setIncomingCallData({
         ...data,
         callerName: otherUser?.firstName + ' ' + otherUser?.lastName,
-        image: data.image || otherUser?.image // Use image from data or otherUser
+        image: otherUser?.image
       });
       setIsIncomingCall(true);
       playRingtone();
@@ -262,7 +269,12 @@ const VideoCall = ({
     console.log('Video call accepted:', data);
     stopRingtone();
     setIsCallActive(true);
-    await openJitsiMeet(roomName);
+    
+    // Ensure we're using the correct room name from the data
+    const roomId = data.roomName || roomName;
+    setRoomName(roomId);
+    
+    await openJitsiMeet(roomId);
   };
 
   const handleCallRejected = (data) => {
