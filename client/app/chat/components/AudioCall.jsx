@@ -161,19 +161,19 @@ const AudioCall = ({
 
   const handleIncomingCall = (data) => {
     console.log('Processing incoming call:', data);
-    console.log('otherUser in handleIncomingCall:', otherUser);
+    console.log('Current user:', currentUser);
+    console.log('Incoming call data:', data);
 
-    // Only handle calls meant for this user
+    // Convert IDs to strings for comparison
     if (data.receiverId?.toString() === currentUser?.id?.toString()) {
+      console.log('Incoming call is for current user');
       setIncomingCallData({
         ...data,
         callerName: otherUser?.firstName + ' ' + otherUser?.lastName,
-        image: data.image || otherUser?.image // Use image from data or otherUser
+        image: otherUser?.image
       });
       setIsIncomingCall(true);
       playRingtone();
-    } else {
-      console.log('Ignoring call for different user:', data.receiverId);
     }
   };
 
